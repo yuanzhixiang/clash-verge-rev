@@ -1,4 +1,4 @@
-import { execSync } from 'child_process'
+import { execFileSync, execSync } from 'child_process'
 import { createHash } from 'crypto'
 import fs from 'fs'
 import fsp from 'fs/promises'
@@ -747,10 +747,43 @@ const resolveUnSetDnsScript = () =>
     localPath: path.join(cwd, 'scripts/unset_dns.sh'),
   })
 
+async function resolveVergectl() {
+  const ext = platform === 'win32' ? '.exe' : ''
+  const profile = process.env.VERGECTL_PROFILE === 'release' ? 'release' : 'debug'
+  const buildArgs = ['build', '-p', 'vergectl', '--target', SIDECAR_HOST]
+
+  if (profile === 'release') {
+    buildArgs.push('--release')
+  }
+
+  execFileSync('cargo', buildArgs, { cwd, stdio: 'inherit' })
+
+  const sourcePath = path.join(
+    cwd,
+    'target',
+    SIDECAR_HOST,
+    profile,
+    `vergectl${ext}`,
+  )
+  const targetPath = path.join(SIDECAR_DIR, `vergectl-${SIDECAR_HOST}${ext}`)
+
+  if (!(await hasFileChanged(sourcePath, targetPath))) {
+    log_success('"vergectl" already exists, skipping copy')
+    return
+  }
+
+  await fsp.mkdir(SIDECAR_DIR, { recursive: true })
+  await fsp.copyFile(sourcePath, targetPath)
+  if (platform !== 'win32') await fsp.chmod(targetPath, 0o755)
+  await updateHashCache(targetPath)
+  log_success(`vergectl sidecar ready: ${path.basename(targetPath)}`)
+}
+
 // =======================
 // Tasks
 // =======================
 const tasks = [
+  { name: 'vergectl', func: resolveVergectl, retry: 1 },
   {
     name: 'verge-mihomo-alpha',
     func: () =>

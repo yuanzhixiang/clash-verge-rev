@@ -1,5 +1,6 @@
 mod backup;
 mod clash;
+mod cli;
 mod config;
 mod icon;
 mod profile;
@@ -9,6 +10,7 @@ mod window;
 // Re-export all functions from modules
 pub use backup::*;
 pub use clash::*;
+pub use cli::*;
 pub use config::*;
 pub use icon::*;
 pub use profile::*;

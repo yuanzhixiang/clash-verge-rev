@@ -1,4 +1,4 @@
-use super::resolve;
+use super::{cli, resolve};
 use crate::{
     cmd::is_port_in_use,
     config::{Config, DEFAULT_PAC, IVerge},
@@ -112,7 +112,13 @@ pub fn embed_server() {
             ))
         });
 
-    let commands = visible.or(scheme).or(pac);
+    let cli = warp::path!("commands" / "cli")
+        .and(warp::post())
+        .and(warp::body::content_length_limit(1024 * 1024))
+        .and(warp::body::json())
+        .and_then(cli::handle);
+
+    let commands = visible.or(scheme).or(pac).or(cli);
 
     AsyncHandler::spawn(move || async move {
         warp::serve(commands)

@@ -576,17 +576,23 @@ export interface TranslationResources {
             fields: {
               backupSetting: string
               checkUpdates: string
+              cliInstallDir: string
+              cliInstalledAt: string
               exit: string
               exportDiagnostics: string
+              installCli: string
               liteModeSettings: string
               openConfDir: string
               openCoreDir: string
               openDevTools: string
               openLogsDir: string
               runtimeConfig: string
+              uninstallCli: string
               vergeVersion: string
             }
             notifications: {
+              cliInstalled: string
+              cliUninstalled: string
               latestVersion: string
               versionCopied: string
             }

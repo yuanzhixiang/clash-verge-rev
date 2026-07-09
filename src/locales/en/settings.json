@@ -184,7 +184,9 @@
         },
         "notifications": {
           "latestVersion": "Currently on the Latest Version",
-          "versionCopied": "Version copied to clipboard"
+          "versionCopied": "Version copied to clipboard",
+          "cliInstalled": "CLI installed",
+          "cliUninstalled": "CLI uninstalled"
         },
         "fields": {
           "backupSetting": "Backup Setting",
@@ -192,6 +194,10 @@
           "openConfDir": "Open Conf Dir",
           "openCoreDir": "Open Core Dir",
           "openLogsDir": "Open Logs Dir",
+          "installCli": "Install CLI",
+          "uninstallCli": "Uninstall CLI",
+          "cliInstalledAt": "Installed at",
+          "cliInstallDir": "Install dir",
           "checkUpdates": "Check for Updates",
           "openDevTools": "Dev Tools",
           "liteModeSettings": "LightWeight Mode Settings",

@@ -344,6 +344,26 @@ export async function openLogsDir() {
   return invoke<void>('open_logs_dir').catch((err) => showNotice.error(err))
 }
 
+export interface CliInstallStatus {
+  installed: boolean
+  versionMatches: boolean
+  path: string
+  installDir: string
+  sourcePath?: string | null
+}
+
+export async function getCliInstallStatus() {
+  return invoke<CliInstallStatus>('get_cli_install_status')
+}
+
+export async function installCli() {
+  return invoke<CliInstallStatus>('install_cli')
+}
+
+export async function uninstallCli() {
+  return invoke<CliInstallStatus>('uninstall_cli')
+}
+
 export const openWebUrl = async (url: string) => {
   try {
     await invoke('open_web_url', { url })

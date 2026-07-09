@@ -1,0 +1,17 @@
+[package]
+name = "vergectl"
+version = "2.5.2"
+edition = "2024"
+rust-version = "1.95"
+
+[[bin]]
+name = "vergectl"
+path = "src/main.rs"
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+serde_yaml_ng = { workspace = true }
+
+[lints]
+workspace = true

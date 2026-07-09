@@ -1,6 +1,6 @@
 import { ContentCopyRounded } from '@mui/icons-material'
 import { Typography } from '@mui/material'
-import { useCallback, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { DialogRef, TooltipIcon } from '@/components/base'
@@ -8,11 +8,15 @@ import { updateLastCheckTime } from '@/hooks/use-update'
 import {
   exitApp,
   exportDiagnosticInfo,
+  getCliInstallStatus,
+  installCli,
   openAppDir,
   openCoreDir,
   openDevTools,
   openLogsDir,
+  uninstallCli,
 } from '@/services/cmds'
+import type { CliInstallStatus } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { checkUpdateSafe as checkUpdate } from '@/services/update'
 import { version } from '@root/package.json'
@@ -33,6 +37,7 @@ interface Props {
 
 const SettingVergeAdvanced = ({ onError: _ }: Props) => {
   const { t } = useTranslation()
+  const [cliStatus, setCliStatus] = useState<CliInstallStatus | null>(null)
 
   const configRef = useRef<DialogRef>(null)
   const hotkeyRef = useRef<DialogRef>(null)
@@ -63,6 +68,34 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
     await exportDiagnosticInfo()
     showNotice.success('shared.feedback.notifications.common.copySuccess', 1000)
   }, [])
+
+  const refreshCliStatus = useCallback(async () => {
+    try {
+      setCliStatus(await getCliInstallStatus())
+    } catch (err) {
+      console.error('Failed to read CLI install status:', err)
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshCliStatus()
+  }, [refreshCliStatus])
+
+  const onToggleCli = useCallback(async () => {
+    try {
+      const shouldUninstall = cliStatus?.installed && cliStatus.versionMatches
+      const nextStatus = shouldUninstall ? await uninstallCli() : await installCli()
+      setCliStatus(nextStatus)
+      showNotice.success(
+        nextStatus.installed
+          ? 'settings.components.verge.advanced.notifications.cliInstalled'
+          : 'settings.components.verge.advanced.notifications.cliUninstalled',
+        1000,
+      )
+    } catch (err: any) {
+      showNotice.error(err)
+    }
+  }, [cliStatus?.installed, cliStatus?.versionMatches])
 
   const copyVersion = useCallback(() => {
     navigator.clipboard.writeText(`v${version}`).then(() => {
@@ -119,6 +152,24 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
       <SettingItem
         onClick={openLogsDir}
         label={t('settings.components.verge.advanced.fields.openLogsDir')}
+      />
+
+      <SettingItem
+        onClick={onToggleCli}
+        label={t(
+          cliStatus?.installed && cliStatus.versionMatches
+            ? 'settings.components.verge.advanced.fields.uninstallCli'
+            : 'settings.components.verge.advanced.fields.installCli',
+        )}
+        secondary={
+          cliStatus
+            ? `${
+                cliStatus.installed
+                  ? t('settings.components.verge.advanced.fields.cliInstalledAt')
+                  : t('settings.components.verge.advanced.fields.cliInstallDir')
+              } ${cliStatus.installed ? cliStatus.path : cliStatus.installDir}`
+            : undefined
+        }
       />
 
       <SettingItem

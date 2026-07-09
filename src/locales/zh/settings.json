@@ -184,7 +184,9 @@
         },
         "notifications": {
           "latestVersion": "当前已是最新版本",
-          "versionCopied": "Verge 版本已复制到剪贴板"
+          "versionCopied": "Verge 版本已复制到剪贴板",
+          "cliInstalled": "CLI 已安装",
+          "cliUninstalled": "CLI 已卸载"
         },
         "fields": {
           "backupSetting": "备份设置",
@@ -192,6 +194,10 @@
           "openConfDir": "配置目录",
           "openCoreDir": "内核目录",
           "openLogsDir": "日志目录",
+          "installCli": "安装 CLI",
+          "uninstallCli": "卸载 CLI",
+          "cliInstalledAt": "安装位置",
+          "cliInstallDir": "安装目录",
           "checkUpdates": "检查更新",
           "openDevTools": "开发者工具",
           "liteModeSettings": "轻量模式设置",

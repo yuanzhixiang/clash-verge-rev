@@ -1,3 +1,4 @@
+pub mod cli;
 #[cfg(target_os = "macos")]
 pub mod connections_stream;
 pub mod dirs;
