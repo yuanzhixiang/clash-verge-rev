@@ -1,4 +1,6 @@
-import { Box, Button, Snackbar, Typography, useTheme } from '@mui/material'
+import { KeyboardArrowDownRounded } from '@mui/icons-material'
+import { Box, Button, IconButton, Typography, useTheme } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
 import {
@@ -31,21 +33,26 @@ export interface ConnectionDetailRef {
   close: () => void
 }
 
-export function ConnectionDetail({ ref }: { ref?: Ref<ConnectionDetailRef> }) {
+export function ConnectionDetail({
+  ref,
+  onClose: onClosed,
+}: {
+  ref?: Ref<ConnectionDetailRef>
+  onClose?: () => void
+}) {
   const [open, setOpen] = useState(false)
   const [detail, setDetail] = useState<IConnectionsItem | null>(null)
   const [closed, setClosed] = useState(false)
-  const theme = useTheme()
 
   const onClose = useCallback(() => {
     setOpen(false)
     setDetail(null)
     setClosed(false)
-  }, [])
+    onClosed?.()
+  }, [onClosed])
 
   useImperativeHandle(ref, () => ({
     open: (detail: IConnectionsItem, closed: boolean) => {
-      if (open) return
       setOpen(true)
       setDetail(detail)
       setClosed(closed)
@@ -53,41 +60,20 @@ export function ConnectionDetail({ ref }: { ref?: Ref<ConnectionDetailRef> }) {
     close: onClose,
   }))
 
+  if (!open || !detail) return null
+
   return (
-    <Snackbar
-      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      open={open}
-      onClose={onClose}
+    <Box
       sx={{
-        '.MuiSnackbarContent-root': {
-          boxSizing: 'border-box',
-          width: { xs: 'calc(100vw - 32px)', sm: 720 },
-          maxWidth: 'calc(100vw - 32px)',
-          maxHeight: '72vh',
-          overflowY: 'auto',
-          backgroundColor: theme.palette.background.paper,
-          color: theme.palette.text.primary,
-          border: `1px solid ${theme.palette.divider}`,
-          borderRadius: '8px',
-          boxShadow: theme.shadows[8],
-          p: 0,
-        },
-        '.MuiSnackbarContent-message': {
-          boxSizing: 'border-box',
-          width: '100%',
-          p: 0,
-        },
+        position: 'absolute',
+        left: { xs: 8, sm: 12 },
+        right: { xs: 8, sm: 12 },
+        bottom: { xs: 8, sm: 10 },
+        zIndex: 5,
       }}
-      message={
-        detail ? (
-          <InnerConnectionDetail
-            data={detail}
-            closed={closed}
-            onClose={onClose}
-          />
-        ) : null
-      }
-    />
+    >
+      <InnerConnectionDetail data={detail} closed={closed} onClose={onClose} />
+    </Box>
   )
 }
 
@@ -113,6 +99,10 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
       : process
   const policy = chainPath.length > 1 ? chainPath.slice(0, -1).join(' -> ') : ''
   const exitNode = chainPath[chainPath.length - 1] || ''
+  const trafficWithBytes = (value?: number) => {
+    const bytes = value ?? 0
+    return `${parseTraffic(bytes).join(' ')} (${bytes.toLocaleString()} bytes)`
+  }
 
   const routeSteps = [
     { label: t('connections.components.route.app'), value: process },
@@ -126,22 +116,33 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
     { label: t('connections.components.route.remote'), value: host },
   ]
 
-  const information = [
+  const leftInformation = [
+    {
+      label: t('connections.components.fields.source'),
+      value: getConnectionSource(data),
+    },
     {
       label: t('shared.labels.downloaded'),
-      value: parseTraffic(data.download).join(' '),
+      value: trafficWithBytes(data.download),
     },
     {
       label: t('shared.labels.uploaded'),
-      value: parseTraffic(data.upload).join(' '),
+      value: trafficWithBytes(data.upload),
     },
     {
       label: t('connections.components.fields.dlSpeed'),
-      value: parseTraffic(data.curDownload ?? -1).join(' ') + '/s',
+      value: `${parseTraffic(data.curDownload ?? 0).join(' ')}/s`,
     },
     {
       label: t('connections.components.fields.ulSpeed'),
-      value: parseTraffic(data.curUpload ?? -1).join(' ') + '/s',
+      value: `${parseTraffic(data.curUpload ?? 0).join(' ')}/s`,
+    },
+  ].filter((item) => item.value)
+
+  const rightInformation = [
+    {
+      label: t('connections.components.fields.destination'),
+      value: destination || '',
     },
     {
       label: t('connections.components.fields.process'),
@@ -150,14 +151,6 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
     {
       label: t('connections.components.fields.time'),
       value: dayjs(data.start).fromNow(),
-    },
-    {
-      label: t('connections.components.fields.source'),
-      value: getConnectionSource(data),
-    },
-    {
-      label: t('connections.components.fields.destination'),
-      value: destination,
     },
     {
       label: t('connections.components.fields.destinationPort'),
@@ -170,23 +163,161 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
   ].filter((item) => item.value)
 
   const onDelete = useLockFn(async () => closeConnection(data.id))
+  const detailColumn = (items: typeof leftInformation) => (
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(128px, max-content) minmax(0, 1fr)',
+        columnGap: 2,
+        rowGap: 1,
+        minWidth: 0,
+      }}
+    >
+      {items.map((each) => (
+        <Fragment key={each.label}>
+          <Box
+            component="span"
+            sx={{
+              color: theme.palette.text.secondary,
+              fontSize: 12.5,
+              fontWeight: 700,
+              lineHeight: 1.35,
+            }}
+          >
+            {each.label}
+          </Box>
+          <Box
+            component="span"
+            sx={{
+              minWidth: 0,
+              color: theme.palette.text.primary,
+              fontSize: 13,
+              lineHeight: 1.35,
+              overflowWrap: 'anywhere',
+            }}
+          >
+            {each.value}
+          </Box>
+        </Fragment>
+      ))}
+    </Box>
+  )
 
   return (
     <Box
       sx={{
         boxSizing: 'border-box',
         width: '100%',
-        p: 2,
+        maxHeight: '48vh',
+        overflow: 'auto',
+        p: { xs: 1.5, sm: 2 },
         userSelect: 'text',
-        color: theme.palette.text.secondary,
+        color: theme.palette.text.primary,
+        backgroundColor: alpha(theme.palette.background.paper, 0.98),
+        border: `1px solid ${alpha(theme.palette.primary.main, 0.22)}`,
+        borderRadius: 1.5,
+        boxShadow: theme.shadows[6],
       }}
     >
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          mb: 1.5,
+          minWidth: 0,
+        }}
+      >
+        <Typography
+          component="div"
+          title={host}
+          sx={{
+            minWidth: 0,
+            color: theme.palette.text.primary,
+            fontSize: 15,
+            fontWeight: 700,
+            lineHeight: 1.3,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {host}
+        </Typography>
+        <Box
+          component="span"
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 0.75,
+            flex: '0 0 auto',
+            color: theme.palette.text.secondary,
+            fontSize: 12.5,
+          }}
+        >
+          <Box
+            component="span"
+            sx={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              backgroundColor: closed
+                ? theme.palette.text.disabled
+                : theme.palette.success.main,
+            }}
+          />
+          {closed ? 'Closed' : 'Live'}
+        </Box>
+        <Box
+          component="span"
+          sx={{
+            flex: '0 0 auto',
+            color: theme.palette.text.secondary,
+            fontSize: 12.5,
+          }}
+        >
+          {dayjs(data.start).fromNow()}
+        </Box>
+        <Box
+          component="span"
+          sx={{
+            flex: '0 0 auto',
+            color: theme.palette.text.secondary,
+            fontSize: 12.5,
+          }}
+        >
+          Type: {getConnectionTypeLabel(data)}
+        </Box>
+        <Box sx={{ flex: 1 }} />
+        {!closed && (
+          <Button
+            size="small"
+            variant="outlined"
+            title={t('connections.components.actions.closeConnection')}
+            onClick={() => {
+              onDelete()
+              onClose?.()
+            }}
+            sx={{ flex: '0 0 auto', height: 30 }}
+          >
+            {t('connections.components.actions.closeConnection')}
+          </Button>
+        )}
+        <IconButton
+          size="small"
+          aria-label="Close detail"
+          onClick={onClose}
+          sx={{ flex: '0 0 auto' }}
+        >
+          <KeyboardArrowDownRounded fontSize="small" />
+        </IconButton>
+      </Box>
       <Typography
         component="div"
         sx={{
           mb: 1,
           color: theme.palette.text.primary,
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: 700,
           lineHeight: 1.3,
         }}
@@ -197,69 +328,22 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
 
       <Box
         sx={{
-          mt: 1.5,
-          pt: 1.5,
+          mt: 2,
+          pt: 1.25,
           borderTop: `1px solid ${theme.palette.divider}`,
         }}
       >
-        <Typography
-          component="div"
-          sx={{
-            mb: 0.75,
-            color: theme.palette.text.secondary,
-            fontSize: 12,
-            fontWeight: 700,
-          }}
-        >
-          {t('connections.components.route.details')}
-        </Typography>
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: 'max-content minmax(0, 1fr)',
-            columnGap: 1.5,
-            rowGap: 0.5,
-            fontSize: 13,
-            lineHeight: 1.45,
+            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+            gap: { xs: 1, md: 3 },
           }}
         >
-          {information.map((each) => (
-            <Fragment key={each.label}>
-              <Box
-                component="span"
-                sx={{ color: theme.palette.text.secondary, fontWeight: 700 }}
-              >
-                {each.label}
-              </Box>
-              <Box
-                component="span"
-                sx={{
-                  minWidth: 0,
-                  color: theme.palette.text.primary,
-                  overflowWrap: 'anywhere',
-                }}
-              >
-                {each.value}
-              </Box>
-            </Fragment>
-          ))}
+          {detailColumn(leftInformation)}
+          {detailColumn(rightInformation)}
         </Box>
       </Box>
-
-      {!closed && (
-        <Box sx={{ mt: 2, textAlign: 'right' }}>
-          <Button
-            variant="contained"
-            title={t('connections.components.actions.closeConnection')}
-            onClick={() => {
-              onDelete()
-              onClose?.()
-            }}
-          >
-            {t('connections.components.actions.closeConnection')}
-          </Button>
-        </Box>
-      )}
     </Box>
   )
 }

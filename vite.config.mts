@@ -5,9 +5,20 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import svgr from 'vite-plugin-svgr'
 
+const remoteAppPort = process.env.VERGE_REMOTE_PORT || '33331'
+
 export default defineConfig({
   root: 'src',
-  server: { port: 3000 },
+  server: {
+    port: 3000,
+    proxy: {
+      '/__verge/cli': {
+        target: `http://127.0.0.1:${remoteAppPort}`,
+        changeOrigin: true,
+        rewrite: () => '/commands/cli',
+      },
+    },
+  },
   plugins: [
     svgr(),
     react(),

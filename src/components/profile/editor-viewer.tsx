@@ -16,7 +16,14 @@ import {
 } from '@mui/material'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useLockFn } from 'ahooks'
-import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseLoadingOverlay, MonacoEditor } from '@/components/base'
@@ -25,8 +32,6 @@ import { useThemeMode } from '@/services/states'
 import type { MonacoEditorInstance, MonacoMarker } from '@/types/monaco'
 import debounce from '@/utils/debounce'
 import getSystem from '@/utils/get-system'
-
-const appWindow = getCurrentWebviewWindow()
 
 export type EditorLanguage = 'yaml' | 'javascript' | 'css'
 
@@ -65,6 +70,7 @@ export const EditorViewer = ({
 }: EditorViewerProps) => {
   const { t } = useTranslation()
   const themeMode = useThemeMode()
+  const appWindow = useMemo(() => getCurrentWebviewWindow(), [])
   const [isMaximized, setIsMaximized] = useState(false)
   const editorRef = useRef<MonacoEditorInstance | null>(null)
 
@@ -84,7 +90,7 @@ export const EditorViewer = ({
     } catch {
       setIsMaximized(false)
     }
-  }, [])
+  }, [appWindow])
 
   const handleSave = useLockFn(async () => {
     try {
@@ -155,7 +161,7 @@ export const EditorViewer = ({
   useEffect(() => {
     if (!open) return
     void syncMaximizedState()
-  }, [open, syncMaximizedState])
+  }, [appWindow, open, syncMaximizedState])
 
   useEffect(() => {
     if (!open || loading) return
@@ -179,7 +185,7 @@ export const EditorViewer = ({
     return () => {
       unlistenResized.then((unlisten) => unlisten())
     }
-  }, [open, syncMaximizedState])
+  }, [appWindow, open, syncMaximizedState])
 
   useEffect(() => {
     return () => {

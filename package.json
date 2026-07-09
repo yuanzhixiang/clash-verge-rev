@@ -12,6 +12,7 @@
     "build:fast": "cross-env NODE_OPTIONS='--max-old-space-size=4096' tauri build -- --profile fast-release",
     "tauri": "tauri",
     "web:dev": "vite",
+    "web:remote": "cross-env VITE_VERGE_REMOTE_APP=1 vite --host 127.0.0.1 --port 47231 --strictPort",
     "web:build": "tsc --noEmit && vite build",
     "web:serve": "vite preview",
     "prebuild": "node scripts/prebuild.mjs",

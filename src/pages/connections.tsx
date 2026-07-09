@@ -139,11 +139,15 @@ const ConnectionsPage = () => {
   )
 
   const detailRef = useRef<ConnectionDetailRef>(null!)
+  const [selectedConnectionId, setSelectedConnectionId] = useState<
+    string | null
+  >(null)
 
   const selectConnectionsType = useCallback(
     (type: 'active' | 'closed') => {
       if (type === connectionsType) return
       detailRef.current?.close()
+      setSelectedConnectionId(null)
       setIsColumnManagerOpen(false)
       setConnectionsType(type)
     },
@@ -154,6 +158,7 @@ const ConnectionsPage = () => {
     (id: string) => {
       const connection = filterConn.find((item) => item.id === id)
       if (connection) {
+        setSelectedConnectionId(id)
         detailRef.current?.open(connection, connectionsType === 'closed')
       }
     },
@@ -186,6 +191,7 @@ const ConnectionsPage = () => {
         overflow: 'hidden',
         borderRadius: '8px',
         minHeight: 0,
+        position: 'relative',
       }}
       header={
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -298,6 +304,7 @@ const ConnectionsPage = () => {
         <ConnectionTable
           connections={filterConn}
           onShowDetail={showDetailById}
+          selectedId={selectedConnectionId}
           columnManagerOpen={isColumnManagerOpen}
           onCloseColumnManager={() => setIsColumnManagerOpen(false)}
         />
@@ -310,6 +317,7 @@ const ConnectionsPage = () => {
             <ConnectionRowItem
               row={displayRows[i]}
               closed={connectionsType === 'closed'}
+              selected={displayRows[i].id === selectedConnectionId}
               onShowDetail={showDetailById}
             />
           )}
@@ -321,7 +329,10 @@ const ConnectionsPage = () => {
           }}
         />
       )}
-      <ConnectionDetail ref={detailRef} />
+      <ConnectionDetail
+        ref={detailRef}
+        onClose={() => setSelectedConnectionId(null)}
+      />
       <Zoom
         in={connectionsType === 'closed' && filterConn.length > 0}
         unmountOnExit

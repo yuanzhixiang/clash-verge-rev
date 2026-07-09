@@ -50,22 +50,16 @@ export const ConnectionRouteChips = ({
                 minWidth: 0,
                 maxWidth: isExit ? 160 : 140,
                 height: 22,
-                px: 0.75,
+                px: 0.9,
                 borderRadius: 1,
-                border: '1px solid',
-                borderColor: alpha(
-                  theme.palette.primary.main,
-                  isExit ? 0.45 : 0.24,
-                ),
-                color: isExit
-                  ? theme.palette.primary.main
-                  : theme.palette.text.primary,
+                border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
+                color: theme.palette.primary.main,
                 backgroundColor: alpha(
                   theme.palette.primary.main,
-                  isExit ? 0.12 : 0.06,
+                  isExit ? 0.13 : 0.08,
                 ),
                 fontSize: 12,
-                fontWeight: isExit ? 600 : 500,
+                fontWeight: 600,
                 lineHeight: '20px',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -79,8 +73,9 @@ export const ConnectionRouteChips = ({
                 component="span"
                 sx={{
                   flex: '0 0 auto',
-                  color: theme.palette.text.disabled,
-                  fontSize: 12,
+                  color: alpha(theme.palette.text.primary, 0.55),
+                  fontSize: 15,
+                  lineHeight: 1,
                 }}
               >
                 -&gt;
@@ -108,13 +103,15 @@ export const ConnectionRouteTimeline = ({
       sx={{
         display: 'flex',
         alignItems: 'stretch',
-        flexWrap: 'wrap',
-        gap: 0.75,
+        flexWrap: 'nowrap',
+        gap: 1,
         py: 0.25,
+        overflowX: 'auto',
+        overflowY: 'hidden',
       }}
     >
       {visibleSteps.map((step) => {
-        const isExit = step === visibleSteps[visibleSteps.length - 1]
+        const isRemote = step === visibleSteps[visibleSteps.length - 1]
 
         return (
           <Fragment key={step.label}>
@@ -123,26 +120,22 @@ export const ConnectionRouteTimeline = ({
               sx={{
                 boxSizing: 'border-box',
                 flex: '0 1 auto',
-                minWidth: 108,
-                maxWidth: 220,
-                px: 1,
-                py: 0.75,
+                minWidth: 120,
+                maxWidth: 250,
+                px: 1.25,
+                py: 0.8,
                 borderRadius: 1,
                 border: '1px solid',
-                borderColor: isExit
-                  ? alpha(theme.palette.primary.main, 0.45)
-                  : theme.palette.divider,
-                backgroundColor: isExit
-                  ? alpha(theme.palette.primary.main, 0.08)
-                  : alpha(theme.palette.action.hover, 0.55),
+                borderColor: alpha(theme.palette.primary.main, 0.26),
+                backgroundColor: alpha(theme.palette.primary.main, 0.035),
               }}
             >
               <Typography
                 component="div"
                 sx={{
-                  color: theme.palette.text.secondary,
+                  color: theme.palette.primary.main,
                   fontSize: 10,
-                  fontWeight: 600,
+                  fontWeight: 700,
                   lineHeight: 1.25,
                 }}
               >
@@ -151,11 +144,11 @@ export const ConnectionRouteTimeline = ({
               <Typography
                 component="div"
                 sx={{
-                  color: isExit
+                  color: isRemote
                     ? theme.palette.primary.main
                     : theme.palette.text.primary,
                   fontSize: 12.5,
-                  fontWeight: isExit ? 600 : 500,
+                  fontWeight: isRemote ? 600 : 500,
                   lineHeight: 1.35,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -165,14 +158,14 @@ export const ConnectionRouteTimeline = ({
                 {step.value}
               </Typography>
             </Box>
-            {!isExit && (
+            {!isRemote && (
               <Box
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  color: theme.palette.text.disabled,
-                  fontSize: 12,
-                  px: 0.25,
+                  color: alpha(theme.palette.text.primary, 0.6),
+                  fontSize: 20,
+                  px: 0.1,
                 }}
               >
                 -&gt;

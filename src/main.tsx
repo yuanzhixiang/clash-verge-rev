@@ -39,6 +39,14 @@ if (!container) {
 
 disableWebViewShortcuts()
 
+const cleanupMihomoWebSockets = () => {
+  void MihomoWebSocket.cleanupAll().catch((error) => {
+    if (import.meta.env.DEV) {
+      console.debug('[main.tsx] Mihomo WebSocket cleanup skipped:', error)
+    }
+  })
+}
+
 const initializeApp = (initialThemeMode: 'light' | 'dark') => {
   const contexts = [
     <ThemeModeProvider key="theme" initialState={initialThemeMode} />,
@@ -64,7 +72,14 @@ const initializeApp = (initialThemeMode: 'light' | 'dark') => {
   )
 }
 
+const setupRemoteBridge = async () => {
+  if (import.meta.env.VITE_VERGE_REMOTE_APP !== '1') return
+  const { setupRemoteTauriBridge } = await import('./dev/remote-tauri-bridge')
+  setupRemoteTauriBridge()
+}
+
 const bootstrap = async () => {
+  await setupRemoteBridge()
   const { initialThemeMode } = await preloadAppData()
   initializeApp(initialThemeMode)
 }
@@ -98,11 +113,11 @@ window.addEventListener('unhandledrejection', (event) => {
 // Page close/refresh events
 window.addEventListener('beforeunload', () => {
   // Clean up all WebSocket instances to prevent memory leaks
-  MihomoWebSocket.cleanupAll()
+  cleanupMihomoWebSockets()
 })
 
 // Page loaded event
 window.addEventListener('DOMContentLoaded', () => {
   // Clean up all WebSocket instances to prevent memory leaks
-  MihomoWebSocket.cleanupAll()
+  cleanupMihomoWebSockets()
 })
