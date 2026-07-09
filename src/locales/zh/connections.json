@@ -26,6 +26,16 @@
       "closed": "已关闭",
       "closeConnection": "关闭连接"
     },
+    "route": {
+      "title": "调用链路",
+      "app": "应用",
+      "inbound": "入口",
+      "rule": "规则",
+      "policy": "策略",
+      "exit": "出口",
+      "remote": "远端",
+      "details": "详情"
+    },
     "columnManager": {
       "title": "列设置",
       "dragHandle": "拖拽控件"

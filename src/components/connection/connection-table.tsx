@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
   type MouseEvent as ReactMouseEvent,
   type TouchEvent as ReactTouchEvent,
   type UIEvent as ReactUIEvent,
@@ -18,6 +19,7 @@ import {
   type ConnectionColumnOption,
 } from './connection-column-manager'
 import { RelativeTime } from './connection-relative-time'
+import { ConnectionRouteChips } from './connection-route'
 import {
   formatConnectionChains,
   formatConnectionTraffic,
@@ -68,7 +70,7 @@ interface BaseColumn {
   minWidth: number
   maxWidth?: number
   align?: 'left' | 'right'
-  cell?: (row: IConnectionsItem, snapshot: TableRowSnapshot) => string
+  cell?: (row: IConnectionsItem, snapshot: TableRowSnapshot) => ReactNode
 }
 
 interface DisplayColumn extends BaseColumn {
@@ -421,8 +423,14 @@ export const ConnectionTable = (props: Props) => {
       {
         field: 'chains',
         headerName: t('connections.components.fields.chains'),
-        width: 280,
-        minWidth: 160,
+        width: 320,
+        minWidth: 180,
+        cell: (row, snapshot) => (
+          <ConnectionRouteChips
+            chains={row.chains}
+            empty={snapshot.chainsText}
+          />
+        ),
       },
       {
         field: 'rule',

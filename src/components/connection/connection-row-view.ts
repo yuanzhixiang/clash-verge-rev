@@ -1,5 +1,7 @@
 import { useMemo, useRef } from 'react'
 
+import { formatConnectionChainPath } from './connection-route-utils'
+
 const TRAFFIC_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 
 export interface ConnectionRowView {
@@ -40,12 +42,7 @@ export const formatConnectionTraffic = (value?: number) => {
 }
 
 export const formatConnectionChains = (chains: string[]) => {
-  let value = ''
-  for (let i = chains.length - 1; i >= 0; i -= 1) {
-    if (value) value += ' / '
-    value += chains[i]
-  }
-  return value
+  return formatConnectionChainPath(chains)
 }
 
 export const getConnectionDestination = (connection: IConnectionsItem) => {

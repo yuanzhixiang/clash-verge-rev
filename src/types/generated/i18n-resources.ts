@@ -32,6 +32,16 @@ export interface TranslationResources {
           downloadSpeed: string
           uploadSpeed: string
         }
+        route: {
+          app: string
+          details: string
+          exit: string
+          inbound: string
+          policy: string
+          remote: string
+          rule: string
+          title: string
+        }
       }
       page: {
         title: string

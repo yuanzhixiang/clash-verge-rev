@@ -117,10 +117,18 @@ const ConnectionsPage = () => {
     if (!hasSearch) return orderFunc([...selectedConnections])
 
     const matchConns = selectedConnections.filter((conn) => {
-      const { host, destinationIP, process } = conn.metadata
-      return (
-        match(host || '') || match(destinationIP || '') || match(process || '')
-      )
+      const { host, destinationIP, remoteDestination, process, processPath } =
+        conn.metadata
+      return [
+        host,
+        destinationIP,
+        remoteDestination,
+        process,
+        processPath,
+        conn.rule,
+        conn.rulePayload,
+        conn.chains.join(' '),
+      ].some((value) => match(value || ''))
     })
 
     return orderFunc ? orderFunc(matchConns) : matchConns
