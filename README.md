@@ -32,6 +32,13 @@ A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">Tauri</a
 Go to the [Release page](https://github.com/clash-verge-rev/clash-verge-rev/releases) to download the corresponding installation package<br>
 Supports Windows (x64/x86), Linux (x64/arm64) and macOS 11+ (intel/apple).
 
+```bash
+pnpm run prebuild aarch64-apple-darwin && pnpm build && (osascript -e 'quit app "Clash Verge"' || true) && rm -rf "/Applications/Clash Verge.app" && cp -R "src-tauri/target/release/bundle/macos/Clash Verge.app" "/Applications/Clash Verge.app" && mkdir -p "${XDG_BIN_HOME:-$HOME/.local/bin}" && cp src-tauri/sidecar/vergectl-aarch64-apple-darwin "${XDG_BIN_HOME:-$HOME/.local/bin}/vergectl" && chmod 755 "${XDG_BIN_HOME:-$HOME/.local/bin}/vergectl" && "${XDG_BIN_HOME:-$HOME/.local/bin}/vergectl" skill install && open "/Applications/Clash Verge.app"
+
+# 快速测试，build 更快，包体积变大
+pnpm run prebuild aarch64-apple-darwin && pnpm build:fast && (osascript -e 'quit app "Clash Verge"' || true) && rm -rf "/Applications/Clash Verge.app" && cp -R "target/fast-release/bundle/macos/Clash Verge.app" "/Applications/Clash Verge.app" && mkdir -p "${XDG_BIN_HOME:-$HOME/.local/bin}" && cp src-tauri/sidecar/vergectl-aarch64-apple-darwin "${XDG_BIN_HOME:-$HOME/.local/bin}/vergectl" && chmod 755 "${XDG_BIN_HOME:-$HOME/.local/bin}/vergectl" && "${XDG_BIN_HOME:-$HOME/.local/bin}/vergectl" skill install && open "/Applications/Clash Verge.app"
+```
+
 #### 我应当怎样选择发行版
 
 | 版本        | 特征                                     | 链接                                                                                   |
