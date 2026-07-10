@@ -8,15 +8,20 @@ use std::iter;
 use std::{fs, path::PathBuf};
 use tauri::Manager as _;
 
-#[cfg(not(feature = "verge-dev"))]
+#[cfg(all(not(feature = "verge-dev"), not(feature = "safe-dev")))]
 pub static APP_ID: &str = "io.github.clash-verge-rev.clash-verge-rev";
-#[cfg(not(feature = "verge-dev"))]
+#[cfg(all(not(feature = "verge-dev"), not(feature = "safe-dev")))]
 pub static BACKUP_DIR: &str = "clash-verge-rev-backup";
 
-#[cfg(feature = "verge-dev")]
+#[cfg(all(feature = "verge-dev", not(feature = "safe-dev")))]
 pub static APP_ID: &str = "io.github.clash-verge-rev.clash-verge-rev.dev";
-#[cfg(feature = "verge-dev")]
+#[cfg(all(feature = "verge-dev", not(feature = "safe-dev")))]
 pub static BACKUP_DIR: &str = "clash-verge-rev-backup-dev";
+
+#[cfg(feature = "safe-dev")]
+pub static APP_ID: &str = "io.github.clash-verge-rev.clash-verge-rev.safe-dev";
+#[cfg(feature = "safe-dev")]
+pub static BACKUP_DIR: &str = "clash-verge-rev-backup-safe-dev";
 
 pub static PORTABLE_FLAG: OnceCell<bool> = OnceCell::new();
 
@@ -221,19 +226,28 @@ pub fn ensure_mihomo_safe_dir() -> Option<PathBuf> {
 
 #[cfg(unix)]
 pub fn ipc_path() -> Result<PathBuf> {
+    let namespace = if crate::utils::dev_mode::is_safe_dev() {
+        "verge-safe-dev"
+    } else {
+        "verge"
+    };
     ensure_mihomo_safe_dir()
-        .map(|base_dir| base_dir.join("verge").join("verge-mihomo.sock"))
+        .map(|base_dir| base_dir.join(namespace).join("verge-mihomo.sock"))
         .or_else(|| {
             app_home_dir()
                 .ok()
-                .map(|dir| dir.join("verge").join("verge-mihomo.sock"))
+                .map(|dir| dir.join(namespace).join("verge-mihomo.sock"))
         })
         .ok_or_else(|| anyhow::anyhow!("Failed to determine ipc path"))
 }
 
 #[cfg(target_os = "windows")]
 pub fn ipc_path() -> Result<PathBuf> {
-    Ok(PathBuf::from(r"\\.\pipe\verge-mihomo"))
+    if crate::utils::dev_mode::is_safe_dev() {
+        Ok(PathBuf::from(r"\\.\pipe\verge-mihomo-safe-dev"))
+    } else {
+        Ok(PathBuf::from(r"\\.\pipe\verge-mihomo"))
+    }
 }
 #[async_trait]
 pub trait PathBufExec {
@@ -248,5 +262,25 @@ impl PathBufExec for PathBuf {
             logging!(info, Type::File, "Removed file: {:?}", self);
         }
         Ok(())
+    }
+}
+
+#[cfg(all(test, feature = "safe-dev"))]
+mod safe_dev_tests {
+    use super::{APP_ID, BACKUP_DIR, ipc_path};
+
+    #[test]
+    fn safe_dev_uses_dedicated_storage_names() {
+        assert_eq!(APP_ID, "io.github.clash-verge-rev.clash-verge-rev.safe-dev");
+        assert_eq!(BACKUP_DIR, "clash-verge-rev-backup-safe-dev");
+    }
+
+    #[test]
+    fn safe_dev_never_uses_the_production_mihomo_ipc_name() {
+        let path = ipc_path().expect("safe-dev IPC path should resolve");
+        assert!(
+            path.to_string_lossy().contains("safe-dev"),
+            "unexpected safe-dev IPC path: {path:?}"
+        );
     }
 }

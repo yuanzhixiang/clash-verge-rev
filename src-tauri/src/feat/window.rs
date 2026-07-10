@@ -1,8 +1,8 @@
 use crate::config::Config;
 use crate::core::{CoreManager, handle, sysopt};
 use crate::module::lightweight;
-use crate::utils;
 use crate::utils::window_manager::WindowManager;
+use crate::utils::{self, dev_mode};
 use clash_verge_logging::{Type, logging};
 use tokio::time::{Duration, timeout};
 
@@ -17,6 +17,17 @@ pub async fn open_or_close_dashboard() {
 }
 
 pub async fn quit() {
+    if dev_mode::is_safe_dev() {
+        logging!(
+            info,
+            Type::System,
+            "safe-dev exits without saving configuration or cleaning network state"
+        );
+        handle::Handle::global().set_is_exiting();
+        handle::Handle::app_handle().exit(0);
+        return;
+    }
+
     logging!(debug, Type::System, "启动退出流程");
     // 设置退出标志
     handle::Handle::global().set_is_exiting();
@@ -39,6 +50,15 @@ pub async fn quit() {
 }
 
 pub async fn clean_async() -> bool {
+    if dev_mode::is_safe_dev() {
+        logging!(
+            info,
+            Type::System,
+            "safe-dev cleanup skipped all core and network operations"
+        );
+        return true;
+    }
+
     logging!(info, Type::System, "开始执行异步清理操作...");
 
     // 重置系统代理

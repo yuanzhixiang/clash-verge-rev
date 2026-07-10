@@ -4,8 +4,9 @@
   "license": "GPL-3.0-only",
   "scripts": {
     "prepare": "husky || true",
-    "dev": "cross-env RUST_BACKTRACE=full tauri dev -f verge-dev",
-    "dev:diff": "cross-env RUST_BACKTRACE=full tauri dev -f verge-dev",
+    "dev": "node scripts/dev-safe.mjs",
+    "dev:diff": "pnpm dev",
+    "dev:unsafe": "cross-env RUST_BACKTRACE=full tauri dev -f verge-dev",
     "dev:trace": "cross-env RUST_BACKTRACE=full RUSTFLAGS=\"--cfg tokio_unstable\" tauri dev -f verge-dev tokio-trace",
     "dev:tauri": "cross-env RUST_BACKTRACE=full tauri dev -f tauri-dev",
     "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096' tauri build",

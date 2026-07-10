@@ -11,6 +11,7 @@ mod module;
 mod process;
 pub mod utils;
 
+#[cfg(not(feature = "safe-dev"))]
 use crate::constants::files;
 use crate::{
     core::handle,
@@ -21,9 +22,11 @@ use anyhow::Result;
 use clash_verge_logging::{Type, logging};
 use once_cell::sync::OnceCell;
 use tauri::{AppHandle, Manager as _};
-#[cfg(target_os = "macos")]
+#[cfg(all(target_os = "macos", not(feature = "safe-dev")))]
 use tauri_plugin_autostart::MacosLauncher;
+#[cfg(not(feature = "safe-dev"))]
 use tauri_plugin_deep_link::DeepLinkExt as _;
+#[cfg(not(feature = "safe-dev"))]
 use tauri_plugin_mihomo::RejectPolicy;
 
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
@@ -40,7 +43,14 @@ mod app_init {
         })
     }
 
-    /// Setup plugins for the Tauri builder
+    /// Safe development only needs Tauri's built-in window/event support.
+    #[cfg(feature = "safe-dev")]
+    pub fn setup_plugins(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
+        builder
+    }
+
+    /// Setup plugins for the full application.
+    #[cfg(not(feature = "safe-dev"))]
     pub fn setup_plugins(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
         #[allow(unused_mut)]
         let mut builder = builder
@@ -81,6 +91,7 @@ mod app_init {
     }
 
     /// Setup deep link handling
+    #[cfg(not(feature = "safe-dev"))]
     pub fn setup_deep_links(app: &tauri::App) {
         #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
         {
@@ -101,6 +112,7 @@ mod app_init {
     }
 
     /// Setup autostart plugin
+    #[cfg(not(feature = "safe-dev"))]
     pub fn setup_autostart(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         #[cfg(target_os = "macos")]
         let mut auto_start_plugin_builder = tauri_plugin_autostart::Builder::new();
@@ -120,14 +132,24 @@ mod app_init {
     /// Setup window state management
     pub fn setup_window_state(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         logging!(info, Type::Setup, "初始化窗口状态管理...");
+        #[cfg(feature = "safe-dev")]
+        let filename = "window_state.safe-dev.json";
+        #[cfg(not(feature = "safe-dev"))]
+        let filename = files::WINDOW_STATE;
         let window_state_plugin = tauri_plugin_window_state::Builder::new()
-            .with_filename(files::WINDOW_STATE)
+            .with_filename(filename)
             .with_state_flags(tauri_plugin_window_state::StateFlags::default())
             .build();
         app.handle().plugin(window_state_plugin)?;
         Ok(())
     }
 
+    #[cfg(feature = "safe-dev")]
+    pub fn generate_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
+        |_invoke: tauri::ipc::Invoke<tauri::Wry>| false
+    }
+
+    #[cfg(not(feature = "safe-dev"))]
     pub fn generate_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
         tauri::generate_handler![
             tauri_plugin_clash_verge_sysinfo::commands::get_system_info,
@@ -222,7 +244,7 @@ mod app_init {
 }
 
 pub fn run() {
-    if app_init::init_singleton_check().is_err() {
+    if !utils::dev_mode::is_safe_dev() && app_init::init_singleton_check().is_err() {
         return;
     }
 
@@ -265,11 +287,14 @@ pub fn run() {
                 }
 
                 logging!(info, Type::Setup, "开始应用初始化...");
-                if let Err(e) = app_init::setup_autostart(app) {
-                    logging!(error, Type::Setup, "Failed to setup autostart: {}", e);
-                }
+                #[cfg(not(feature = "safe-dev"))]
+                {
+                    if let Err(e) = app_init::setup_autostart(app) {
+                        logging!(error, Type::Setup, "Failed to setup autostart: {}", e);
+                    }
 
-                app_init::setup_deep_links(app);
+                    app_init::setup_deep_links(app);
+                }
 
                 if let Err(e) = app_init::setup_window_state(app) {
                     logging!(error, Type::Setup, "Failed to setup window state: {}", e);
@@ -282,6 +307,7 @@ pub fn run() {
             if let Err(panic) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 resolve::resolve_setup_async();
                 resolve::resolve_setup_sync();
+                #[cfg(not(feature = "safe-dev"))]
                 resolve::init_signal();
                 logging!(info, Type::Setup, "初始化已启动");
             })) {
@@ -295,13 +321,13 @@ pub fn run() {
     // macOS 内存压力下 WKWebView 渲染进程可能被系统终止（表现为白屏），
     // 注册恢复钩子：清理孤儿 WebSocket 订阅防止内存泄漏；窗口可见时立即 reload
     // 恢复页面，不可见时延迟到用户下次打开窗口再 reload。
-    #[cfg(target_os = "macos")]
+    #[cfg(all(target_os = "macos", not(feature = "safe-dev")))]
     let builder = builder.on_web_content_process_terminate(resolve::window::on_web_content_process_terminated);
 
     mod event_handlers {
-        #[cfg(target_os = "macos")]
+        #[cfg(all(target_os = "macos", not(feature = "safe-dev")))]
         use crate::module::lightweight;
-        use crate::utils::window_manager::WindowManager;
+        use crate::utils::{dev_mode, window_manager::WindowManager};
         use crate::{
             config::Config,
             core::{self, handle, hotkey},
@@ -328,9 +354,12 @@ pub fn run() {
 
         #[cfg(target_os = "macos")]
         pub async fn handle_reopen(has_visible_windows: bool) {
-            if lightweight::is_in_lightweight_mode() {
-                lightweight::exit_lightweight_mode().await;
-                return;
+            #[cfg(not(feature = "safe-dev"))]
+            {
+                if lightweight::is_in_lightweight_mode() {
+                    lightweight::exit_lightweight_mode().await;
+                    return;
+                }
             }
 
             if !has_visible_windows {
@@ -340,6 +369,10 @@ pub fn run() {
         }
 
         pub fn handle_window_close(api: &tauri::WindowEvent) {
+            if dev_mode::is_safe_dev() {
+                return;
+            }
+
             #[cfg(target_os = "macos")]
             handle::Handle::global().set_activation_policy_accessory();
 
@@ -356,6 +389,10 @@ pub fn run() {
         }
 
         pub fn handle_window_focus(focused: bool) {
+            if dev_mode::is_safe_dev() {
+                return;
+            }
+
             AsyncHandler::spawn(move || async move {
                 let is_enable_global_hotkey = Config::verge().await.data_arc().enable_global_hotkey.unwrap_or(true);
 
@@ -391,6 +428,10 @@ pub fn run() {
 
         #[cfg(target_os = "macos")]
         pub fn handle_window_destroyed() {
+            if dev_mode::is_safe_dev() {
+                return;
+            }
+
             use crate::core::hotkey::SystemHotkey;
             AsyncHandler::spawn(move || async move {
                 let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
@@ -435,16 +476,31 @@ pub fn run() {
                 event_handlers::handle_reopen(has_visible_windows).await;
             });
         }
-        tauri::RunEvent::Exit => AsyncHandler::block_on(async {
-            // Windows session ending currently reaches Tao as WM_ENDSESSION and
-            // destroys the loop without a preventable ExitRequested event.
-            if !handle::Handle::global().is_exiting() {
-                feat::quit().await;
+        tauri::RunEvent::Exit => {
+            if utils::dev_mode::is_safe_dev() {
+                logging!(
+                    info,
+                    Type::System,
+                    "safe-dev application exited without operational cleanup"
+                );
+                return;
             }
-            logging!(info, Type::System, "Application exited");
-        }),
+
+            AsyncHandler::block_on(async {
+                // Windows session ending currently reaches Tao as WM_ENDSESSION and
+                // destroys the loop without a preventable ExitRequested event.
+                if !handle::Handle::global().is_exiting() {
+                    feat::quit().await;
+                }
+                logging!(info, Type::System, "Application exited");
+            });
+        }
         #[allow(unused_variables)]
         tauri::RunEvent::ExitRequested { api, code, .. } => {
+            if utils::dev_mode::is_safe_dev() {
+                return;
+            }
+
             if module::lightweight::is_in_lightweight_mode() && !handle::Handle::global().is_exiting() {
                 api.prevent_exit();
             } else if code.is_none() {
@@ -462,7 +518,7 @@ pub fn run() {
             }
             tauri::WindowEvent::Focused(focused) => {
                 // 兜底：原生取消最小化只触发 Focused、不走 activate_window（macOS）
-                #[cfg(target_os = "macos")]
+                #[cfg(all(target_os = "macos", not(feature = "safe-dev")))]
                 if focused {
                     crate::utils::resolve::window::reload_main_window_if_needed();
                 }

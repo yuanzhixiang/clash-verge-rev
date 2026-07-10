@@ -1,12 +1,20 @@
-import type { InvokeArgs } from '@tauri-apps/api/core'
+import type { InvokeArgs, InvokeOptions } from '@tauri-apps/api/core'
 import { mockConvertFileSrc, mockIPC, mockWindows } from '@tauri-apps/api/mocks'
+
+import { isReadOnlyCliPayload, safeDevReadOnlyError } from './remote-read-only'
 
 type InvokePayload = Record<string, unknown>
 type CliPayload = Record<string, unknown>
 type CliResponse<T> = { ok: boolean; data?: T; error?: string }
 type MockChannel = { onmessage?: (message: unknown) => void }
+type NativeInvoke = <T>(
+  cmd: string,
+  args?: InvokeArgs,
+  options?: InvokeOptions,
+) => Promise<T>
 type TauriInternals = {
   plugins?: { path?: { sep: string; delimiter: string } }
+  invoke?: NativeInvoke
 }
 type HttpRequest = {
   method?: string
@@ -16,6 +24,9 @@ type HttpRequest = {
 }
 
 const WS_INTERVAL_MS = 500
+const SAFE_TAURI = import.meta.env.VITE_VERGE_SAFE_TAURI === '1'
+const READ_ONLY =
+  SAFE_TAURI || import.meta.env.VITE_VERGE_REMOTE_READ_ONLY === '1'
 const wsCleanups = new Map<number, () => void>()
 let nextWsId = 1
 let nextResourceId = 1
@@ -42,14 +53,21 @@ const tauriInternals = () =>
     .__TAURI_INTERNALS__
 
 const cli = async <T = unknown>(payload: CliPayload): Promise<T> => {
+  if (READ_ONLY && !isReadOnlyCliPayload(payload)) {
+    throw safeDevReadOnlyError(
+      `CLI request: ${String(payload.cmd ?? 'unknown')}/${String(payload.action ?? '')}`,
+    )
+  }
+
   const response = await fetch('/__verge/cli', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
-  if (!response.ok) throw new Error(`remote app bridge HTTP ${response.status}`)
-
   const result = (await response.json()) as CliResponse<T>
+  if (!response.ok) {
+    throw new Error(result.error || `remote app bridge HTTP ${response.status}`)
+  }
   if (!result.ok) throw new Error(result.error || 'remote app bridge failed')
   return result.data as T
 }
@@ -299,6 +317,123 @@ const handleHttp = async (cmd: string, args: InvokePayload) => {
     default:
       throw new Error(`unsupported remote HTTP command: ${cmd}`)
   }
+}
+
+const READ_ONLY_HTTP_COMMANDS = new Set([
+  'plugin:http|fetch',
+  'plugin:http|fetch_send',
+  'plugin:http|fetch_read_body',
+  'plugin:http|fetch_cancel',
+  'plugin:http|fetch_cancel_body',
+])
+
+const READ_ONLY_PATH_COMMANDS = new Set([
+  'plugin:path|join',
+  'plugin:path|resolve',
+  'plugin:path|normalize',
+  'plugin:path|dirname',
+  'plugin:path|basename',
+  'plugin:path|extname',
+  'plugin:path|is_absolute',
+  'plugin:path|resolve_directory',
+])
+
+const READ_ONLY_UTILITY_COMMANDS = new Set([
+  'plugin:clipboard-manager|read_text',
+  'plugin:dialog|message',
+  'plugin:fs|exists',
+  'plugin:fs|read_text_file',
+  'plugin:fs|read_file',
+])
+
+const READ_ONLY_MIHOMO_COMMANDS = new Set([
+  'plugin:mihomo|get_version',
+  'plugin:mihomo|get_connections',
+  'plugin:mihomo|get_groups',
+  'plugin:mihomo|get_group_by_name',
+  'plugin:mihomo|get_proxies',
+  'plugin:mihomo|get_proxy_by_name',
+  'plugin:mihomo|get_proxy_providers',
+  'plugin:mihomo|get_proxy_provider_by_name',
+  'plugin:mihomo|get_rules',
+  'plugin:mihomo|get_rule_providers',
+  'plugin:mihomo|get_base_config',
+  'plugin:mihomo|ws_connections',
+  'plugin:mihomo|ws_traffic',
+  'plugin:mihomo|ws_memory',
+  'plugin:mihomo|ws_logs',
+  'plugin:mihomo|ws_disconnect',
+  'plugin:mihomo|clear_all_ws_connections',
+])
+
+const READ_ONLY_APP_PLUGIN_COMMANDS = new Set([
+  'plugin:app|name',
+  'plugin:app|version',
+  'plugin:app|identifier',
+  'plugin:app|tauri_version',
+])
+
+const READ_ONLY_APP_COMMANDS = new Set([
+  'get_verge_config',
+  'get_profiles',
+  'read_profile_file',
+  'get_next_update_time',
+  'get_clash_info',
+  'get_clash_mode',
+  'check_dns_config_exists',
+  'get_dns_config_content',
+  'validate_dns_config',
+  'get_runtime_config',
+  'get_runtime_yaml',
+  'get_runtime_exists',
+  'get_runtime_logs',
+  'get_runtime_proxy_chain_config',
+  'get_clash_logs',
+  'get_sys_proxy',
+  'get_auto_proxy',
+  'get_auto_launch_status',
+  'get_network_interfaces',
+  'get_network_interfaces_info',
+  'get_system_hostname',
+  'is_service_available',
+  'is_port_in_use',
+  'get_running_mode',
+  'get_app_dir',
+  'get_cli_install_status',
+  'get_system_info',
+  'list_local_backup',
+  'list_webdav_backup',
+  'get_unlock_items',
+  'app_is_admin',
+  'get_app_uptime',
+  'get_portable_flag',
+])
+
+const assertReadOnlyCommand = (cmd: string, args: InvokePayload) => {
+  if (!READ_ONLY) return
+
+  if (READ_ONLY_HTTP_COMMANDS.has(cmd)) {
+    if (cmd === 'plugin:http|fetch') {
+      const clientConfig = recordOf(args.clientConfig) as HttpRequest
+      const method = String(clientConfig.method || 'GET').toUpperCase()
+      if (method !== 'GET' && method !== 'HEAD') {
+        throw safeDevReadOnlyError(`${cmd} ${method}`)
+      }
+    }
+    return
+  }
+
+  if (
+    READ_ONLY_PATH_COMMANDS.has(cmd) ||
+    READ_ONLY_UTILITY_COMMANDS.has(cmd) ||
+    READ_ONLY_MIHOMO_COMMANDS.has(cmd) ||
+    READ_ONLY_APP_PLUGIN_COMMANDS.has(cmd) ||
+    READ_ONLY_APP_COMMANDS.has(cmd)
+  ) {
+    return
+  }
+
+  throw safeDevReadOnlyError(`command: ${cmd}`)
 }
 
 const handlePath = async (
@@ -562,6 +697,8 @@ const handleApp = async (cmd: string) => {
 }
 
 const handleCommand = async (cmd: string, args: InvokePayload) => {
+  assertReadOnlyCommand(cmd, args)
+
   if (cmd.startsWith('plugin:http|')) return handleHttp(cmd, args)
   if (cmd.startsWith('plugin:path|')) return handlePath(cmd, args)
   if (
@@ -932,6 +1069,28 @@ export const setupRemoteTauriBridge = () => {
   if (bridgeInstalled) return
   bridgeInstalled = true
 
+  const internals = tauriInternals()
+
+  if (SAFE_TAURI) {
+    const nativeInvoke = internals.invoke?.bind(internals)
+    if (!nativeInvoke) {
+      throw new Error('[Safe Dev] native Tauri invoke is unavailable')
+    }
+
+    internals.invoke = <T>(
+      cmd: string,
+      args?: InvokeArgs,
+      options?: InvokeOptions,
+    ) => {
+      if (cmd.startsWith('plugin:window|') || cmd.startsWith('plugin:event|')) {
+        return nativeInvoke<T>(cmd, args, options)
+      }
+      return handleCommand(cmd, payloadOf(args)) as Promise<T>
+    }
+    window.addEventListener('beforeunload', closeAllSockets)
+    return
+  }
+
   mockWindows('main')
   mockConvertFileSrc(
     OS_PLATFORM === 'win32'
@@ -940,7 +1099,6 @@ export const setupRemoteTauriBridge = () => {
         ? 'macos'
         : 'linux',
   )
-  const internals = tauriInternals()
   internals.plugins = {
     ...internals.plugins,
     path: {

@@ -3,12 +3,17 @@ import {
   getCurrentWebviewWindow,
   WebviewWindow,
 } from '@tauri-apps/api/webviewWindow'
-import { Theme as TauriOsTheme } from '@tauri-apps/api/window'
+import {
+  getCurrentWindow,
+  Theme as TauriOsTheme,
+} from '@tauri-apps/api/window'
 import { useEffect, useMemo } from 'react'
 
 import { useVerge } from '@/hooks/use-verge'
 import { defaultDarkTheme, defaultTheme } from '@/pages/_theme'
 import { useSetThemeMode, useThemeMode } from '@/services/states'
+import getSystem from '@/utils/get-system'
+import { getShellCanvasColor } from '@/utils/shell-theme'
 
 const CSS_INJECTION_SCOPE_ROOT = '[data-css-injection-root]'
 const CSS_INJECTION_SCOPE_LIMIT =
@@ -26,6 +31,7 @@ const TOP_LEVEL_AT_RULES = [
   '@color-profile',
 ]
 let cssScopeSupport: boolean | null = null
+const OS = getSystem()
 
 const canUseCssScope = () => {
   if (cssScopeSupport !== null) {
@@ -67,6 +73,7 @@ ${css}
  */
 export const useCustomTheme = () => {
   const appWindow: WebviewWindow = useMemo(() => getCurrentWebviewWindow(), [])
+  const nativeWindow = useMemo(() => getCurrentWindow(), [])
   const { verge } = useVerge()
   const { theme_mode, theme_setting } = verge ?? {}
   const mode = useThemeMode()
@@ -140,6 +147,16 @@ export const useCustomTheme = () => {
       })
     }
   }, [mode, appWindow, theme_mode])
+
+  useEffect(() => {
+    if (OS !== 'macos') {
+      return
+    }
+
+    nativeWindow.setBackgroundColor(getShellCanvasColor(mode)).catch((err) => {
+      console.error('Failed to sync the macOS window background color:', err)
+    })
+  }, [mode, nativeWindow])
 
   const theme = useMemo(() => {
     const setting = theme_setting || {}

@@ -9,10 +9,10 @@ use clash_verge_logging::{Type, logging_error};
 #[cfg(target_os = "macos")]
 use clash_verge_logging::logging;
 
-const DARK_BACKGROUND_COLOR: Color = Color(46, 48, 61, 255); // #2E303D
-const LIGHT_BACKGROUND_COLOR: Color = Color(245, 245, 245, 255); // #F5F5F5
-const DARK_BACKGROUND_HEX: &str = "#2E303D";
-const LIGHT_BACKGROUND_HEX: &str = "#F5F5F5";
+const DARK_BACKGROUND_COLOR: Color = Color(21, 22, 25, 255); // #151619
+const LIGHT_BACKGROUND_COLOR: Color = Color(237, 242, 247, 255); // #EDF2F7
+const DARK_BACKGROUND_HEX: &str = "#151619";
+const LIGHT_BACKGROUND_HEX: &str = "#EDF2F7";
 
 // 定义默认窗口尺寸常量
 const DEFAULT_WIDTH: f64 = 940.0;
@@ -104,6 +104,11 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
 
     if let Some(theme) = resolved_theme {
         builder = builder.theme(Some(theme));
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder.title_bar_style(tauri::TitleBarStyle::Overlay);
     }
 
     builder = builder.background_color(background_color);

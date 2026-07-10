@@ -3,11 +3,19 @@ import type { Palette } from '@mui/material/styles'
 
 export type ShellThemeVars = Record<`--shell-${string}`, string>
 
+export const SHELL_CANVAS_COLORS = {
+  light: '#edf2f7',
+  dark: '#151619',
+} as const
+
+export const getShellCanvasColor = (mode: Palette['mode']) =>
+  SHELL_CANVAS_COLORS[mode]
+
 export const getShellThemeVars = (palette: Palette): ShellThemeVars => {
   const isDarkMode = palette.mode === 'dark'
 
   return {
-    '--shell-canvas': isDarkMode ? '#151619' : '#edf2f7',
+    '--shell-canvas': getShellCanvasColor(palette.mode),
     '--shell-sidebar': isDarkMode
       ? 'rgba(21, 22, 25, 0.96)'
       : 'rgba(237, 242, 247, 0.94)',

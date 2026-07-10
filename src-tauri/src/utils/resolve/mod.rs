@@ -16,7 +16,7 @@ use crate::{
     feat,
     module::{auto_backup::AutoBackupManager, lightweight::auto_lightweight_boot},
     process::AsyncHandler,
-    utils::{init, server, window_manager::WindowManager},
+    utils::{dev_mode, init, server, window_manager::WindowManager},
 };
 use clash_verge_logging::{Type, logging, logging_error};
 use clash_verge_signal;
@@ -30,7 +30,9 @@ static RESOLVE_DONE: AtomicBool = AtomicBool::new(false);
 
 pub fn init_work_dir_and_logger() -> anyhow::Result<()> {
     AsyncHandler::block_on(async {
-        init_work_config().await;
+        if !dev_mode::is_safe_dev() {
+            init_work_config().await;
+        }
         logging!(info, Type::Setup, "Initializing logger");
         // #[cfg(not(feature = "tokio-trace"))]
         Logger::global().init().await?;
@@ -39,6 +41,10 @@ pub fn init_work_dir_and_logger() -> anyhow::Result<()> {
 }
 
 pub fn resolve_setup_sync() {
+    if dev_mode::is_safe_dev() {
+        return;
+    }
+
     AsyncHandler::spawn(|| async {
         AsyncHandler::spawn_blocking(init_scheme);
         AsyncHandler::spawn_blocking(init_embed_server);
@@ -46,6 +52,15 @@ pub fn resolve_setup_sync() {
 }
 
 pub fn resolve_setup_async() {
+    if dev_mode::is_safe_dev() {
+        AsyncHandler::spawn(|| async {
+            logging!(info, Type::Setup, "Starting read-only safe development window");
+            WindowManager::create_window(true).await;
+            resolve_done();
+        });
+        return;
+    }
+
     AsyncHandler::spawn(|| async {
         logging!(info, Type::ClashVergeRev, "Version: {}", env!("CARGO_PKG_VERSION"));
 
@@ -87,6 +102,10 @@ pub fn resolve_setup_async() {
 }
 
 pub async fn resolve_reset_async() -> Result<(), anyhow::Error> {
+    if dev_mode::is_safe_dev() {
+        return Ok(());
+    }
+
     sysopt::Sysopt::global().reset_sysproxy().await?;
     CoreManager::global().stop_core().await?;
 
@@ -165,6 +184,10 @@ async fn init_silent_updater() {
 }
 
 pub fn init_signal() {
+    if dev_mode::is_safe_dev() {
+        return;
+    }
+
     logging!(info, Type::Setup, "Initializing signal handlers...");
     clash_verge_signal::register(feat::quit);
 }

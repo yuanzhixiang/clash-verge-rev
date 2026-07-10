@@ -6,6 +6,17 @@
   overflow: hidden;
   background: var(--shell-canvas);
 
+  .macos-titlebar-spacer {
+    flex: 0 0 28px;
+    width: 100%;
+    height: 28px;
+    min-height: 28px;
+    box-sizing: border-box;
+    background: var(--shell-canvas);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
   .layout-content {
     display: flex;
     flex: 1;

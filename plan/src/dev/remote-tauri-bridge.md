@@ -2,19 +2,30 @@
 
 ## 功能定位
 
-`remote-tauri-bridge` 只用于浏览器里的前端开发模式，让 `pnpm web:remote` 连接已经运行的本机 Clash Verge App。
+`remote-tauri-bridge` 用于浏览器远程模式，以及 `pnpm dev` 的真实 Tauri 安全只读模式，让开发前端连接已经运行的本机正式 Clash Verge App。
 
 ## 数据流
 
-- 前端用 Tauri 官方 `mockIPC` 拦截 `invoke`。
+- 普通浏览器远程模式用 Tauri 官方 `mockIPC` 拦截 `invoke`。
 - `main.tsx` 在 preload 前动态安装 bridge；被静态导入的页面/组件不能在模块顶层调用 Tauri window APIs，否则浏览器 dev 模式会早于 mock setup 执行。
 - mock 命令通过 Vite 代理访问 `/__verge/cli`。
 - Vite 代理转发到已运行 App 的 `127.0.0.1:33331/commands/cli`。
 - Connections、Traffic、Logs 的 WebSocket 命令用轮询 CLI bridge 模拟，避免启动第二个 Tauri 后端。
 - 常用 Tauri 插件命令提供浏览器内轻量 mock，例如 window、path、clipboard、dialog、shell、fs、process、http。
+- 安全 Tauri 模式不安装 `mockIPC`，而是在保留其它 Tauri internals 的前提下包装原生 invoke；只把 Window 与 Event 命令委托回当前开发窗口，保留真实标题栏、窗口控制、尺寸、主题与拖拽行为。
+
+## 只读策略
+
+- `VITE_VERGE_REMOTE_READ_ONLY=1` 时使用默认拒绝白名单；只有配置与状态读取、Profiles/Rules/Connections/Logs 查询及轮询可以访问正式 App CLI。
+- 代理选择、连接关闭、规则与 Profile 编辑、配置 patch、核心/服务控制、Provider 更新、备份写入及系统代理/TUN 操作必须在发出 HTTP 请求前拒绝。
+- 只读约束在 invoke 命令和 CLI payload 两层执行；Vite 的 `/__verge/cli` relay 还会在服务端重复校验，页面不能通过直接 POST 绕过前端 bridge。
+- 安全模式中的 HTTP 插件只允许 `GET` 与 `HEAD`，其它方法在创建请求前拒绝。
+- 本地开发窗口的 Window/Event 命令不属于正式 App 写操作，可以原生执行。
+- 被阻止的命令返回包含命令名的 Safe Dev 只读错误，不模拟成功，也不改变正式 App。
 
 ## 限制
 
 - 这是 dev-only 能力，不参与生产运行。
-- 只保证常用页面读数据和少量可逆操作；窗口控制、打开目录、退出 App 等命令在浏览器里是 no-op。
+- 浏览器 `web:remote` 未显式启用只读变量时保持现有行为；严格只读只作为默认 `pnpm dev` 的安全边界。
+- 浏览器模式的窗口控制仍为 no-op；安全 Tauri 模式使用真实本地窗口命令。
 - 未映射命令必须抛错，方便开发时发现缺口。

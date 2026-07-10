@@ -46,7 +46,7 @@ import { useVisibility } from '@/hooks/use-visibility'
 import { useWindowDecorations } from '@/hooks/use-window'
 import { useThemeMode } from '@/services/states'
 import getSystem from '@/utils/get-system'
-import { getShellThemeVars } from '@/utils/shell-theme'
+import { getShellCanvasColor, getShellThemeVars } from '@/utils/shell-theme'
 
 import {
   useCustomTheme,
@@ -271,7 +271,7 @@ const Layout = () => {
         style={{
           width: '100vw',
           height: '100vh',
-          background: mode === 'light' ? '#fff' : '#181a1b',
+          background: getShellCanvasColor(mode),
           transition: 'background 0.2s',
           display: 'flex',
           alignItems: 'center',
@@ -339,6 +339,14 @@ const Layout = () => {
 
         {/* Custom titlebar - rendered only when decorated is false, memoized for performance */}
         {customTitlebar}
+
+        {OS === 'macos' && decorated !== false && (
+          <div
+            aria-hidden="true"
+            className="macos-titlebar-spacer"
+            data-tauri-drag-region="true"
+          />
+        )}
 
         <div className="layout-content">
           <div className="layout-content__left">

@@ -1,6 +1,7 @@
 pub mod cli;
 #[cfg(target_os = "macos")]
 pub mod connections_stream;
+pub mod dev_mode;
 pub mod dirs;
 pub mod help;
 pub mod init;
