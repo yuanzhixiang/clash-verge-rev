@@ -1,9 +1,17 @@
 import { ClearRounded } from '@mui/icons-material'
-import { Box, SvgIcon, TextField, styled, IconButton } from '@mui/material'
+import {
+  Box,
+  TextField,
+  styled,
+  IconButton,
+  type SxProps,
+  type Theme,
+} from '@mui/material'
 import Tooltip from '@mui/material/Tooltip'
 import {
   type ChangeEvent,
   type MouseEvent,
+  type ReactNode,
   useCallback,
   useEffect,
   useMemo,
@@ -12,8 +20,8 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import matchCaseIcon from '@/assets/image/component/match_case.svg?react'
-import matchWholeWordIcon from '@/assets/image/component/match_whole_word.svg?react'
+import MatchCaseIcon from '@/assets/image/component/match_case.svg?react'
+import MatchWholeWordIcon from '@/assets/image/component/match_whole_word.svg?react'
 import UseRegularExpressionIcon from '@/assets/image/component/use_regular_expression.svg?react'
 import { buildRegex, compileStringMatcher } from '@/utils/search-matcher'
 
@@ -35,6 +43,8 @@ type SearchProps = {
   matchWholeWord?: boolean
   useRegularExpression?: boolean
   searchState?: Partial<SearchOptionState>
+  startAdornment?: ReactNode
+  sx?: SxProps<Theme>
   onSearch: (match: (content: string) => boolean, state: SearchState) => void
   onClick?: (e: MouseEvent<HTMLDivElement>) => void
 }
@@ -43,6 +53,9 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
   '& .MuiInputBase-root': {
     background: theme.palette.mode === 'light' ? '#fff' : undefined,
     paddingRight: '4px',
+  },
+  '& .MuiInputBase-input': {
+    padding: '5.2px 10px',
   },
   "& .MuiInputBase-root svg[aria-label='active'] path": {
     fill: theme.palette.primary.light,
@@ -81,6 +94,8 @@ export const BaseSearchBox = ({
   matchCase: defaultMatchCase = false,
   matchWholeWord: defaultMatchWholeWord = false,
   useRegularExpression: defaultUseRegularExpression = false,
+  startAdornment,
+  sx,
   onSearch,
   onClick,
 }: SearchProps) => {
@@ -110,13 +125,10 @@ export const BaseSearchBox = ({
     })
 
   const iconStyle = {
-    style: {
-      height: '24px',
-      width: '24px',
-      cursor: 'pointer',
-    } as React.CSSProperties,
-    inheritViewBox: true,
-  }
+    height: '24px',
+    width: '24px',
+    cursor: 'pointer',
+  } as React.CSSProperties
 
   useEffect(() => {
     onSearchRef.current = onSearch
@@ -200,7 +212,7 @@ export const BaseSearchBox = ({
         autoFocus={autoFocus}
         spellCheck="false"
         placeholder={placeholder ?? t('shared.placeholders.filter')}
-        sx={{ input: { py: 0.65, px: 1.25 } }}
+        sx={sx}
         value={text}
         onClick={onClick}
         onChange={handleChangeText}
@@ -208,13 +220,27 @@ export const BaseSearchBox = ({
         slotProps={{
           input: {
             sx: { pr: 1 },
+            startAdornment: startAdornment ? (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  flex: '0 0 auto',
+                  ml: 0.25,
+                  mr: 0.25,
+                  color: 'text.secondary',
+                }}
+              >
+                {startAdornment}
+              </Box>
+            ) : undefined,
             endAdornment: (
               <Box sx={{ display: 'flex' }}>
                 {!!text && (
                   <Tooltip title={t('shared.placeholders.resetInput')}>
                     <IconButton
                       size="small"
-                      {...iconStyle}
+                      style={iconStyle}
                       onClick={handleClearInput}
                     >
                       <ClearRounded fontSize="inherit" />
@@ -222,26 +248,23 @@ export const BaseSearchBox = ({
                   </Tooltip>
                 )}
                 <Tooltip title={t('shared.placeholders.matchCase')}>
-                  <SvgIcon
-                    component={matchCaseIcon}
-                    {...iconStyle}
+                  <MatchCaseIcon
+                    style={iconStyle}
                     aria-label={matchCase ? 'active' : 'inactive'}
                     onClick={handleToggleMatchCase}
                   />
                 </Tooltip>
                 <Tooltip title={t('shared.placeholders.matchWholeWord')}>
-                  <SvgIcon
-                    component={matchWholeWordIcon}
-                    {...iconStyle}
+                  <MatchWholeWordIcon
+                    style={iconStyle}
                     aria-label={matchWholeWord ? 'active' : 'inactive'}
                     onClick={handleToggleMatchWholeWord}
                   />
                 </Tooltip>
                 <Tooltip title={t('shared.placeholders.useRegex')}>
-                  <SvgIcon
-                    component={UseRegularExpressionIcon}
+                  <UseRegularExpressionIcon
                     aria-label={useRegularExpression ? 'active' : 'inactive'}
-                    {...iconStyle}
+                    style={iconStyle}
                     onClick={handleToggleUseRegularExpression}
                   />
                 </Tooltip>

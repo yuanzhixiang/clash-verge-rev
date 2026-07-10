@@ -12,15 +12,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import {
-  Box,
-  List,
-  Menu,
-  MenuItem,
-  Paper,
-  SvgIcon,
-  ThemeProvider,
-} from '@mui/material'
+import { Box, List, Menu, MenuItem, Paper, ThemeProvider } from '@mui/material'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import type { CSSProperties } from 'react'
@@ -54,6 +46,7 @@ import { useVisibility } from '@/hooks/use-visibility'
 import { useWindowDecorations } from '@/hooks/use-window'
 import { useThemeMode } from '@/services/states'
 import getSystem from '@/utils/get-system'
+import { getShellThemeVars } from '@/utils/shell-theme'
 
 import {
   useCustomTheme,
@@ -126,6 +119,7 @@ const OS = getSystem()
 const Layout = () => {
   const mode = useThemeMode()
   const isDark = mode !== 'light'
+  const AppIcon = isDark ? iconDark : iconLight
   const { t } = useTranslation()
   const { theme } = useCustomTheme()
   const { verge, mutateVerge, patchVerge } = useVerge()
@@ -326,7 +320,12 @@ const Layout = () => {
           }
         }}
         sx={[
-          ({ palette }) => ({ bgcolor: palette.background.paper }),
+          ({ palette }) => {
+            return {
+              ...getShellThemeVars(palette),
+              bgcolor: 'var(--shell-canvas)',
+            }
+          },
           OS === 'linux'
             ? {
                 borderRadius: '8px',
@@ -352,8 +351,8 @@ const Layout = () => {
                   justifyContent: 'space-between',
                 }}
               >
-                <SvgIcon
-                  component={isDark ? iconDark : iconLight}
+                <AppIcon
+                  aria-hidden
                   style={{
                     height: '36px',
                     width: '36px',
@@ -361,7 +360,6 @@ const Layout = () => {
                     marginRight: '5px',
                     marginLeft: '-3px',
                   }}
-                  inheritViewBox
                 />
                 <LogoSvg fill={isDark ? 'white' : 'black'} />
               </div>

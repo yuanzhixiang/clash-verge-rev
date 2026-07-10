@@ -8,6 +8,38 @@
         "update": "Perbarui"
       }
     },
+    "actions": {
+      "add": {
+        "trigger": "Tambah aturan",
+        "title": "Tambah Aturan",
+        "confirm": "Tambah",
+        "position": {
+          "label": "Posisi",
+          "prepend": "Atas",
+          "append": "Bawah"
+        },
+        "validation": {
+          "duplicateRule": "Aturan ini sudah ada"
+        }
+      },
+      "delete": {
+        "trigger": "Hapus aturan",
+        "selectFirst": "Pilih aturan terlebih dahulu",
+        "title": "Hapus Aturan",
+        "description": "Hapus aturan ini dari profil aktif? Berkas langganan tidak akan diubah.",
+        "confirm": "Hapus"
+      },
+      "scrollTop": "Kembali ke atas"
+    },
+    "columns": {
+      "id": "ID",
+      "type": "Tipe",
+      "value": "Nilai",
+      "policy": "Kebijakan",
+      "used": "Digunakan"
+    },
+    "description": "Aturan dievaluasi berdasarkan prioritas, dari atas ke bawah.",
+    "searchPlaceholder": "Cari aturan",
     "title": "Aturan"
   },
   "feedback": {
@@ -18,7 +50,13 @@
         "genericError": "Update failed: {{message}}",
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
-      }
+      },
+      "mutationUnavailable": "Pilih profil aktif sebelum mengedit aturan",
+      "runtimeReadFailed": "Gagal membaca aturan aktif: {{message}}",
+      "saveFailed": "Perubahan aturan tidak dapat disimpan",
+      "mutationNotApplied": "Aturan dibuat oleh Merge atau Script setelahnya. Edit sumber tersebut.",
+      "addSuccess": "Aturan ditambahkan",
+      "deleteSuccess": "Aturan dihapus"
     }
   },
   "modals": {

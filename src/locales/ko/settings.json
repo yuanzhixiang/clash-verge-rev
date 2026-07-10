@@ -184,7 +184,9 @@
         },
         "notifications": {
           "latestVersion": "현재 최신 버전입니다",
-          "versionCopied": "버전이 클립보드에 복사되었습니다"
+          "versionCopied": "버전이 클립보드에 복사되었습니다",
+          "cliInstalled": "CLI installed",
+          "cliUninstalled": "CLI uninstalled"
         },
         "fields": {
           "backupSetting": "백업 설정",
@@ -192,6 +194,10 @@
           "openConfDir": "설정 디렉터리 열기",
           "openCoreDir": "코어 디렉터리 열기",
           "openLogsDir": "로그 디렉터리 열기",
+          "installCli": "Install CLI",
+          "uninstallCli": "Uninstall CLI",
+          "cliInstalledAt": "Installed at",
+          "cliInstallDir": "Install dir",
           "checkUpdates": "업데이트 확인",
           "openDevTools": "개발자 도구",
           "liteModeSettings": "경량 모드 설정",

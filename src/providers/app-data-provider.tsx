@@ -15,6 +15,7 @@ import {
   getSystemProxy,
 } from '@/services/cmds'
 import { revalidateQueries, useQuery } from '@/services/query-client'
+import type { RuntimeRule } from '@/types/rule'
 
 import {
   ClashConfigContext,
@@ -91,7 +92,10 @@ export const AppDataProvider = ({
 
   const { data: rulesData, refetch: _refetchRules } = useQuery({
     queryKey: ['getRules'],
-    queryFn: getRules,
+    queryFn: async () => {
+      const result = await getRules()
+      return { ...result, rules: result.rules as RuntimeRule[] }
+    },
     ...TQ_MIHOMO,
   })
 

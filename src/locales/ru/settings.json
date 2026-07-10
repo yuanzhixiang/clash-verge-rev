@@ -184,7 +184,9 @@
         },
         "notifications": {
           "latestVersion": "Обновление не требуется",
-          "versionCopied": "Версия скопирована в буфер обмена"
+          "versionCopied": "Версия скопирована в буфер обмена",
+          "cliInstalled": "CLI installed",
+          "cliUninstalled": "CLI uninstalled"
         },
         "fields": {
           "backupSetting": "Настройки резервного копирования",
@@ -192,6 +194,10 @@
           "openConfDir": "Открыть папку приложения",
           "openCoreDir": "Открыть папку ядра",
           "openLogsDir": "Открыть папку логов",
+          "installCli": "Install CLI",
+          "uninstallCli": "Uninstall CLI",
+          "cliInstalledAt": "Installed at",
+          "cliInstallDir": "Install dir",
           "checkUpdates": "Проверить обновления",
           "openDevTools": "Открыть инструменты разработчика",
           "liteModeSettings": "Настройки режима LightWeight",

@@ -8,6 +8,38 @@
         "update": "更新"
       }
     },
+    "actions": {
+      "add": {
+        "trigger": "新增規則",
+        "title": "新增規則",
+        "confirm": "新增",
+        "position": {
+          "label": "插入位置",
+          "prepend": "頂部",
+          "append": "底部"
+        },
+        "validation": {
+          "duplicateRule": "這條規則已經存在"
+        }
+      },
+      "delete": {
+        "trigger": "刪除規則",
+        "selectFirst": "請先選擇一條規則",
+        "title": "刪除規則",
+        "description": "從目前設定中刪除這條規則？訂閱來源檔案不會被修改。",
+        "confirm": "刪除"
+      },
+      "scrollTop": "返回頂部"
+    },
+    "columns": {
+      "id": "ID",
+      "type": "類型",
+      "value": "匹配值",
+      "policy": "策略",
+      "used": "命中"
+    },
+    "description": "規則會依優先順序由上而下比對。",
+    "searchPlaceholder": "搜尋規則",
     "title": "規則"
   },
   "feedback": {
@@ -18,7 +50,13 @@
         "genericError": "更新失敗：{{message}}",
         "none": "沒有可更新的規則集合",
         "allUpdated": "所有規則集合均已更新"
-      }
+      },
+      "mutationUnavailable": "請先選擇並啟用一個設定檔",
+      "runtimeReadFailed": "讀取目前規則失敗：{{message}}",
+      "saveFailed": "規則變更未能儲存",
+      "mutationNotApplied": "這條規則由後置 Merge 或 Script 產生，請編輯對應來源。",
+      "addSuccess": "規則已新增",
+      "deleteSuccess": "規則已刪除"
     }
   },
   "modals": {

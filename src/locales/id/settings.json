@@ -184,7 +184,9 @@
         },
         "notifications": {
           "latestVersion": "Saat ini pada Versi Terbaru",
-          "versionCopied": "Version copied to clipboard"
+          "versionCopied": "Version copied to clipboard",
+          "cliInstalled": "CLI installed",
+          "cliUninstalled": "CLI uninstalled"
         },
         "fields": {
           "backupSetting": "Pengaturan Cadangan",
@@ -192,6 +194,10 @@
           "openConfDir": "Buka Direktori Konfigurasi",
           "openCoreDir": "Buka Direktori Core",
           "openLogsDir": "Buka Direktori Log",
+          "installCli": "Install CLI",
+          "uninstallCli": "Uninstall CLI",
+          "cliInstalledAt": "Installed at",
+          "cliInstallDir": "Install dir",
           "checkUpdates": "Periksa Pembaruan",
           "openDevTools": "Buka Alat Pengembang",
           "liteModeSettings": "LightWeight Mode Settings",

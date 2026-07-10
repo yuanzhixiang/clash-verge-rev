@@ -8,6 +8,38 @@
         "update": "更新"
       }
     },
+    "actions": {
+      "add": {
+        "trigger": "ルールを追加",
+        "title": "ルールを追加",
+        "confirm": "追加",
+        "position": {
+          "label": "挿入位置",
+          "prepend": "先頭",
+          "append": "末尾"
+        },
+        "validation": {
+          "duplicateRule": "このルールは既に存在します"
+        }
+      },
+      "delete": {
+        "trigger": "ルールを削除",
+        "selectFirst": "先にルールを選択してください",
+        "title": "ルールを削除",
+        "description": "アクティブなプロファイルからこのルールを削除しますか？購読元ファイルは変更されません。",
+        "confirm": "削除"
+      },
+      "scrollTop": "一番上へ戻る"
+    },
+    "columns": {
+      "id": "ID",
+      "type": "タイプ",
+      "value": "値",
+      "policy": "ポリシー",
+      "used": "使用回数"
+    },
+    "description": "ルールは上から下へ優先順位順に評価されます。",
+    "searchPlaceholder": "ルールを検索",
     "title": "ルール"
   },
   "feedback": {
@@ -18,7 +50,13 @@
         "genericError": "Update failed: {{message}}",
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
-      }
+      },
+      "mutationUnavailable": "ルールを編集する前にアクティブなプロファイルを選択してください",
+      "runtimeReadFailed": "有効なルールを読み込めませんでした: {{message}}",
+      "saveFailed": "ルールの変更を保存できませんでした",
+      "mutationNotApplied": "このルールは後続の Merge または Script が生成しています。生成元を編集してください。",
+      "addSuccess": "ルールを追加しました",
+      "deleteSuccess": "ルールを削除しました"
     }
   },
   "modals": {

@@ -8,6 +8,38 @@
         "update": "به‌روزرسانی"
       }
     },
+    "actions": {
+      "add": {
+        "trigger": "افزودن قانون",
+        "title": "افزودن قانون",
+        "confirm": "افزودن",
+        "position": {
+          "label": "موقعیت",
+          "prepend": "بالا",
+          "append": "پایین"
+        },
+        "validation": {
+          "duplicateRule": "این قانون از قبل وجود دارد"
+        }
+      },
+      "delete": {
+        "trigger": "حذف قانون",
+        "selectFirst": "ابتدا یک قانون را انتخاب کنید",
+        "title": "حذف قانون",
+        "description": "این قانون از نمایه فعال حذف شود؟ فایل اصلی اشتراک تغییر نمی‌کند.",
+        "confirm": "حذف"
+      },
+      "scrollTop": "بازگشت به بالا"
+    },
+    "columns": {
+      "id": "شناسه",
+      "type": "نوع",
+      "value": "مقدار",
+      "policy": "سیاست",
+      "used": "دفعات استفاده"
+    },
+    "description": "قوانین به ترتیب اولویت، از بالا به پایین ارزیابی می‌شوند.",
+    "searchPlaceholder": "جستجوی قوانین",
     "title": "قوانین"
   },
   "feedback": {
@@ -18,7 +50,13 @@
         "genericError": "Update failed: {{message}}",
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
-      }
+      },
+      "mutationUnavailable": "پیش از ویرایش قوانین یک نمایه فعال انتخاب کنید",
+      "runtimeReadFailed": "خواندن قوانین فعال ناموفق بود: {{message}}",
+      "saveFailed": "تغییر قانون ذخیره نشد",
+      "mutationNotApplied": "قانون توسط Merge یا Script بعدی ساخته می‌شود. همان منبع را ویرایش کنید.",
+      "addSuccess": "قانون افزوده شد",
+      "deleteSuccess": "قانون حذف شد"
     }
   },
   "modals": {

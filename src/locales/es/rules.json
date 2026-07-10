@@ -8,6 +8,38 @@
         "update": "Actualizar"
       }
     },
+    "actions": {
+      "add": {
+        "trigger": "Añadir regla",
+        "title": "Añadir regla",
+        "confirm": "Añadir",
+        "position": {
+          "label": "Posición",
+          "prepend": "Arriba",
+          "append": "Abajo"
+        },
+        "validation": {
+          "duplicateRule": "Esta regla ya existe"
+        }
+      },
+      "delete": {
+        "trigger": "Eliminar regla",
+        "selectFirst": "Selecciona primero una regla",
+        "title": "Eliminar regla",
+        "description": "¿Eliminar esta regla del perfil activo? El archivo de suscripción no se modificará.",
+        "confirm": "Eliminar"
+      },
+      "scrollTop": "Volver arriba"
+    },
+    "columns": {
+      "id": "ID",
+      "type": "Tipo",
+      "value": "Valor",
+      "policy": "Política",
+      "used": "Usos"
+    },
+    "description": "Las reglas se evalúan por prioridad, de arriba abajo.",
+    "searchPlaceholder": "Buscar reglas",
     "title": "Reglas"
   },
   "feedback": {
@@ -18,7 +50,13 @@
         "genericError": "Update failed: {{message}}",
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
-      }
+      },
+      "mutationUnavailable": "Selecciona un perfil activo antes de editar reglas",
+      "runtimeReadFailed": "No se pudieron leer las reglas activas: {{message}}",
+      "saveFailed": "No se pudo guardar el cambio de regla",
+      "mutationNotApplied": "La regla la genera un Merge o Script posterior. Edita esa fuente.",
+      "addSuccess": "Regla añadida",
+      "deleteSuccess": "Regla eliminada"
     }
   },
   "modals": {

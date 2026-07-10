@@ -8,6 +8,38 @@
         "update": "Güncelle"
       }
     },
+    "actions": {
+      "add": {
+        "trigger": "Kural ekle",
+        "title": "Kural Ekle",
+        "confirm": "Ekle",
+        "position": {
+          "label": "Konum",
+          "prepend": "Üst",
+          "append": "Alt"
+        },
+        "validation": {
+          "duplicateRule": "Bu kural zaten mevcut"
+        }
+      },
+      "delete": {
+        "trigger": "Kuralı kaldır",
+        "selectFirst": "Önce bir kural seçin",
+        "title": "Kuralı Kaldır",
+        "description": "Bu kural etkin profilden kaldırılsın mı? Abonelik kaynak dosyası değiştirilmez.",
+        "confirm": "Kaldır"
+      },
+      "scrollTop": "Başa dön"
+    },
+    "columns": {
+      "id": "ID",
+      "type": "Tür",
+      "value": "Değer",
+      "policy": "Politika",
+      "used": "Kullanım"
+    },
+    "description": "Kurallar öncelik sırasına göre yukarıdan aşağıya değerlendirilir.",
+    "searchPlaceholder": "Kurallarda ara",
     "title": "Kurallar"
   },
   "feedback": {
@@ -18,7 +50,13 @@
         "genericError": "Update failed: {{message}}",
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
-      }
+      },
+      "mutationUnavailable": "Kuralları düzenlemeden önce etkin bir profil seçin",
+      "runtimeReadFailed": "Etkin kurallar okunamadı: {{message}}",
+      "saveFailed": "Kural değişikliği kaydedilemedi",
+      "mutationNotApplied": "Kural sonraki bir Merge veya Script tarafından oluşturuluyor. O kaynağı düzenleyin.",
+      "addSuccess": "Kural eklendi",
+      "deleteSuccess": "Kural kaldırıldı"
     }
   },
   "modals": {

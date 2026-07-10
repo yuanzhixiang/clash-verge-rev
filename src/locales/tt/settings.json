@@ -184,7 +184,9 @@
         },
         "notifications": {
           "latestVersion": "Сездә иң соңгы версия урнаштырылган",
-          "versionCopied": "Version copied to clipboard"
+          "versionCopied": "Version copied to clipboard",
+          "cliInstalled": "CLI installed",
+          "cliUninstalled": "CLI uninstalled"
         },
         "fields": {
           "backupSetting": "Резерв копия көйләүләре",
@@ -192,6 +194,10 @@
           "openConfDir": "Кушымта папкасын ачу",
           "openCoreDir": "Ядро сакланган папканы ачу",
           "openLogsDir": "Логлар папкасын ачу",
+          "installCli": "Install CLI",
+          "uninstallCli": "Uninstall CLI",
+          "cliInstalledAt": "Installed at",
+          "cliInstallDir": "Install dir",
           "checkUpdates": "Яңартуларны тикшерү",
           "openDevTools": "Разработчик коралларын ачу",
           "liteModeSettings": "LightWeight Mode Settings",

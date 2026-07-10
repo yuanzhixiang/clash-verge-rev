@@ -8,6 +8,38 @@
         "update": "更新"
       }
     },
+    "actions": {
+      "add": {
+        "trigger": "新增规则",
+        "title": "新增规则",
+        "confirm": "添加",
+        "position": {
+          "label": "插入位置",
+          "prepend": "顶部",
+          "append": "底部"
+        },
+        "validation": {
+          "duplicateRule": "这条规则已经存在"
+        }
+      },
+      "delete": {
+        "trigger": "删除规则",
+        "selectFirst": "请先选择一条规则",
+        "title": "删除规则",
+        "description": "从当前配置中删除这条规则？订阅源文件不会被修改。",
+        "confirm": "删除"
+      },
+      "scrollTop": "返回顶部"
+    },
+    "columns": {
+      "id": "ID",
+      "type": "类型",
+      "value": "匹配值",
+      "policy": "策略",
+      "used": "命中"
+    },
+    "description": "规则按优先级从上到下匹配。",
+    "searchPlaceholder": "搜索规则",
     "title": "规则"
   },
   "feedback": {
@@ -18,7 +50,13 @@
         "genericError": "更新失败: {{message}}",
         "none": "没有可更新的规则集合",
         "allUpdated": "所有规则集合均已更新"
-      }
+      },
+      "mutationUnavailable": "请先选择并启用一个配置",
+      "runtimeReadFailed": "读取当前规则失败：{{message}}",
+      "saveFailed": "规则变更未能保存",
+      "mutationNotApplied": "这条规则由后置 Merge 或 Script 生成，请编辑对应来源。",
+      "addSuccess": "规则已添加",
+      "deleteSuccess": "规则已删除"
     }
   },
   "modals": {

@@ -8,6 +8,38 @@
         "update": "تحديث"
       }
     },
+    "actions": {
+      "add": {
+        "trigger": "إضافة قاعدة",
+        "title": "إضافة قاعدة",
+        "confirm": "إضافة",
+        "position": {
+          "label": "الموضع",
+          "prepend": "الأعلى",
+          "append": "الأسفل"
+        },
+        "validation": {
+          "duplicateRule": "هذه القاعدة موجودة بالفعل"
+        }
+      },
+      "delete": {
+        "trigger": "إزالة القاعدة",
+        "selectFirst": "اختر قاعدة أولاً",
+        "title": "إزالة القاعدة",
+        "description": "إزالة هذه القاعدة من الملف النشط؟ لن يتم تعديل ملف الاشتراك الأصلي.",
+        "confirm": "إزالة"
+      },
+      "scrollTop": "العودة إلى الأعلى"
+    },
+    "columns": {
+      "id": "المعرّف",
+      "type": "النوع",
+      "value": "القيمة",
+      "policy": "السياسة",
+      "used": "مرات الاستخدام"
+    },
+    "description": "يتم تقييم القواعد حسب الأولوية من الأعلى إلى الأسفل.",
+    "searchPlaceholder": "البحث في القواعد",
     "title": "القواعد"
   },
   "feedback": {
@@ -18,7 +50,13 @@
         "genericError": "Update failed: {{message}}",
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
-      }
+      },
+      "mutationUnavailable": "اختر ملفاً نشطاً قبل تعديل القواعد",
+      "runtimeReadFailed": "تعذرت قراءة القواعد النشطة: {{message}}",
+      "saveFailed": "تعذر حفظ تغيير القاعدة",
+      "mutationNotApplied": "يتم إنشاء القاعدة بواسطة Merge أو Script لاحق. عدّل ذلك المصدر.",
+      "addSuccess": "تمت إضافة القاعدة",
+      "deleteSuccess": "تمت إزالة القاعدة"
     }
   },
   "modals": {

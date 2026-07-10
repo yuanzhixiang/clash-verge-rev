@@ -2,14 +2,15 @@ import { Context, createContext, use } from 'react'
 import {
   BaseConfig,
   ProxyProvider,
-  Rule,
   RuleProvider,
 } from 'tauri-plugin-mihomo-api'
+
+import type { RuntimeRule } from '@/types/rule'
 
 export interface AppDataContextType {
   proxies: any
   clashConfig: BaseConfig
-  rules: Rule[]
+  rules: RuntimeRule[]
   sysproxy: any
   runningMode?: string
   uptime: number
@@ -46,7 +47,7 @@ export interface ProxiesContextType {
 }
 
 export interface RulesContextType {
-  rules: Rule[]
+  rules: RuntimeRule[]
   ruleProviders: Record<string, RuleProvider | undefined>
 }
 

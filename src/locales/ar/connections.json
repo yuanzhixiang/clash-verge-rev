@@ -26,6 +26,16 @@
       "closed": "Closed",
       "closeConnection": "إغلاق الاتصال"
     },
+    "route": {
+      "title": "Route",
+      "app": "App",
+      "inbound": "Inbound",
+      "rule": "Rule",
+      "policy": "Policy",
+      "exit": "Exit",
+      "remote": "Remote",
+      "details": "Details"
+    },
     "columnManager": {
       "title": "الأعمدة",
       "dragHandle": "Drag handle"

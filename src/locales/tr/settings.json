@@ -184,7 +184,9 @@
         },
         "notifications": {
           "latestVersion": "Şu Anda En Son Sürümdesiniz",
-          "versionCopied": "Version copied to clipboard"
+          "versionCopied": "Version copied to clipboard",
+          "cliInstalled": "CLI installed",
+          "cliUninstalled": "CLI uninstalled"
         },
         "fields": {
           "backupSetting": "Yedekleme Ayarı",
@@ -192,6 +194,10 @@
           "openConfDir": "Yapılandırma Dizinini Aç",
           "openCoreDir": "Çekirdek Dizinini Aç",
           "openLogsDir": "Günlük Dizinini Aç",
+          "installCli": "Install CLI",
+          "uninstallCli": "Uninstall CLI",
+          "cliInstalledAt": "Installed at",
+          "cliInstallDir": "Install dir",
           "checkUpdates": "Güncellemeleri Kontrol Et",
           "openDevTools": "Geliştirici Araçları",
           "liteModeSettings": "Hafif Mod Ayarları",

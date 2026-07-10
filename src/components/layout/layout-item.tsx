@@ -3,11 +3,11 @@ import type {
   DraggableSyntheticListeners,
 } from '@dnd-kit/core'
 import {
-  alpha,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  useMediaQuery,
 } from '@mui/material'
 import type { CSSProperties, PointerEvent, ReactNode } from 'react'
 import { useCallback } from 'react'
@@ -36,12 +36,14 @@ export const LayoutItem = (props: Props) => {
   const { verge } = useVerge()
   const { menu_icon } = verge ?? {}
   const navCollapsed = verge?.collapse_navbar ?? false
+  const compactByViewport = useMediaQuery('(max-width:720px)')
+  const compact = navCollapsed || compactByViewport
   const resolved = useResolvedPath(to)
   const match = useMatch({ path: resolved.pathname, end: true })
   const navigate = useNavigate()
 
   const effectiveMenuIcon =
-    navCollapsed && menu_icon === 'disable' ? 'monochrome' : menu_icon
+    compact && menu_icon === 'disable' ? 'monochrome' : menu_icon
 
   const { setNodeRef, attributes, listeners, style, isDragging, disabled } =
     sortable ?? {}
@@ -68,7 +70,13 @@ export const LayoutItem = (props: Props) => {
       ref={setNodeRef}
       style={style}
       sx={[
-        { py: 0.5, maxWidth: 250, mx: 'auto', padding: '4px 0px' },
+        {
+          width: '100%',
+          maxWidth: 250,
+          mx: 'auto',
+          px: 0.75,
+          py: 0.25,
+        },
         isDragging ? { opacity: 0.78 } : {},
       ]}
     >
@@ -78,33 +86,47 @@ export const LayoutItem = (props: Props) => {
         {...(draggable ? otherListeners : {})}
         sx={[
           {
-            borderRadius: 2,
-            marginLeft: 1.25,
-            paddingLeft: 1,
-            paddingRight: 1,
-            marginRight: 1.25,
+            minHeight: 42,
+            borderRadius: 1.5,
+            px: 1.25,
+            py: 0.5,
             cursor: draggable ? 'grab' : 'pointer',
+            transition:
+              'background-color 160ms ease, color 160ms ease, transform 160ms ease',
             '&:active': draggable ? { cursor: 'grabbing' } : {},
+            '&:hover': {
+              bgcolor: 'var(--shell-nav-hover)',
+            },
+            '&:focus-visible': {
+              outline: '2px solid var(--shell-focus) !important',
+              outlineOffset: '-2px',
+            },
             '& .MuiListItemText-primary': {
               color: 'text.primary',
-              fontWeight: '700',
+              fontSize: 14,
+              fontWeight: 550,
+              letterSpacing: '-0.01em',
             },
           },
-          ({ palette: { mode, primary } }) => {
-            const bgcolor =
-              mode === 'light'
-                ? alpha(primary.main, 0.15)
-                : alpha(primary.main, 0.35)
-            const color = mode === 'light' ? '#1f1f1f' : '#ffffff'
+          ({ palette }) => {
+            const color = palette.text.primary
             return {
-              '&.Mui-selected': { bgcolor },
-              '&.Mui-selected:hover': { bgcolor },
-              '&.Mui-selected .MuiListItemText-primary': { color },
+              '&.Mui-selected': {
+                bgcolor: 'var(--shell-nav-selected)',
+                color,
+              },
+              '&.Mui-selected:hover': {
+                bgcolor: 'var(--shell-nav-selected)',
+              },
+              '&.Mui-selected .MuiListItemText-primary': {
+                color,
+                fontWeight: 680,
+              },
             }
           },
         ]}
-        title={navCollapsed ? children : undefined}
-        aria-label={navCollapsed ? children : undefined}
+        title={compact ? children : undefined}
+        aria-label={children}
         onFocus={handlePreload}
         onMouseEnter={handlePreload}
         onPointerDown={handlePointerDown}
@@ -114,22 +136,31 @@ export const LayoutItem = (props: Props) => {
           <ListItemIcon
             sx={{
               color: 'text.primary',
-              marginLeft: '6px',
+              minWidth: 38,
               cursor: draggable ? 'grab' : 'inherit',
+              '& .MuiSvgIcon-root': { fontSize: 21 },
             }}
           >
             {icon[0]}
           </ListItemIcon>
         )}
         {effectiveMenuIcon === 'colorful' && (
-          <ListItemIcon sx={{ cursor: draggable ? 'grab' : 'inherit' }}>
+          <ListItemIcon
+            sx={{
+              minWidth: 38,
+              cursor: draggable ? 'grab' : 'inherit',
+              '& .MuiSvgIcon-root': { fontSize: 21 },
+            }}
+          >
             {icon[1]}
           </ListItemIcon>
         )}
         <ListItemText
           sx={{
-            textAlign: 'center',
-            marginLeft: effectiveMenuIcon === 'disable' ? '' : '-35px',
+            minWidth: 0,
+            m: 0,
+            textAlign: 'left',
+            pl: effectiveMenuIcon === 'disable' ? 1 : 0,
           }}
           primary={children}
         />

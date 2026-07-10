@@ -45,13 +45,19 @@ import {
   VirtualList,
 } from '@/components/base'
 import { RuleItem } from '@/components/profile/rule-item'
+import {
+  BUILTIN_PROXY_POLICIES,
+  PROXY_POLICY_LABEL_KEYS,
+  RULE_DEFINITIONS,
+  RULE_TYPE_LABEL_KEYS,
+  RuleConfigError,
+  serializeRule,
+} from '@/components/rule/rule-config'
 import { readProfileFile, saveProfileFile } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
-import type { TranslationKey } from '@/types/generated/i18n-keys'
 import type { MonacoEditorInstance } from '@/types/monaco'
 import getSystem from '@/utils/get-system'
-import { isValidIpCidr } from '@/utils/network'
 
 interface Props {
   groupsUid: string
@@ -63,193 +69,8 @@ interface Props {
   onSave?: (prev?: string, curr?: string) => void
 }
 
-const portValidator = (value: string): boolean => {
-  return new RegExp(
-    '^(?:[1-9]\\d{0,3}|[1-5]\\d{4}|6[0-4]\\d{3}|65[0-4]\\d{2}|655[0-2]\\d|6553[0-5])$',
-  ).test(value)
-}
-
-const rules: {
-  name: string
-  required?: boolean
-  example?: string
-  noResolve?: boolean
-  validator?: (value: string) => boolean
-}[] = [
-  {
-    name: 'DOMAIN',
-    example: 'example.com',
-  },
-  {
-    name: 'DOMAIN-SUFFIX',
-    example: 'example.com',
-  },
-  {
-    name: 'DOMAIN-KEYWORD',
-    example: 'example',
-  },
-  {
-    name: 'DOMAIN-REGEX',
-    example: 'example.*',
-  },
-  {
-    name: 'GEOSITE',
-    example: 'youtube',
-  },
-  {
-    name: 'GEOIP',
-    example: 'CN',
-    noResolve: true,
-  },
-  {
-    name: 'SRC-GEOIP',
-    example: 'CN',
-  },
-  {
-    name: 'IP-ASN',
-    example: '13335',
-    noResolve: true,
-    validator: (value) => (+value ? true : false),
-  },
-  {
-    name: 'SRC-IP-ASN',
-    example: '9808',
-    validator: (value) => (+value ? true : false),
-  },
-  {
-    name: 'IP-CIDR',
-    example: '127.0.0.0/8',
-    noResolve: true,
-    validator: isValidIpCidr,
-  },
-  {
-    name: 'IP-CIDR6',
-    example: '2620:0:2d0:200::7/32',
-    noResolve: true,
-    validator: isValidIpCidr,
-  },
-  {
-    name: 'SRC-IP-CIDR',
-    example: '192.168.1.201/32',
-    validator: isValidIpCidr,
-  },
-  {
-    name: 'IP-SUFFIX',
-    example: '8.8.8.8/24',
-    noResolve: true,
-    validator: isValidIpCidr,
-  },
-  {
-    name: 'SRC-IP-SUFFIX',
-    example: '192.168.1.201/8',
-    validator: isValidIpCidr,
-  },
-  {
-    name: 'SRC-PORT',
-    example: '7777',
-    validator: (value) => portValidator(value),
-  },
-  {
-    name: 'DST-PORT',
-    example: '80',
-    validator: (value) => portValidator(value),
-  },
-  {
-    name: 'IN-PORT',
-    example: '7897',
-    validator: (value) => portValidator(value),
-  },
-  {
-    name: 'DSCP',
-    example: '4',
-  },
-  {
-    name: 'PROCESS-NAME',
-    example: getSystem() === 'windows' ? 'chrome.exe' : 'curl',
-  },
-  {
-    name: 'PROCESS-PATH',
-    example:
-      getSystem() === 'windows'
-        ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-        : '/usr/bin/wget',
-  },
-  {
-    name: 'PROCESS-NAME-REGEX',
-    example: '.*telegram.*',
-  },
-  {
-    name: 'PROCESS-PATH-REGEX',
-    example:
-      getSystem() === 'windows' ? '(?i).*Application\\chrome.*' : '.*bin/wget',
-  },
-  {
-    name: 'NETWORK',
-    example: 'udp',
-    validator: (value) => ['tcp', 'udp'].includes(value),
-  },
-  {
-    name: 'UID',
-    example: '1001',
-    validator: (value) => (+value ? true : false),
-  },
-  {
-    name: 'IN-TYPE',
-    example: 'SOCKS/HTTP',
-  },
-  {
-    name: 'IN-USER',
-    example: 'mihomo',
-  },
-  {
-    name: 'IN-NAME',
-    example: 'ss',
-  },
-  {
-    name: 'SUB-RULE',
-    example: '(NETWORK,tcp)',
-  },
-  {
-    name: 'RULE-SET',
-    example: 'providername',
-    noResolve: true,
-  },
-  {
-    name: 'AND',
-    example: '((DOMAIN,baidu.com),(NETWORK,UDP))',
-  },
-  {
-    name: 'OR',
-    example: '((NETWORK,UDP),(DOMAIN,baidu.com))',
-  },
-  {
-    name: 'NOT',
-    example: '((DOMAIN,baidu.com))',
-  },
-  {
-    name: 'MATCH',
-    required: false,
-  },
-]
-
-const RULE_TYPE_LABEL_KEYS: Record<string, string> = Object.fromEntries(
-  rules.map((rule) => [
-    rule.name,
-    `rules.modals.editor.ruleTypes.${rule.name}`,
-  ]),
-)
-
-const builtinProxyPolicies = ['DIRECT', 'REJECT', 'REJECT-DROP', 'PASS']
-
-const PROXY_POLICY_LABEL_KEYS: Record<string, TranslationKey> =
-  builtinProxyPolicies.reduce(
-    (acc, policy) => {
-      acc[policy] =
-        `proxies.components.enums.policies.${policy}` as TranslationKey
-      return acc
-    },
-    {} as Record<string, TranslationKey>,
-  )
+const rules = RULE_DEFINITIONS
+const builtinProxyPolicies: string[] = [...BUILTIN_PROXY_POLICIES]
 
 export const RulesEditorViewer = (props: Props) => {
   const { groupsUid, mergeUid, profileUid, property, open, onClose, onSave } =
@@ -264,10 +85,10 @@ export const RulesEditorViewer = (props: Props) => {
   const [visualization, setVisualization] = useState(true)
   const [match, setMatch] = useState(() => (_: string) => true)
 
-  const [ruleType, setRuleType] = useState<(typeof rules)[number]>(rules[0])
+  const [ruleType, setRuleType] = useState<(typeof rules)[number]>(rules[0]!)
   const [ruleContent, setRuleContent] = useState('')
   const [noResolve, setNoResolve] = useState(false)
-  const [proxyPolicy, setProxyPolicy] = useState(builtinProxyPolicies[0])
+  const [proxyPolicy, setProxyPolicy] = useState(builtinProxyPolicies[0]!)
   const [proxyPolicyList, setProxyPolicyList] = useState<string[]>([])
   const [ruleList, setRuleList] = useState<string[]>([])
   const [ruleSetList, setRuleSetList] = useState<string[]>([])
@@ -563,19 +384,21 @@ export const RulesEditorViewer = (props: Props) => {
   }, [])
 
   const validateRule = () => {
-    if ((ruleType.required ?? true) && !ruleContent) {
-      throw new Error(
-        t('rules.modals.editor.form.validation.conditionRequired'),
-      )
+    try {
+      return serializeRule(ruleType, ruleContent, proxyPolicy, noResolve)
+    } catch (error) {
+      if (error instanceof RuleConfigError) {
+        throw new Error(
+          t(
+            error.code === 'conditionRequired'
+              ? 'rules.modals.editor.form.validation.conditionRequired'
+              : 'rules.modals.editor.form.validation.invalidRule',
+          ),
+          { cause: error },
+        )
+      }
+      throw error
     }
-    if (ruleType.validator && !ruleType.validator(ruleContent)) {
-      throw new Error(t('rules.modals.editor.form.validation.invalidRule'))
-    }
-
-    const condition = (ruleType.required ?? true) ? ruleContent : ''
-    return `${ruleType.name}${condition ? ',' + condition : ''},${proxyPolicy}${
-      ruleType.noResolve && noResolve ? ',no-resolve' : ''
-    }`
   }
 
   const handleSave = useLockFn(async () => {

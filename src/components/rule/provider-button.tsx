@@ -23,6 +23,7 @@ import { updateRuleProvider } from 'tauri-plugin-mihomo-api'
 
 import { useAppRefreshers, useRulesData } from '@/providers/app-data-context'
 import { showNotice } from '@/services/notice-service'
+import { getShellThemeVars } from '@/utils/shell-theme'
 
 // 辅助组件 - 类型框
 const TypeBox = styled(Box)<{ component?: React.ElementType }>(({ theme }) => ({
@@ -43,6 +44,7 @@ export const ProviderButton = () => {
   const { ruleProviders } = useRulesData()
   const { refreshRules, refreshRuleProviders } = useAppRefreshers()
   const [updating, setUpdating] = useState<Record<string, boolean>>({})
+  const isUpdatingAny = Object.values(updating).some(Boolean)
 
   // 检查是否有提供者
   const hasProviders = Object.keys(ruleProviders || {}).length > 0
@@ -136,17 +138,60 @@ export const ProviderButton = () => {
         size="small"
         startIcon={<StorageOutlined />}
         onClick={() => setOpen(true)}
+        sx={{
+          minHeight: 36,
+          borderColor: 'var(--shell-border-strong)',
+          borderRadius: 1.25,
+          bgcolor: 'var(--shell-panel-muted)',
+          color: 'text.primary',
+          fontWeight: 600,
+          whiteSpace: 'nowrap',
+          textTransform: 'none',
+          '&:hover': {
+            borderColor: 'var(--shell-border-strong)',
+            bgcolor: 'var(--shell-nav-hover)',
+          },
+          '&:focus-visible': {
+            outline: '2px solid var(--shell-focus) !important',
+            outlineOffset: 2,
+          },
+        }}
       >
         {t('rules.page.provider.trigger')}
       </Button>
 
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="sm"
+        fullWidth
+        slotProps={{
+          paper: {
+            sx: ({ palette }) => ({
+              ...getShellThemeVars(palette),
+              display: 'flex',
+              maxHeight: 'calc(100% - 24px)',
+              overflow: 'hidden',
+              border: '1px solid var(--shell-border-strong) !important',
+              borderRadius: 2,
+              bgcolor: 'var(--shell-panel) !important',
+              backgroundImage: 'none',
+              boxShadow: 'var(--shell-shadow) !important',
+            }),
+          },
+        }}
+      >
+        <DialogTitle sx={{ px: 2.5, pt: 2.25, pb: 1.5 }}>
           <Box
             sx={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
+              gap: 1.5,
+              '@media (max-width: 520px)': {
+                alignItems: 'stretch',
+                flexDirection: 'column',
+              },
             }}
           >
             <Typography variant="h6">
@@ -155,15 +200,25 @@ export const ProviderButton = () => {
             <Button
               variant="contained"
               size="small"
+              loading={isUpdatingAny}
+              disabled={isUpdatingAny}
               onClick={updateAllProviders}
+              sx={{
+                borderRadius: 1.25,
+                textTransform: 'none',
+                '&:focus-visible': {
+                  outline: '2px solid var(--shell-focus) !important',
+                  outlineOffset: 2,
+                },
+              }}
             >
               {t('rules.page.provider.actions.updateAll')}
             </Button>
           </Box>
         </DialogTitle>
 
-        <DialogContent>
-          <List sx={{ py: 0, minHeight: 250 }}>
+        <DialogContent sx={{ minHeight: 0, overflowY: 'auto', px: 2.5, py: 1 }}>
+          <List sx={{ py: 0, minHeight: 180 }}>
             {Object.entries(ruleProviders || {})
               .sort()
               .map(([key, item]) => {
@@ -174,33 +229,24 @@ export const ProviderButton = () => {
                 return (
                   <ListItem
                     key={key}
-                    sx={[
-                      {
-                        p: 0,
-                        mb: '8px',
-                        borderRadius: 2,
-                        overflow: 'hidden',
-                        transition: 'all 0.2s',
+                    sx={({ palette }) => ({
+                      p: 0,
+                      mb: 1,
+                      overflow: 'hidden',
+                      border: '1px solid var(--shell-border)',
+                      borderRadius: 1.5,
+                      bgcolor: 'var(--shell-panel-muted)',
+                      transition:
+                        'background-color 160ms ease, border-color 160ms ease',
+                      '&:hover': {
+                        bgcolor: alpha(palette.text.primary, 0.055),
+                        borderColor: 'var(--shell-border-strong)',
                       },
-                      ({ palette: { mode, primary } }) => {
-                        const bgcolor = mode === 'light' ? '#ffffff' : '#24252f'
-                        const hoverColor =
-                          mode === 'light'
-                            ? alpha(primary.main, 0.1)
-                            : alpha(primary.main, 0.2)
-
-                        return {
-                          backgroundColor: bgcolor,
-                          '&:hover': {
-                            backgroundColor: hoverColor,
-                            borderColor: alpha(primary.main, 0.3),
-                          },
-                        }
-                      },
-                    ]}
+                    })}
                   >
                     <ListItemText
                       sx={{ px: 2, py: 1 }}
+                      slotProps={{ secondary: { component: 'div' } }}
                       primary={
                         <Box
                           sx={{
@@ -262,6 +308,10 @@ export const ProviderButton = () => {
                           animation: isUpdating
                             ? 'spin 1s linear infinite'
                             : 'none',
+                          '&:focus-visible': {
+                            outline: '2px solid var(--shell-focus) !important',
+                            outlineOffset: 2,
+                          },
                           '@keyframes spin': {
                             '0%': { transform: 'rotate(0deg)' },
                             '100%': { transform: 'rotate(360deg)' },
@@ -278,8 +328,27 @@ export const ProviderButton = () => {
           </List>
         </DialogContent>
 
-        <DialogActions>
-          <Button onClick={handleClose} variant="outlined">
+        <DialogActions
+          sx={{
+            px: 2.5,
+            py: 1.5,
+            borderTop: '1px solid var(--shell-border)',
+          }}
+        >
+          <Button
+            onClick={handleClose}
+            variant="outlined"
+            sx={{
+              borderColor: 'var(--shell-border-strong)',
+              borderRadius: 1.25,
+              color: 'text.primary',
+              textTransform: 'none',
+              '&:focus-visible': {
+                outline: '2px solid var(--shell-focus) !important',
+                outlineOffset: 2,
+              },
+            }}
+          >
             {t('shared.actions.close')}
           </Button>
         </DialogActions>

@@ -8,6 +8,38 @@
         "update": "Яңарту"
       }
     },
+    "actions": {
+      "add": {
+        "trigger": "Кагыйдә өстәү",
+        "title": "Кагыйдә өстәү",
+        "confirm": "Өстәү",
+        "position": {
+          "label": "Урын",
+          "prepend": "Өстә",
+          "append": "Аста"
+        },
+        "validation": {
+          "duplicateRule": "Бу кагыйдә инде бар"
+        }
+      },
+      "delete": {
+        "trigger": "Кагыйдәне бетерү",
+        "selectFirst": "Башта кагыйдәне сайлагыз",
+        "title": "Кагыйдәне бетерү",
+        "description": "Бу кагыйдәне актив профильдән бетерергәме? Язылу чыганагы үзгәртелми.",
+        "confirm": "Бетерү"
+      },
+      "scrollTop": "Өскә кайту"
+    },
+    "columns": {
+      "id": "ID",
+      "type": "Төр",
+      "value": "Кыйммәт",
+      "policy": "Сәясәт",
+      "used": "Куллану"
+    },
+    "description": "Кагыйдәләр өстенлек тәртибендә өстән аска бәяләнә.",
+    "searchPlaceholder": "Кагыйдәләрне эзләү",
     "title": "Кагыйдәләр"
   },
   "feedback": {
@@ -18,7 +50,13 @@
         "genericError": "Update failed: {{message}}",
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
-      }
+      },
+      "mutationUnavailable": "Кагыйдәләрне үзгәрткәнче актив профиль сайлагыз",
+      "runtimeReadFailed": "Актив кагыйдәләрне укып булмады: {{message}}",
+      "saveFailed": "Кагыйдә үзгәреше сакланмады",
+      "mutationNotApplied": "Кагыйдә соңрак Merge яки Script тарафыннан ясала. Шул чыганакны үзгәртегез.",
+      "addSuccess": "Кагыйдә өстәлде",
+      "deleteSuccess": "Кагыйдә бетерелде"
     }
   },
   "modals": {

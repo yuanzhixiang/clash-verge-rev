@@ -497,6 +497,10 @@ export interface TranslationResources {
     rules: {
       feedback: {
         notifications: {
+          addSuccess: string
+          deleteSuccess: string
+          mutationNotApplied: string
+          mutationUnavailable: string
           provider: {
             allUpdated: string
             genericError: string
@@ -504,6 +508,8 @@ export interface TranslationResources {
             updateFailed: string
             updateSuccess: string
           }
+          runtimeReadFailed: string
+          saveFailed: string
         }
       }
       modals: {
@@ -565,6 +571,37 @@ export interface TranslationResources {
         }
       }
       page: {
+        actions: {
+          add: {
+            confirm: string
+            position: {
+              append: string
+              label: string
+              prepend: string
+            }
+            title: string
+            trigger: string
+            validation: {
+              duplicateRule: string
+            }
+          }
+          delete: {
+            confirm: string
+            description: string
+            selectFirst: string
+            title: string
+            trigger: string
+          }
+          scrollTop: string
+        }
+        columns: {
+          id: string
+          policy: string
+          type: string
+          used: string
+          value: string
+        }
+        description: string
         provider: {
           actions: {
             update: string
@@ -573,6 +610,7 @@ export interface TranslationResources {
           dialogTitle: string
           trigger: string
         }
+        searchPlaceholder: string
         title: string
       }
     }

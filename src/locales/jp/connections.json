@@ -26,6 +26,16 @@
       "closed": "Closed",
       "closeConnection": "接続を閉じる"
     },
+    "route": {
+      "title": "Route",
+      "app": "App",
+      "inbound": "Inbound",
+      "rule": "Rule",
+      "policy": "Policy",
+      "exit": "Exit",
+      "remote": "Remote",
+      "details": "Details"
+    },
     "columnManager": {
       "title": "列",
       "dragHandle": "Drag handle"

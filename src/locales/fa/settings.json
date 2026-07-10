@@ -184,7 +184,9 @@
         },
         "notifications": {
           "latestVersion": "در حال حاضر در آخرین نسخه",
-          "versionCopied": "نسخه در کلیپ بورد کپی شد"
+          "versionCopied": "نسخه در کلیپ بورد کپی شد",
+          "cliInstalled": "CLI installed",
+          "cliUninstalled": "CLI uninstalled"
         },
         "fields": {
           "backupSetting": "تنظیمات پشتیبان گیری",
@@ -192,6 +194,10 @@
           "openConfDir": "باز کردن پوشه برنامه",
           "openCoreDir": "باز کردن پوشه هسته",
           "openLogsDir": "باز کردن پوشه لاگ‌ها",
+          "installCli": "Install CLI",
+          "uninstallCli": "Uninstall CLI",
+          "cliInstalledAt": "Installed at",
+          "cliInstallDir": "Install dir",
           "checkUpdates": "بررسی برای به‌روزرسانی‌ها",
           "openDevTools": "باز کردن ابزارهای توسعه‌دهنده",
           "liteModeSettings": "LightWeight Mode Settings",

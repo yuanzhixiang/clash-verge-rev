@@ -26,6 +26,16 @@
       "closed": "已關閉",
       "closeConnection": "關閉連線"
     },
+    "route": {
+      "title": "Route",
+      "app": "App",
+      "inbound": "Inbound",
+      "rule": "Rule",
+      "policy": "Policy",
+      "exit": "Exit",
+      "remote": "Remote",
+      "details": "Details"
+    },
     "columnManager": {
       "title": "欄位設定",
       "dragHandle": "拖曳以移動"

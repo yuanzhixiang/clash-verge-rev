@@ -184,7 +184,9 @@
         },
         "notifications": {
           "latestVersion": "現在は最新バージョンです。",
-          "versionCopied": "Version copied to clipboard"
+          "versionCopied": "Version copied to clipboard",
+          "cliInstalled": "CLI installed",
+          "cliUninstalled": "CLI uninstalled"
         },
         "fields": {
           "backupSetting": "バックアップ設定",
@@ -192,6 +194,10 @@
           "openConfDir": "設定ディレクトリを開く",
           "openCoreDir": "コアディレクトリを開く",
           "openLogsDir": "ログディレクトリを開く",
+          "installCli": "Install CLI",
+          "uninstallCli": "Uninstall CLI",
+          "cliInstalledAt": "Installed at",
+          "cliInstallDir": "Install dir",
           "checkUpdates": "更新を確認",
           "openDevTools": "開発者ツールを開く",
           "liteModeSettings": "軽量モード設定",

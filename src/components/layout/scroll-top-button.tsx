@@ -4,13 +4,15 @@ import { IconButton, Fade, SxProps, Theme } from '@mui/material'
 interface Props {
   onClick: () => void
   show: boolean
+  ariaLabel?: string
   sx?: SxProps<Theme>
 }
 
-export const ScrollTopButton = ({ onClick, show, sx }: Props) => {
+export const ScrollTopButton = ({ onClick, show, ariaLabel, sx }: Props) => {
   return (
     <Fade in={show}>
       <IconButton
+        aria-label={ariaLabel}
         onClick={onClick}
         sx={{
           position: 'absolute',

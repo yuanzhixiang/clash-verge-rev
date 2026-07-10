@@ -67,7 +67,7 @@ export const VirtualList = forwardRef<VirtualListHandle, VirtualListProps>(
     }))
 
     return (
-      <div ref={parentRef} style={{ ...style, overflow: 'auto' }}>
+      <div ref={parentRef} style={{ overflow: 'auto', ...style }}>
         <div
           style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
         >
