@@ -29,6 +29,10 @@
         "description": "Diese Regel aus dem aktiven Profil entfernen? Die Abonnementdatei wird nicht verändert.",
         "confirm": "Entfernen"
       },
+      "edit": {
+        "title": "Regel bearbeiten",
+        "hint": "Doppelklicken oder F2 drücken, um diese Regel zu bearbeiten"
+      },
       "scrollTop": "Nach oben"
     },
     "columns": {
@@ -56,7 +60,11 @@
       "saveFailed": "Die Regeländerung konnte nicht gespeichert werden",
       "mutationNotApplied": "Die Regel wird von einem späteren Merge oder Script erzeugt. Bearbeiten Sie diese Quelle.",
       "addSuccess": "Regel hinzugefügt",
-      "deleteSuccess": "Regel entfernt"
+      "deleteSuccess": "Regel entfernt",
+      "editSuccess": "Regel aktualisiert",
+      "editUnavailable": "Diese Regel kann nicht bearbeitet werden: {{message}}",
+      "editAmbiguous": "Identische doppelte Regeln können nicht sicher bearbeitet werden",
+      "editTargetChanged": "Die Regel wurde vor dem Speichern geändert. Bitte erneut öffnen."
     }
   },
   "modals": {

@@ -29,6 +29,10 @@
         "description": "Bu kural etkin profilden kaldırılsın mı? Abonelik kaynak dosyası değiştirilmez.",
         "confirm": "Kaldır"
       },
+      "edit": {
+        "title": "Kuralı Düzenle",
+        "hint": "Bu kuralı düzenlemek için çift tıklayın veya F2'ye basın"
+      },
       "scrollTop": "Başa dön"
     },
     "columns": {
@@ -56,7 +60,11 @@
       "saveFailed": "Kural değişikliği kaydedilemedi",
       "mutationNotApplied": "Kural sonraki bir Merge veya Script tarafından oluşturuluyor. O kaynağı düzenleyin.",
       "addSuccess": "Kural eklendi",
-      "deleteSuccess": "Kural kaldırıldı"
+      "deleteSuccess": "Kural kaldırıldı",
+      "editSuccess": "Kural güncellendi",
+      "editUnavailable": "Bu kural düzenlenemiyor: {{message}}",
+      "editAmbiguous": "Aynı yinelenen kurallar güvenle düzenlenemez",
+      "editTargetChanged": "Kural kaydedilmeden önce değişti. Yeniden açın."
     }
   },
   "modals": {

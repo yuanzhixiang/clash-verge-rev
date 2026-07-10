@@ -499,6 +499,10 @@ export interface TranslationResources {
         notifications: {
           addSuccess: string
           deleteSuccess: string
+          editAmbiguous: string
+          editSuccess: string
+          editTargetChanged: string
+          editUnavailable: string
           mutationNotApplied: string
           mutationUnavailable: string
           provider: {
@@ -591,6 +595,10 @@ export interface TranslationResources {
             selectFirst: string
             title: string
             trigger: string
+          }
+          edit: {
+            hint: string
+            title: string
           }
           scrollTop: string
         }

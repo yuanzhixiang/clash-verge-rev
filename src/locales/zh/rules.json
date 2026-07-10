@@ -29,6 +29,10 @@
         "description": "从当前配置中删除这条规则？订阅源文件不会被修改。",
         "confirm": "删除"
       },
+      "edit": {
+        "title": "编辑规则",
+        "hint": "双击或按 F2 编辑这条规则"
+      },
       "scrollTop": "返回顶部"
     },
     "columns": {
@@ -56,7 +60,11 @@
       "saveFailed": "规则变更未能保存",
       "mutationNotApplied": "这条规则由后置 Merge 或 Script 生成，请编辑对应来源。",
       "addSuccess": "规则已添加",
-      "deleteSuccess": "规则已删除"
+      "deleteSuccess": "规则已删除",
+      "editSuccess": "规则已更新",
+      "editUnavailable": "无法编辑这条规则：{{message}}",
+      "editAmbiguous": "存在完全相同的重复规则，无法安全定位编辑目标",
+      "editTargetChanged": "规则在保存前已发生变化，请重新打开后再编辑"
     }
   },
   "modals": {

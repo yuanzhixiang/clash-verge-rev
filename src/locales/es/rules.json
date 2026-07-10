@@ -29,6 +29,10 @@
         "description": "¿Eliminar esta regla del perfil activo? El archivo de suscripción no se modificará.",
         "confirm": "Eliminar"
       },
+      "edit": {
+        "title": "Editar regla",
+        "hint": "Haz doble clic o pulsa F2 para editar esta regla"
+      },
       "scrollTop": "Volver arriba"
     },
     "columns": {
@@ -56,7 +60,11 @@
       "saveFailed": "No se pudo guardar el cambio de regla",
       "mutationNotApplied": "La regla la genera un Merge o Script posterior. Edita esa fuente.",
       "addSuccess": "Regla añadida",
-      "deleteSuccess": "Regla eliminada"
+      "deleteSuccess": "Regla eliminada",
+      "editSuccess": "Regla actualizada",
+      "editUnavailable": "No se puede editar esta regla: {{message}}",
+      "editAmbiguous": "No se pueden editar de forma segura reglas duplicadas idénticas",
+      "editTargetChanged": "La regla cambió antes de guardarse. Ábrela de nuevo."
     }
   },
   "modals": {

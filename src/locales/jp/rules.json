@@ -29,6 +29,10 @@
         "description": "アクティブなプロファイルからこのルールを削除しますか？購読元ファイルは変更されません。",
         "confirm": "削除"
       },
+      "edit": {
+        "title": "ルールを編集",
+        "hint": "ダブルクリックまたは F2 キーでこのルールを編集"
+      },
       "scrollTop": "一番上へ戻る"
     },
     "columns": {
@@ -56,7 +60,11 @@
       "saveFailed": "ルールの変更を保存できませんでした",
       "mutationNotApplied": "このルールは後続の Merge または Script が生成しています。生成元を編集してください。",
       "addSuccess": "ルールを追加しました",
-      "deleteSuccess": "ルールを削除しました"
+      "deleteSuccess": "ルールを削除しました",
+      "editSuccess": "ルールを更新しました",
+      "editUnavailable": "このルールは編集できません: {{message}}",
+      "editAmbiguous": "同一の重複ルールは安全に編集できません",
+      "editTargetChanged": "保存前にルールが変更されました。もう一度開いてください。"
     }
   },
   "modals": {

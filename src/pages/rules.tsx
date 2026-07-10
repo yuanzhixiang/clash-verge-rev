@@ -33,10 +33,14 @@ import {
   countRuntimeRule,
   deleteRuleFromEnhancement,
   getRuntimeRuleAtIndex,
+  parseSerializedRule,
   parseRuntimeRuleConfig,
+  replaceRuleInEnhancement,
+  type ParsedRule,
   type RulePlacement,
   type RuntimeRuleConfig,
 } from '@/components/rule/rule-config'
+import { RuleEditDialog } from '@/components/rule/rule-edit-dialog'
 import RuleItem from '@/components/rule/rule-item'
 import { useProfiles } from '@/hooks/use-profiles'
 import { useVisibility } from '@/hooks/use-visibility'
@@ -66,6 +70,14 @@ interface AddDialogContext extends RuntimeRuleConfig {
   rulesProfileUid: string
 }
 
+interface EditDialogContext extends RuntimeRuleConfig {
+  profileUid: string
+  rulesProfileUid: string
+  index: number
+  rawRule: string
+  parsedRule: ParsedRule
+}
+
 interface SelectedRuleTarget {
   profileUid: string
   index: number
@@ -85,6 +97,8 @@ const RulesPage = () => {
   const [addContext, setAddContext] = useState<AddDialogContext | null>(null)
   const [loadingAddContext, setLoadingAddContext] = useState(false)
   const [submittingAdd, setSubmittingAdd] = useState(false)
+  const [editContext, setEditContext] = useState<EditDialogContext | null>(null)
+  const [submittingEdit, setSubmittingEdit] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null)
   const [preparingDelete, setPreparingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -220,6 +234,117 @@ const RulesPage = () => {
       }
     },
   )
+
+  const handleOpenEdit = useLockFn(async (rule: RuntimeRule) => {
+    if (!currentProfileUid || !rulesProfileUid) {
+      showNotice.error('rules.feedback.notifications.mutationUnavailable')
+      return
+    }
+
+    try {
+      const runtime = await loadRuntimeRules()
+      const rawRule = getRuntimeRuleAtIndex(runtime, rule.index)
+      if (countRuntimeRule(runtime, rawRule) !== 1) {
+        showNotice.error('rules.feedback.notifications.editAmbiguous')
+        return
+      }
+
+      setSelectedRuleTarget({
+        profileUid: currentProfileUid,
+        index: rule.index,
+      })
+      setEditContext({
+        ...runtime,
+        profileUid: currentProfileUid,
+        rulesProfileUid,
+        index: rule.index,
+        rawRule,
+        parsedRule: parseSerializedRule(rawRule),
+      })
+    } catch (error) {
+      showNotice.error('rules.feedback.notifications.editUnavailable', {
+        message: String(error),
+      })
+    }
+  })
+
+  const handleEditRule = useLockFn(async (nextRule: string) => {
+    if (!editContext || editContext.profileUid !== currentProfileUid) {
+      showNotice.error('rules.feedback.notifications.mutationUnavailable')
+      return
+    }
+
+    const targetRulesProfileUid = editContext.rulesProfileUid
+    setSubmittingEdit(true)
+    try {
+      const runtimeBefore = await loadRuntimeRules()
+      const currentRule = getRuntimeRuleAtIndex(
+        runtimeBefore,
+        editContext.index,
+      )
+      if (currentRule !== editContext.rawRule) {
+        throw new Error(t('rules.feedback.notifications.editTargetChanged'))
+      }
+      if (countRuntimeRule(runtimeBefore, currentRule) !== 1) {
+        throw new Error(t('rules.feedback.notifications.editAmbiguous'))
+      }
+      if (countRuntimeRule(runtimeBefore, nextRule) > 0) {
+        throw new RuleConfigError('duplicateRule')
+      }
+
+      const previousRule =
+        editContext.index > 0
+          ? getRuntimeRuleAtIndex(runtimeBefore, editContext.index - 1)
+          : null
+      const nextNeighbor =
+        editContext.index + 1 < runtimeBefore.ruleItems.length
+          ? getRuntimeRuleAtIndex(runtimeBefore, editContext.index + 1)
+          : null
+      const previousContent = await readProfileFile(targetRulesProfileUid)
+      const mutation = replaceRuleInEnhancement(
+        previousContent,
+        currentRule,
+        nextRule,
+      )
+      if (!mutation.changed) {
+        setEditContext(null)
+        return
+      }
+
+      if (!(await saveProfileFile(targetRulesProfileUid, mutation.content))) {
+        throw new Error(t('rules.feedback.notifications.saveFailed'))
+      }
+
+      let runtimeAfter: RuntimeRuleConfig
+      try {
+        runtimeAfter = await loadRuntimeRules()
+      } catch (error) {
+        await saveProfileFile(targetRulesProfileUid, previousContent)
+        throw error
+      }
+      const ruleApplied =
+        getRuntimeRuleAtIndex(runtimeAfter, editContext.index) === nextRule
+      const previousPreserved =
+        previousRule == null ||
+        getRuntimeRuleAtIndex(runtimeAfter, editContext.index - 1) ===
+          previousRule
+      const nextPreserved =
+        nextNeighbor == null ||
+        getRuntimeRuleAtIndex(runtimeAfter, editContext.index + 1) ===
+          nextNeighbor
+
+      if (!ruleApplied || !previousPreserved || !nextPreserved) {
+        await saveProfileFile(targetRulesProfileUid, previousContent)
+        throw new Error(t('rules.feedback.notifications.mutationNotApplied'))
+      }
+
+      setEditContext(null)
+      await refreshRules()
+      showNotice.success('rules.feedback.notifications.editSuccess')
+    } finally {
+      setSubmittingEdit(false)
+    }
+  })
 
   const handlePrepareDelete = useLockFn(async () => {
     if (!currentProfileUid || !rulesProfileUid || !selectedRule) {
@@ -502,6 +627,7 @@ const RulesPage = () => {
                       index: rule.index,
                     })
                   }
+                  onEdit={handleOpenEdit}
                 />
               )}
               style={{ flex: 1, minHeight: 0, overflowX: 'hidden' }}
@@ -623,6 +749,22 @@ const RulesPage = () => {
             setAddContext(null)
           }}
           onSubmit={handleAddRule}
+        />
+      )}
+
+      {editContext && (
+        <RuleEditDialog
+          key={`${editContext.profileUid}-${editContext.index}-${editContext.rawRule}`}
+          open={editContext.profileUid === currentProfileUid}
+          submitting={submittingEdit}
+          originalRule={editContext.rawRule}
+          initialRule={editContext.parsedRule}
+          existingRules={editContext.rules}
+          policyOptions={editContext.policyOptions}
+          ruleSetOptions={editContext.ruleSetOptions}
+          subRuleOptions={editContext.subRuleOptions}
+          onClose={() => setEditContext(null)}
+          onSubmit={handleEditRule}
         />
       )}
 

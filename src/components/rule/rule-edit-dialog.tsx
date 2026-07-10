@@ -5,9 +5,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Stack,
-  ToggleButton,
-  ToggleButtonGroup,
   Typography,
 } from '@mui/material'
 import { useState } from 'react'
@@ -17,25 +14,20 @@ import { showNotice } from '@/services/notice-service'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
 import { getShellThemeVars } from '@/utils/shell-theme'
 
-import {
-  BUILTIN_PROXY_POLICIES,
-  DEFAULT_RULE_DEFINITION,
-  RuleConfigError,
-  type ParsedRule,
-  type RulePlacement,
-  serializeRule,
-} from './rule-config'
+import { RuleConfigError, type ParsedRule, serializeRule } from './rule-config'
 import { RuleFormFields } from './rule-form-fields'
 
 interface Props {
   open: boolean
   submitting: boolean
+  originalRule: string
+  initialRule: ParsedRule
   existingRules: string[]
   policyOptions: string[]
   ruleSetOptions: string[]
   subRuleOptions: string[]
   onClose: () => void
-  onSubmit: (rule: string, placement: RulePlacement) => Promise<void>
+  onSubmit: (rule: string) => Promise<void>
 }
 
 const VALIDATION_KEYS: Record<string, TranslationKey> = {
@@ -44,9 +36,11 @@ const VALIDATION_KEYS: Record<string, TranslationKey> = {
   duplicateRule: 'rules.page.actions.add.validation.duplicateRule',
 }
 
-export const RuleAddDialog = ({
+export const RuleEditDialog = ({
   open,
   submitting,
+  originalRule,
+  initialRule,
   existingRules,
   policyOptions,
   ruleSetOptions,
@@ -55,13 +49,7 @@ export const RuleAddDialog = ({
   onSubmit,
 }: Props) => {
   const { t } = useTranslation()
-  const [form, setForm] = useState<ParsedRule>(() => ({
-    definition: DEFAULT_RULE_DEFINITION,
-    content: '',
-    policy: BUILTIN_PROXY_POLICIES[0],
-    noResolve: false,
-  }))
-  const [placement, setPlacement] = useState<RulePlacement>('prepend')
+  const [form, setForm] = useState(initialRule)
 
   const handleSubmit = async () => {
     try {
@@ -71,10 +59,16 @@ export const RuleAddDialog = ({
         form.policy,
         form.noResolve,
       )
-      if (existingRules.includes(rawRule)) {
+      if (rawRule === originalRule) {
+        onClose()
+        return
+      }
+      if (
+        existingRules.some((rule) => rule !== originalRule && rule === rawRule)
+      ) {
         throw new RuleConfigError('duplicateRule')
       }
-      await onSubmit(rawRule, placement)
+      await onSubmit(rawRule)
     } catch (error) {
       if (error instanceof RuleConfigError) {
         showNotice.error(VALIDATION_KEYS[error.code] ?? error.message)
@@ -106,12 +100,12 @@ export const RuleAddDialog = ({
     >
       <DialogTitle sx={{ px: 2.5, pt: 2.25, pb: 1 }}>
         <Typography component="span" sx={{ fontSize: 18, fontWeight: 650 }}>
-          {t('rules.page.actions.add.title')}
+          {t('rules.page.actions.edit.title')}
         </Typography>
       </DialogTitle>
 
       <DialogContent sx={{ px: 2.5, py: 0 }}>
-        <Stack spacing={1.75} sx={{ pt: 1.5, pb: 1.5 }}>
+        <Box sx={{ pt: 1.5, pb: 1.5 }}>
           <RuleFormFields
             autoFocus
             value={form}
@@ -120,38 +114,12 @@ export const RuleAddDialog = ({
             subRuleOptions={subRuleOptions}
             onChange={setForm}
           />
-
-          <Box>
-            <Typography
-              color="text.secondary"
-              sx={{ mb: 0.75, fontSize: 12.5, fontWeight: 560 }}
-            >
-              {t('rules.page.actions.add.position.label')}
-            </Typography>
-            <ToggleButtonGroup
-              exclusive
-              fullWidth
-              size="small"
-              value={placement}
-              onChange={(_, value: RulePlacement | null) =>
-                value && setPlacement(value)
-              }
-              aria-label={t('rules.page.actions.add.position.label')}
-              sx={{ '& .MuiToggleButton-root': { py: 0.65 } }}
-            >
-              <ToggleButton value="prepend">
-                {t('rules.page.actions.add.position.prepend')}
-              </ToggleButton>
-              <ToggleButton value="append">
-                {t('rules.page.actions.add.position.append')}
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
-        </Stack>
+        </Box>
       </DialogContent>
 
       <DialogActions
         sx={{
+          mt: 1.5,
           px: 2.5,
           py: 1.5,
           borderTop: '1px solid var(--shell-border)',
@@ -171,7 +139,7 @@ export const RuleAddDialog = ({
           onClick={handleSubmit}
           sx={{ textTransform: 'none' }}
         >
-          {t('rules.page.actions.add.confirm')}
+          {t('shared.actions.save')}
         </Button>
       </DialogActions>
     </Dialog>

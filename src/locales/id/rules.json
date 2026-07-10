@@ -29,6 +29,10 @@
         "description": "Hapus aturan ini dari profil aktif? Berkas langganan tidak akan diubah.",
         "confirm": "Hapus"
       },
+      "edit": {
+        "title": "Edit aturan",
+        "hint": "Klik dua kali atau tekan F2 untuk mengedit aturan ini"
+      },
       "scrollTop": "Kembali ke atas"
     },
     "columns": {
@@ -56,7 +60,11 @@
       "saveFailed": "Perubahan aturan tidak dapat disimpan",
       "mutationNotApplied": "Aturan dibuat oleh Merge atau Script setelahnya. Edit sumber tersebut.",
       "addSuccess": "Aturan ditambahkan",
-      "deleteSuccess": "Aturan dihapus"
+      "deleteSuccess": "Aturan dihapus",
+      "editSuccess": "Aturan diperbarui",
+      "editUnavailable": "Aturan ini tidak dapat diedit: {{message}}",
+      "editAmbiguous": "Aturan duplikat yang identik tidak dapat diedit dengan aman",
+      "editTargetChanged": "Aturan berubah sebelum disimpan. Buka kembali aturan tersebut."
     }
   },
   "modals": {

@@ -7,6 +7,14 @@ pub struct SeqMap {
     pub prepend: Sequence,
     pub append: Sequence,
     pub delete: Vec<String>,
+    #[serde(default)]
+    pub replace: Vec<SeqReplace>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SeqReplace {
+    pub from: String,
+    pub to: String,
 }
 
 fn collect_proxy_names(seq: &Sequence) -> Vec<String> {
@@ -35,6 +43,7 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
         prepend,
         append,
         delete,
+        replace,
     } = seq;
 
     let added_proxy_names = if field == "proxies" {
@@ -53,21 +62,38 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
     updated_items.extend(prepend);
 
     if let Some(Value::Sequence(existing_items)) = config.remove(field) {
-        // Filter out deleted items
+        let mut consumed_replacements = vec![false; replace.len()];
+        // Filter out deleted items and replace string rules in their original slots.
         let kept_items: Sequence = existing_items
             .into_iter()
-            .filter(|item| {
-                if let Value::String(s) = item {
-                    !delete.contains(s)
-                } else if let Value::Mapping(m) = item {
-                    if let Some(Value::String(name)) = m.get("name") {
-                        !delete.contains(name)
-                    } else {
-                        true
+            .filter_map(|item| match item {
+                Value::String(value) => {
+                    if delete.contains(&value) {
+                        return None;
                     }
-                } else {
-                    true
+
+                    if field == "rules"
+                        && let Some((index, replacement)) = replace
+                            .iter()
+                            .enumerate()
+                            .find(|(index, replacement)| !consumed_replacements[*index] && replacement.from == value)
+                    {
+                        consumed_replacements[index] = true;
+                        return Some(Value::String(replacement.to.clone()));
+                    }
+
+                    Some(Value::String(value))
                 }
+                Value::Mapping(mapping) => {
+                    if let Some(Value::String(name)) = mapping.get("name")
+                        && delete.contains(name)
+                    {
+                        None
+                    } else {
+                        Some(Value::Mapping(mapping))
+                    }
+                }
+                value => Some(value),
             })
             .collect();
         updated_items.extend(kept_items);
@@ -155,6 +181,78 @@ mod tests {
     use serde_yaml_ng::Value;
 
     #[test]
+    #[allow(clippy::expect_used)]
+    fn test_legacy_seq_map_defaults_replace() {
+        let seq: SeqMap = serde_yaml_ng::from_str("prepend: []\nappend: []\ndelete: []\n")
+            .expect("legacy seq map should deserialize");
+        assert!(seq.replace.is_empty());
+    }
+
+    #[test]
+    #[allow(clippy::expect_used)]
+    fn test_replace_rules_in_original_slots() {
+        let config: Mapping = serde_yaml_ng::from_str("rules: [A, B, A]\n").expect("config should deserialize");
+        let seq = SeqMap {
+            replace: vec![
+                SeqReplace {
+                    from: "A".to_string(),
+                    to: "X".to_string(),
+                },
+                SeqReplace {
+                    from: "A".to_string(),
+                    to: "Y".to_string(),
+                },
+            ],
+            ..Default::default()
+        };
+
+        let config = use_seq(seq, config, "rules");
+        let rules = config
+            .get("rules")
+            .and_then(Value::as_sequence)
+            .expect("rules should remain a sequence");
+        assert_eq!(rules, &vec![Value::from("X"), Value::from("B"), Value::from("Y")]);
+    }
+
+    #[test]
+    #[allow(clippy::expect_used)]
+    fn test_unmatched_and_non_rule_replacements_are_ignored() {
+        let rules_config: Mapping =
+            serde_yaml_ng::from_str("rules: [A, B]\n").expect("rules config should deserialize");
+        let proxies_config: Mapping =
+            serde_yaml_ng::from_str("proxies: [A, B]\n").expect("proxies config should deserialize");
+        let seq = SeqMap {
+            replace: vec![SeqReplace {
+                from: "A".to_string(),
+                to: "X".to_string(),
+            }],
+            ..Default::default()
+        };
+
+        let unchanged_rules = use_seq(
+            SeqMap {
+                replace: vec![SeqReplace {
+                    from: "missing".to_string(),
+                    to: "X".to_string(),
+                }],
+                ..Default::default()
+            },
+            rules_config,
+            "rules",
+        );
+        assert_eq!(
+            unchanged_rules.get("rules").and_then(Value::as_sequence),
+            Some(&vec![Value::from("A"), Value::from("B")]),
+        );
+
+        let unchanged_proxies = use_seq(seq, proxies_config, "proxies");
+        assert_eq!(
+            unchanged_proxies.get("proxies").and_then(Value::as_sequence),
+            Some(&vec![Value::from("A"), Value::from("B")]),
+        );
+    }
+
+    #[test]
     #[allow(clippy::unwrap_used)]
     #[allow(clippy::expect_used)]
     fn test_delete_proxy_and_references() {
@@ -181,6 +279,7 @@ proxy-groups:
             prepend: Sequence::new(),
             append: Sequence::new(),
             delete: vec!["proxy1".to_string()],
+            replace: Vec::new(),
         };
 
         config = use_seq(seq, config, "proxies");
@@ -272,6 +371,7 @@ proxy-groups:
             prepend,
             append,
             delete: vec![],
+            replace: Vec::new(),
         };
 
         config = use_seq(seq, config, "proxies");
@@ -318,6 +418,7 @@ proxy-groups: "invalid"
             prepend: Sequence::new(),
             append: Sequence::new(),
             delete: vec!["proxy1".to_string()],
+            replace: Vec::new(),
         };
 
         config = use_seq(seq, config, "proxies");

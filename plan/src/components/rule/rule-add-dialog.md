@@ -12,6 +12,7 @@
 
 - `open / onClose / onSubmit / submitting` 控制弹窗生命周期和保存状态。
 - `policyOptions / ruleSetOptions / subRuleOptions / existingRules` 来自当前运行配置。
+- 新增模式每次挂载时默认选择 `DOMAIN-SUFFIX`，不依赖规则类型数组顺序；编辑弹窗不使用该默认值。
 
 ## 视觉状态
 

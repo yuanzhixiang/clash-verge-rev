@@ -1,4 +1,5 @@
 import yaml from 'js-yaml'
+import { getDomain } from 'tldts'
 
 import type { TranslationKey } from '@/types/generated/i18n-keys'
 import getSystem from '@/utils/get-system'
@@ -10,6 +11,13 @@ export interface RuleDefinition {
   example?: string
   noResolve?: boolean
   validator?: (value: string) => boolean
+}
+
+export interface ParsedRule {
+  definition: RuleDefinition
+  content: string
+  policy: string
+  noResolve: boolean
 }
 
 export type RulePlacement = 'prepend' | 'append'
@@ -123,6 +131,14 @@ export const RULE_DEFINITIONS: readonly RuleDefinition[] = [
   { name: 'MATCH', required: false },
 ]
 
+const domainSuffixDefinition = RULE_DEFINITIONS.find(
+  (definition) => definition.name === 'DOMAIN-SUFFIX',
+)
+if (!domainSuffixDefinition) {
+  throw new Error('DOMAIN-SUFFIX rule definition is required')
+}
+export const DEFAULT_RULE_DEFINITION = domainSuffixDefinition
+
 export const RULE_TYPE_LABEL_KEYS: Record<string, TranslationKey> =
   Object.fromEntries(
     RULE_DEFINITIONS.map((rule) => [
@@ -146,6 +162,29 @@ export const PROXY_POLICY_LABEL_KEYS: Record<string, TranslationKey> =
     ]),
   )
 
+export const normalizePastedDomain = (rawValue: string): string | null => {
+  const value = rawValue.trim()
+  if (!value || /\s/.test(value) || value.includes('*')) return null
+
+  const candidate = /^[a-z][a-z\d+.-]*:\/\//i.test(value)
+    ? value
+    : `https://${value}`
+
+  try {
+    const url = new URL(candidate)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
+
+    const hostname = url.hostname.replace(/\.$/, '').toLowerCase()
+    if (!hostname || hostname === 'localhost') return null
+
+    return (
+      getDomain(hostname, { allowPrivateDomains: true })?.toLowerCase() ?? null
+    )
+  } catch {
+    return null
+  }
+}
+
 export const serializeRule = (
   definition: RuleDefinition,
   content: string,
@@ -168,6 +207,29 @@ export const serializeRule = (
   return `${definition.name}${normalizedContent ? `,${normalizedContent}` : ''},${normalizedPolicy}${
     definition.noResolve && noResolve ? ',no-resolve' : ''
   }`
+}
+
+export const parseSerializedRule = (rawRule: string): ParsedRule => {
+  const parts = rawRule.split(',')
+  const typeName = parts.shift()?.trim().toUpperCase()
+  const definition = RULE_DEFINITIONS.find(
+    (candidate) => candidate.name === typeName,
+  )
+  if (!definition) throw new RuleConfigError('ruleUnavailable')
+
+  const noResolve = parts.at(-1)?.trim().toLowerCase() === 'no-resolve'
+  if (noResolve) parts.pop()
+  if (noResolve && !definition.noResolve) {
+    throw new RuleConfigError('invalidRule')
+  }
+
+  const policy = parts.pop()?.trim() ?? ''
+  const content = parts.join(',').trim()
+  if (!policy || ((definition.required ?? true) && !content)) {
+    throw new RuleConfigError('invalidRule')
+  }
+
+  return { definition, content, policy, noResolve }
 }
 
 type UnknownRecord = Record<string, unknown>
@@ -247,6 +309,29 @@ interface RuleEnhancementState {
   prepend: string[]
   append: string[]
   delete: string[]
+  replace: RuleReplacement[]
+}
+
+export interface RuleReplacement {
+  from: string
+  to: string
+}
+
+const readReplacements = (document: UnknownRecord): RuleReplacement[] => {
+  const value = document.replace
+  if (value == null) return []
+  if (!Array.isArray(value)) throw new RuleConfigError('invalidEnhancement')
+
+  return value.map((item) => {
+    if (
+      !isRecord(item) ||
+      typeof item.from !== 'string' ||
+      typeof item.to !== 'string'
+    ) {
+      throw new RuleConfigError('invalidEnhancement')
+    }
+    return { from: item.from, to: item.to }
+  })
 }
 
 const parseRuleEnhancement = (content: string): RuleEnhancementState => {
@@ -256,6 +341,7 @@ const parseRuleEnhancement = (content: string): RuleEnhancementState => {
     prepend: readStringArray(document, 'prepend'),
     append: readStringArray(document, 'append'),
     delete: readStringArray(document, 'delete'),
+    replace: readReplacements(document),
   }
 }
 
@@ -266,6 +352,7 @@ const dumpRuleEnhancement = (state: RuleEnhancementState): string =>
       prepend: state.prepend,
       append: state.append,
       delete: state.delete,
+      replace: state.replace,
     },
     { forceQuotes: true, lineWidth: -1 },
   )
@@ -291,18 +378,84 @@ export const deleteRuleFromEnhancement = (
   const state = parseRuleEnhancement(content)
   const removedLocalRule =
     state.prepend.includes(rule) || state.append.includes(rule)
+  const replacementIndexes = state.replace.flatMap((replacement, index) =>
+    replacement.to === rule ? [index] : [],
+  )
+  if (replacementIndexes.length > 1) {
+    throw new RuleConfigError('invalidEnhancement')
+  }
   const alreadyDeleted = state.delete.includes(rule)
 
   state.prepend = state.prepend.filter((item) => item !== rule)
   state.append = state.append.filter((item) => item !== rule)
-  if (!removedLocalRule && !alreadyDeleted) {
+  const replacementIndex = replacementIndexes[0]
+  if (
+    !removedLocalRule &&
+    replacementIndexes.length === 1 &&
+    replacementIndex != null
+  ) {
+    const [replacement] = state.replace.splice(replacementIndex, 1)
+    if (replacement && !state.delete.includes(replacement.from)) {
+      state.delete.push(replacement.from)
+    }
+  } else if (!removedLocalRule && !alreadyDeleted) {
     state.delete.push(rule)
   }
 
-  const changed = removedLocalRule || (!removedLocalRule && !alreadyDeleted)
+  const changed =
+    removedLocalRule ||
+    replacementIndexes.length === 1 ||
+    (!removedLocalRule && !alreadyDeleted)
   return {
     content: changed ? dumpRuleEnhancement(state) : content,
     changed,
     removedLocalRule,
   }
+}
+
+export const replaceRuleInEnhancement = (
+  content: string,
+  previousRule: string,
+  nextRule: string,
+): { content: string; changed: boolean } => {
+  if (previousRule === nextRule) return { content, changed: false }
+
+  const state = parseRuleEnhancement(content)
+  let replacedLocalRule = false
+  const replaceLocal = (rules: string[]) =>
+    rules.map((rule) => {
+      if (!replacedLocalRule && rule === previousRule) {
+        replacedLocalRule = true
+        return nextRule
+      }
+      return rule
+    })
+
+  state.prepend = replaceLocal(state.prepend)
+  state.append = replaceLocal(state.append)
+  if (!replacedLocalRule) {
+    const replacementIndexes = state.replace.flatMap((replacement, index) =>
+      replacement.to === previousRule ? [index] : [],
+    )
+    if (replacementIndexes.length > 1) {
+      throw new RuleConfigError('invalidEnhancement')
+    }
+
+    if (replacementIndexes.length === 1) {
+      const index = replacementIndexes[0]
+      const replacement = index == null ? null : state.replace[index]
+      if (index == null || !replacement) {
+        throw new RuleConfigError('invalidEnhancement')
+      }
+      if (replacement.from === nextRule) {
+        state.replace.splice(index, 1)
+      } else {
+        state.replace[index] = { ...replacement, to: nextRule }
+      }
+    } else {
+      state.replace.push({ from: previousRule, to: nextRule })
+    }
+  }
+
+  return { content: dumpRuleEnhancement(state), changed: true }
 }

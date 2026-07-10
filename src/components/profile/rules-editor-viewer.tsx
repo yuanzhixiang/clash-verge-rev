@@ -97,6 +97,9 @@ export const RulesEditorViewer = (props: Props) => {
   const [prependSeq, setPrependSeq] = useState<string[]>([])
   const [appendSeq, setAppendSeq] = useState<string[]>([])
   const [deleteSeq, setDeleteSeq] = useState<string[]>([])
+  const [replaceSeq, setReplaceSeq] = useState<
+    Array<{ from: string; to: string }>
+  >([])
   const hasLoadedSeqConfigRef = useRef(false)
 
   const filteredPrependSeq = useMemo(
@@ -235,6 +238,7 @@ export const RulesEditorViewer = (props: Props) => {
     setPrependSeq(obj?.prepend || [])
     setAppendSeq(obj?.append || [])
     setDeleteSeq(obj?.delete || [])
+    setReplaceSeq(obj?.replace || [])
 
     setPrevData(data)
     setCurrData(data)
@@ -251,6 +255,7 @@ export const RulesEditorViewer = (props: Props) => {
       setPrependSeq(obj?.prepend ?? [])
       setAppendSeq(obj?.append ?? [])
       setDeleteSeq(obj?.delete ?? [])
+      setReplaceSeq(obj?.replace ?? [])
     })
   }, [currData, visualization])
 
@@ -260,7 +265,7 @@ export const RulesEditorViewer = (props: Props) => {
       return
     }
 
-    if (!(prependSeq && appendSeq && deleteSeq)) {
+    if (!(prependSeq && appendSeq && deleteSeq && replaceSeq)) {
       return
     }
 
@@ -272,7 +277,12 @@ export const RulesEditorViewer = (props: Props) => {
       try {
         setCurrData(
           yaml.dump(
-            { prepend: prependSeq, append: appendSeq, delete: deleteSeq },
+            {
+              prepend: prependSeq,
+              append: appendSeq,
+              delete: deleteSeq,
+              replace: replaceSeq,
+            },
             { forceQuotes: true },
           ),
         )
@@ -295,7 +305,7 @@ export const RulesEditorViewer = (props: Props) => {
         clearTimeout(timeoutId)
       }
     }
-  }, [prependSeq, appendSeq, deleteSeq])
+  }, [prependSeq, appendSeq, deleteSeq, replaceSeq])
 
   const fetchProfile = useCallback(async () => {
     const data = await readProfileFile(profileUid) // 原配置文件

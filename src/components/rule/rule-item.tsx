@@ -1,4 +1,5 @@
 import { alpha, Box, styled, Typography } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 
 import type { RuntimeRule } from '@/types/rule'
 
@@ -53,6 +54,7 @@ interface Props {
   displayIndex: number
   selected: boolean
   onSelect: (value: RuntimeRule) => void
+  onEdit: (value: RuntimeRule) => void
 }
 
 const parseColor = (text: string) => {
@@ -66,7 +68,14 @@ const parseColor = (text: string) => {
   return POLICY_COLORS[sum % POLICY_COLORS.length]
 }
 
-const RuleItem = ({ value, displayIndex, selected, onSelect }: Props) => {
+const RuleItem = ({
+  value,
+  displayIndex,
+  selected,
+  onSelect,
+  onEdit,
+}: Props) => {
+  const { t } = useTranslation()
   const payload = value.payload || '-'
   const used = value.extra?.hitCount
   const usedLabel = used == null ? '—' : String(used)
@@ -76,10 +85,18 @@ const RuleItem = ({ value, displayIndex, selected, onSelect }: Props) => {
       role="row"
       tabIndex={0}
       aria-selected={selected}
+      aria-description={t('rules.page.actions.edit.hint')}
+      aria-keyshortcuts="F2"
       data-selected={selected ? 'true' : 'false'}
       data-striped={displayIndex % 2 === 1 ? 'true' : 'false'}
       onClick={() => onSelect(value)}
+      onDoubleClick={() => onEdit(value)}
       onKeyDown={(event) => {
+        if (event.key === 'F2') {
+          event.preventDefault()
+          onEdit(value)
+          return
+        }
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault()
           onSelect(value)

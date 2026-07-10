@@ -338,6 +338,7 @@ interface ISeqProfileConfig {
   prepend: []
   append: []
   delete: []
+  replace?: Array<{ from: string; to: string }>
 }
 
 interface IProxyGroupConfig {
