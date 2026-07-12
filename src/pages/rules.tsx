@@ -478,13 +478,6 @@ const RulesPage = () => {
           >
             {t('rules.page.title')}
           </Typography>
-          <Typography
-            color="text.secondary"
-            data-tauri-drag-region="true"
-            sx={{ mt: 1, fontSize: 13.5, lineHeight: 1.45 }}
-          >
-            {t('rules.page.description')}
-          </Typography>
         </Box>
 
         <Box
@@ -522,15 +515,18 @@ const RulesPage = () => {
                   transition:
                     'background-color 160ms ease, border-color 160ms ease',
                   '& fieldset': {
-                    borderColor: 'var(--shell-border-strong)',
+                    borderColor: 'var(--shell-border)',
                   },
                   '&:hover fieldset': {
-                    borderColor: alpha(palette.text.primary, 0.24),
+                    borderColor: 'var(--shell-border)',
                   },
                   '&.Mui-focused fieldset': {
                     borderWidth: 1,
                     borderColor: palette.primary.main,
                   },
+                },
+                '& .MuiInputBase-input': {
+                  fontSize: 13.5,
                 },
               })}
             />
@@ -552,7 +548,7 @@ const RulesPage = () => {
           mb: { xs: 1.5, sm: 3 },
           overflowX: 'auto',
           overflowY: 'hidden',
-          border: '1px solid var(--shell-border-strong)',
+          border: '1px solid var(--shell-border)',
           borderRadius: '9px',
           bgcolor: 'var(--shell-panel)',
         }}
@@ -576,8 +572,12 @@ const RulesPage = () => {
               alignItems: 'center',
               boxSizing: 'border-box',
               minHeight: 32,
-              borderBottom: '1px solid var(--shell-border-strong)',
-              bgcolor: 'var(--shell-panel-muted)',
+              borderBottom: '1px solid var(--shell-border)',
+              bgcolor: ({ palette }) =>
+                alpha(
+                  palette.text.primary,
+                  palette.mode === 'dark' ? 0.03 : 0.018,
+                ),
             }}
           >
             {columnHeaders.map((header, index) => (
@@ -598,9 +598,6 @@ const RulesPage = () => {
                     index === 0 ? 'center' : index === 4 ? 'right' : 'left',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
-                  '&:not(:last-of-type)': {
-                    borderRight: '1px solid var(--shell-border)',
-                  },
                 }}
               >
                 {header}
@@ -646,8 +643,12 @@ const RulesPage = () => {
               alignItems: 'center',
               gap: 0.75,
               px: 1,
-              borderTop: '1px solid var(--shell-border-strong)',
-              bgcolor: 'var(--shell-panel-muted)',
+              borderTop: '1px solid var(--shell-border)',
+              bgcolor: ({ palette }) =>
+                alpha(
+                  palette.text.primary,
+                  palette.mode === 'dark' ? 0.03 : 0.018,
+                ),
             }}
           >
             <Tooltip
@@ -733,8 +734,11 @@ const RulesPage = () => {
         sx={{
           right: { xs: 20, sm: 36 },
           bottom: { xs: 60, sm: 76 },
-          border: '1px solid var(--shell-border-strong)',
+          border: '1px solid transparent',
           bgcolor: 'var(--shell-panel-muted) !important',
+          '&:hover': {
+            borderColor: 'var(--shell-border)',
+          },
           '&:focus-visible': {
             outline: '2px solid var(--shell-focus) !important',
             outlineOffset: 2,

@@ -134,13 +134,12 @@ export const ProviderButton = () => {
   return (
     <>
       <Button
-        variant="outlined"
+        variant="text"
         size="small"
         startIcon={<StorageOutlined />}
         onClick={() => setOpen(true)}
         sx={{
           minHeight: 36,
-          borderColor: 'var(--shell-border-strong)',
           borderRadius: 1.25,
           bgcolor: 'var(--shell-panel-muted)',
           color: 'text.primary',
@@ -148,7 +147,6 @@ export const ProviderButton = () => {
           whiteSpace: 'nowrap',
           textTransform: 'none',
           '&:hover': {
-            borderColor: 'var(--shell-border-strong)',
             bgcolor: 'var(--shell-nav-hover)',
           },
           '&:focus-visible': {

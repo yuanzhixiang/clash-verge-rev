@@ -11,18 +11,17 @@ const Item = styled(Box)(({ theme }) => ({
   width: '100%',
   height: 32,
   color: theme.palette.text.primary,
-  borderBottom: '1px solid var(--shell-border)',
   cursor: 'default',
   outline: 'none',
   transition: 'background-color 120ms ease',
   '&[data-striped="true"]': {
-    backgroundColor: alpha(theme.palette.text.primary, 0.025),
+    backgroundColor: alpha(theme.palette.text.primary, 0.022),
   },
   '&:hover': {
-    backgroundColor: alpha(theme.palette.text.primary, 0.065),
+    backgroundColor: alpha(theme.palette.text.primary, 0.06),
   },
   '&[data-selected="true"]': {
-    backgroundColor: alpha(theme.palette.text.primary, 0.11),
+    backgroundColor: alpha(theme.palette.text.primary, 0.105),
   },
   '&:focus-visible': {
     outline: `2px solid ${theme.palette.primary.main}`,

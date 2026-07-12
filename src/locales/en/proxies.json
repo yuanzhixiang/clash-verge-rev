@@ -85,7 +85,7 @@
       "policies": {
         "DIRECT": "DIRECT - Data goes directly outbound",
         "REJECT": "REJECT - Intercepts requests",
-        "REJECT-DROP": "REJECT-DROP - Discards requests",
+        "REJECT-DROP": "DROP - Discards requests",
         "PASS": "PASS - Skips this rule when matched"
       }
     }
