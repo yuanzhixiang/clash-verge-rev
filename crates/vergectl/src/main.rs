@@ -70,7 +70,7 @@ fn run() -> CliResult<()> {
         "proxies" => proxies(&mut args),
         "connections" => connections(&mut args),
         "rules" => rules(&mut args),
-        "unlock" => unlock(&mut args),
+        "unlock" => unlock(&args),
         "validate" => validate(&mut args),
         "watch" => watch(&mut args),
         other => Err(err(3, format!("unknown command: {other}"))),
@@ -87,7 +87,7 @@ fn config(args: &mut Vec<String>) -> CliResult<()> {
                 call(json!({
                     "cmd": "config_get",
                     "target": target,
-                    "format": format.clone(),
+                    "format": format,
                 }))?,
                 json_out || format == "json",
             )
@@ -545,7 +545,7 @@ fn rules(args: &mut Vec<String>) -> CliResult<()> {
     }
 }
 
-fn unlock(args: &mut Vec<String>) -> CliResult<()> {
+fn unlock(args: &[String]) -> CliResult<()> {
     match args.first().map(String::as_str) {
         Some("list" | "check") => {
             let action = args[0].clone();
@@ -565,7 +565,7 @@ fn backup(args: &mut Vec<String>) -> CliResult<()> {
     }
 }
 
-fn backup_local(args: &mut [String], json_out: bool) -> CliResult<()> {
+fn backup_local(args: &[String], json_out: bool) -> CliResult<()> {
     match args.get(1).map(String::as_str) {
         Some("create" | "list") => print(
             call(json!({
