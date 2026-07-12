@@ -330,7 +330,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
           '& code': {
             px: 0.5,
             py: 0.125,
-            borderRadius: 0.5,
+            borderRadius: 'var(--radius-compact)',
             bgcolor: 'action.hover',
             fontSize: '0.92em',
           },
@@ -338,7 +338,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
             my: 1.5,
             p: 1.5,
             overflow: 'auto',
-            borderRadius: 1,
+            borderRadius: 'var(--radius-compact)',
             bgcolor: 'action.hover',
           },
           '& pre code': {
@@ -373,7 +373,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
           '& img': {
             maxWidth: '100%',
             height: 'auto',
-            borderRadius: 1,
+            borderRadius: 'var(--radius-compact)',
           },
           '& blockquote:not(.markdown-alert)': {
             m: '12px 0 18px',
@@ -417,7 +417,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
                           px: 2,
                           py: 1,
                           borderLeft: `4px solid ${color}`,
-                          borderRadius: 1,
+                          borderRadius: 'var(--radius-compact)',
                           bgcolor: alpha(
                             color,
                             theme.palette.mode === 'dark' ? 0.16 : 0.08,

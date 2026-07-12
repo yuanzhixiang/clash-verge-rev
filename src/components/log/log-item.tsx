@@ -18,7 +18,7 @@ const Item = styled(Box)(({ theme: { palette, typography } }) => ({
     display: 'inline-block',
     marginLeft: 8,
     textAlign: 'center',
-    borderRadius: 2,
+    borderRadius: 'var(--radius-container)',
     textTransform: 'uppercase',
     fontWeight: '600',
   },
@@ -37,7 +37,7 @@ const Item = styled(Box)(({ theme: { palette, typography } }) => ({
   },
   '& .highlight': {
     backgroundColor: palette.mode === 'dark' ? '#ffeb3b40' : '#ffeb3b90',
-    borderRadius: 2,
+    borderRadius: 'var(--radius-container)',
     padding: '0 2px',
   },
 }))

@@ -27,8 +27,6 @@ export const EnhancedCard = forwardRef<HTMLElement, EnhancedCardProps>(
     ref,
   ) => {
     const theme = useTheme()
-    const isDark = theme.palette.mode === 'dark'
-
     // 统一的标题截断样式
     const titleTruncateStyle = {
       minWidth: 0,
@@ -45,15 +43,33 @@ export const EnhancedCard = forwardRef<HTMLElement, EnhancedCardProps>(
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          borderRadius: 2,
-          backgroundColor: isDark ? '#282a36' : '#ffffff',
+          overflow: 'hidden',
+          border: '1px solid var(--shell-border)',
+          borderRadius: 'var(--radius-container)',
+          backgroundColor: 'var(--shell-card)',
+          boxShadow:
+            theme.palette.mode === 'dark'
+              ? '0 10px 28px rgba(0, 0, 0, 0.16)'
+              : '0 10px 28px rgba(63, 78, 96, 0.07)',
+          transition:
+            'border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease',
+          '@media (hover: hover)': {
+            '&:hover': {
+              borderColor: 'var(--shell-border-strong)',
+              transform: 'translateY(-1px)',
+              boxShadow:
+                theme.palette.mode === 'dark'
+                  ? '0 14px 32px rgba(0, 0, 0, 0.2)'
+                  : '0 14px 32px rgba(63, 78, 96, 0.1)',
+            },
+          },
         }}
         ref={ref}
       >
         <Box
           sx={{
-            px: 2,
-            py: 1,
+            px: 2.25,
+            py: 1.5,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -75,9 +91,9 @@ export const EnhancedCard = forwardRef<HTMLElement, EnhancedCardProps>(
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: 1.5,
-                width: 38,
-                height: 38,
+                borderRadius: 'var(--radius-control)',
+                width: 36,
+                height: 36,
                 mr: 1.5,
                 flexShrink: 0,
                 backgroundColor: alpha(theme.palette[iconColor].main, 0.12),
@@ -92,8 +108,9 @@ export const EnhancedCard = forwardRef<HTMLElement, EnhancedCardProps>(
                   variant="h6"
                   sx={{
                     ...titleTruncateStyle,
-                    fontWeight: 'medium',
-                    fontSize: 18,
+                    fontWeight: 600,
+                    fontSize: 16,
+                    letterSpacing: '-0.015em',
                   }}
                   title={title}
                 >
@@ -111,7 +128,7 @@ export const EnhancedCard = forwardRef<HTMLElement, EnhancedCardProps>(
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            p: noContentPadding ? 0 : 2,
+            p: noContentPadding ? 0 : 2.25,
             ...(minHeight && { minHeight }),
           }}
         >

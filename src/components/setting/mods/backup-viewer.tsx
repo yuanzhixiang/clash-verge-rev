@@ -124,7 +124,7 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
           spacing={1}
           sx={{
             border: (theme) => `1px solid ${theme.palette.divider}`,
-            borderRadius: 2,
+            borderRadius: 'var(--radius-container)',
             p: 2,
           }}
         >
@@ -140,7 +140,7 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
           spacing={1}
           sx={{
             border: (theme) => `1px solid ${theme.palette.divider}`,
-            borderRadius: 2,
+            borderRadius: 'var(--radius-container)',
             p: 2,
           }}
         >

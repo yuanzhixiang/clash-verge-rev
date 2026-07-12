@@ -168,7 +168,7 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
         justifyContent: 'center',
         border: '1px dashed',
         borderColor: 'error.main',
-        borderRadius: 2,
+        borderRadius: 'var(--radius-container)',
         bgcolor: 'error.light',
         color: 'error.contrastText',
       }}
@@ -233,7 +233,7 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
           sx={{
             p: 2,
             bgcolor: 'background.paper',
-            borderRadius: 1,
+            borderRadius: 'var(--radius-compact)',
             border: '1px solid',
             borderColor: 'divider',
           }}
@@ -299,7 +299,7 @@ export const LightweightTrafficErrorBoundary: React.FC<{
             justifyContent: 'center',
             minHeight: 60,
             bgcolor: 'error.light',
-            borderRadius: 1,
+            borderRadius: 'var(--radius-compact)',
             color: 'error.contrastText',
           }}
         >

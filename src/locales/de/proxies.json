@@ -7,6 +7,8 @@
     },
     "actions": {
       "toggleChain": "Ketten-Proxy",
+      "test": "Tap to Test",
+      "testAll": "Test All",
       "connect": "Connect",
       "disconnect": "Disconnect",
       "connecting": "Connecting...",
@@ -25,7 +27,9 @@
     },
     "labels": {
       "proxyCount": "Anzahl der Knoten",
-      "delayCheckReset": "Latenztest durchführen, um Fixierung aufzuheben"
+      "delayCheckReset": "Latenztest durchführen, um Fixierung aufzuheben",
+      "outboundMode": "Outbound Mode",
+      "readonlyGroup": "Automatic selection"
     },
     "tooltips": {
       "locate": "Aktueller Knoten",
@@ -39,7 +43,8 @@
       "filter": "Knoten filtern"
     },
     "placeholders": {
-      "delayCheckUrl": "Latenztest-URL"
+      "delayCheckUrl": "Latenztest-URL",
+      "searchNodes": "Search nodes"
     },
     "chain": {
       "header": "Chain Proxy Config",
@@ -55,7 +60,18 @@
       "exitNode": "Ausgang"
     },
     "messages": {
-      "directMode": "Direktverbindungs-Modus"
+      "directMode": "Direktverbindungs-Modus",
+      "noNodes": "No proxy nodes",
+      "noGroups": "No policy groups"
+    },
+    "modeDescriptions": {
+      "rule": "Requests are routed according to the configured rules.",
+      "global": "All requests are sent through the selected global proxy.",
+      "direct": "All requests are sent directly to their destination."
+    },
+    "sections": {
+      "proxy": "Proxy",
+      "policyGroup": "Policy Group"
     },
     "title": {
       "default": "Richtlinie",

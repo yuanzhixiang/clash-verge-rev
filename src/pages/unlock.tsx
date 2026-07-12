@@ -375,7 +375,7 @@ const UnlockPage = () => {
                 variant="outlined"
                 sx={{
                   height: '100%',
-                  borderRadius: 2,
+                  borderRadius: 'var(--radius-container)',
                   borderLeft: `4px solid ${getStatusBorderColor(item.status)}`,
                   backgroundColor: isDark ? '#282a36' : '#ffffff',
                   position: 'relative',

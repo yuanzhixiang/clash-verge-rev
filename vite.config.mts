@@ -154,6 +154,12 @@ const safeTauriCoreInvokeBridge: Plugin = {
 
 export default defineConfig({
   root: 'src',
+  optimizeDeps: {
+    // Safe Dev must transform Mihomo's bare @tauri-apps/api/core import through
+    // the read-only invoke bridge. Pre-bundling would capture the native invoke
+    // instead and send reads to the intentionally plugin-free dev backend.
+    exclude: safeTauriCoreBridge ? ['tauri-plugin-mihomo-api'] : [],
+  },
   server: {
     host: '127.0.0.1',
     port: devServerPort,

@@ -18,3 +18,4 @@
 - relay 只接受 POST，并按命令与 action 的精确读取白名单校验 payload；未知命令和所有修改命令在转发到正式 App 前返回 403。
 - relay 设有 1 MiB 请求体上限与 10 秒上游超时。普通 `web:remote` 未开启只读变量时仍沿用现有通用代理行为。
 - 安全 Tauri 模式下，Vite 将 `@tauri-apps/api/core` 定向到仅开发期生效的 invoke 适配层，避免覆盖 Tauri 2.11 的不可写原生 invoke；普通浏览器远程模式和生产构建不启用该适配层。
+- 安全 Tauri 模式禁止预打包 `tauri-plugin-mihomo-api`，确保它对 `@tauri-apps/api/core` 的导入也经过 invoke 适配层；否则代理、规则、连接和流量等读取会绕过远程 App，错误调用未注册 Mihomo 插件的安全开发后端。

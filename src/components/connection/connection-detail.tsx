@@ -215,7 +215,7 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
         color: theme.palette.text.primary,
         backgroundColor: alpha(theme.palette.background.paper, 0.98),
         border: `1px solid ${alpha(theme.palette.primary.main, 0.22)}`,
-        borderRadius: 1.5,
+        borderRadius: 'var(--radius-container)',
         boxShadow: theme.shadows[6],
       }}
     >

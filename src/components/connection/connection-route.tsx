@@ -51,7 +51,7 @@ export const ConnectionRouteChips = ({
                 maxWidth: isExit ? 160 : 140,
                 height: 22,
                 px: 0.9,
-                borderRadius: 1,
+                borderRadius: 'var(--radius-compact)',
                 border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
                 color: theme.palette.primary.main,
                 backgroundColor: alpha(
@@ -124,7 +124,7 @@ export const ConnectionRouteTimeline = ({
                 maxWidth: 250,
                 px: 1.25,
                 py: 0.8,
-                borderRadius: 1,
+                borderRadius: 'var(--radius-compact)',
                 border: '1px solid',
                 borderColor: alpha(theme.palette.primary.main, 0.26),
                 backgroundColor: alpha(theme.palette.primary.main, 0.035),

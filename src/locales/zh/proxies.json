@@ -7,6 +7,8 @@
     },
     "actions": {
       "toggleChain": "链式代理",
+      "test": "点击测速",
+      "testAll": "全部测速",
       "connect": "连接",
       "disconnect": "断开",
       "connecting": "连接中...",
@@ -25,7 +27,9 @@
     },
     "labels": {
       "proxyCount": "节点数量",
-      "delayCheckReset": "进行延迟测试，以取消固定"
+      "delayCheckReset": "进行延迟测试，以取消固定",
+      "outboundMode": "出站模式",
+      "readonlyGroup": "自动选择"
     },
     "tooltips": {
       "locate": "当前节点",
@@ -39,7 +43,8 @@
       "filter": "过滤节点"
     },
     "placeholders": {
-      "delayCheckUrl": "延迟测试链接"
+      "delayCheckUrl": "延迟测试链接",
+      "searchNodes": "搜索节点"
     },
     "chain": {
       "header": "代理链配置",
@@ -55,7 +60,18 @@
       "exitNode": "出口"
     },
     "messages": {
-      "directMode": "直连模式"
+      "directMode": "直连模式",
+      "noNodes": "暂无代理节点",
+      "noGroups": "暂无策略组"
+    },
+    "modeDescriptions": {
+      "rule": "请求将按照已配置的规则选择出站策略。",
+      "global": "所有请求将通过当前选择的全局代理发送。",
+      "direct": "所有请求将直接发送到目标地址。"
+    },
+    "sections": {
+      "proxy": "代理节点",
+      "policyGroup": "策略组"
     },
     "title": {
       "default": "策略",

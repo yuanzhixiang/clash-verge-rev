@@ -7,6 +7,8 @@
     },
     "actions": {
       "toggleChain": "Цепочка прокси",
+      "test": "Tap to Test",
+      "testAll": "Test All",
       "connect": "Подключиться",
       "disconnect": "Отключиться",
       "connecting": "Подключение...",
@@ -25,7 +27,9 @@
     },
     "labels": {
       "proxyCount": "Количество прокси",
-      "delayCheckReset": "Сброс проверки задержки"
+      "delayCheckReset": "Сброс проверки задержки",
+      "outboundMode": "Outbound Mode",
+      "readonlyGroup": "Automatic selection"
     },
     "tooltips": {
       "locate": "Местоположение",
@@ -39,7 +43,8 @@
       "filter": "Фильтр"
     },
     "placeholders": {
-      "delayCheckUrl": "URL для проверки задержки"
+      "delayCheckUrl": "URL для проверки задержки",
+      "searchNodes": "Search nodes"
     },
     "chain": {
       "header": "Цепочка прокси",
@@ -55,7 +60,18 @@
       "exitNode": "Выход"
     },
     "messages": {
-      "directMode": "Прямой режим"
+      "directMode": "Прямой режим",
+      "noNodes": "No proxy nodes",
+      "noGroups": "No policy groups"
+    },
+    "modeDescriptions": {
+      "rule": "Requests are routed according to the configured rules.",
+      "global": "All requests are sent through the selected global proxy.",
+      "direct": "All requests are sent directly to their destination."
+    },
+    "sections": {
+      "proxy": "Proxy",
+      "policyGroup": "Policy Group"
     },
     "title": {
       "default": "Политика",

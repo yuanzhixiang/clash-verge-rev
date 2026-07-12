@@ -141,7 +141,7 @@ const SortableItem = ({
         backgroundColor: isDragging
           ? theme.palette.action.selected
           : theme.palette.background.default,
-        borderRadius: 1,
+        borderRadius: 'var(--radius-compact)',
         border: roleColor
           ? `1.5px solid ${roleColor}`
           : `1px solid ${theme.palette.divider}`,
@@ -601,7 +601,7 @@ export const ProxyChain = ({
             >
               <Box
                 sx={{
-                  borderRadius: 1,
+                  borderRadius: 'var(--radius-compact)',
                   minHeight: 60,
                   p: 1,
                 }}

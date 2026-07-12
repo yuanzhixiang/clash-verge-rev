@@ -74,7 +74,7 @@ const CompactStatCard = memo(
         sx={{
           display: 'flex',
           alignItems: 'center',
-          borderRadius: 2,
+          borderRadius: 'var(--radius-container)',
           bgcolor: alpha(colorValue, 0.05),
           border: `1px solid ${alpha(colorValue, 0.15)}`,
           padding: '8px',
@@ -199,7 +199,7 @@ export const EnhancedTrafficStats = () => {
           height: 130,
           cursor: 'pointer',
           border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
-          borderRadius: 2,
+          borderRadius: 'var(--radius-container)',
           overflow: 'hidden',
         }}
         onClick={() => trafficRef.current?.toggleStyle()}

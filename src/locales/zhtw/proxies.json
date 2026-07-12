@@ -7,6 +7,8 @@
     },
     "actions": {
       "toggleChain": "鏈式代理",
+      "test": "Tap to Test",
+      "testAll": "Test All",
       "connect": "連線",
       "disconnect": "中斷",
       "connecting": "連線中...",
@@ -25,7 +27,9 @@
     },
     "labels": {
       "proxyCount": "節點數量",
-      "delayCheckReset": "測試延遲以取消固定"
+      "delayCheckReset": "測試延遲以取消固定",
+      "outboundMode": "Outbound Mode",
+      "readonlyGroup": "Automatic selection"
     },
     "tooltips": {
       "locate": "目前節點",
@@ -39,7 +43,8 @@
       "filter": "篩選節點"
     },
     "placeholders": {
-      "delayCheckUrl": "延遲測試網址"
+      "delayCheckUrl": "延遲測試網址",
+      "searchNodes": "Search nodes"
     },
     "chain": {
       "header": "鏈式代理設定",
@@ -55,7 +60,18 @@
       "exitNode": "出口"
     },
     "messages": {
-      "directMode": "直連模式"
+      "directMode": "直連模式",
+      "noNodes": "No proxy nodes",
+      "noGroups": "No policy groups"
+    },
+    "modeDescriptions": {
+      "rule": "Requests are routed according to the configured rules.",
+      "global": "All requests are sent through the selected global proxy.",
+      "direct": "All requests are sent directly to their destination."
+    },
+    "sections": {
+      "proxy": "Proxy",
+      "policyGroup": "Policy Group"
     },
     "title": {
       "default": "策略",

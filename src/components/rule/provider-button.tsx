@@ -33,7 +33,7 @@ const MetaTag = styled(Box)<{ component?: React.ElementType }>(({ theme }) => ({
   display: 'inline-flex',
   height: 20,
   alignItems: 'center',
-  borderRadius: 5,
+  borderRadius: 'var(--radius-compact)',
   padding: '0 6px',
   backgroundColor: alpha(theme.palette.text.primary, 0.055),
   color: theme.palette.text.secondary,
@@ -155,7 +155,7 @@ export const ProviderButton = () => {
           height: 38,
           minWidth: 0,
           px: 1.5,
-          borderRadius: 1.5,
+          borderRadius: 'var(--radius-control)',
           bgcolor: 'var(--shell-panel-muted)',
           color: 'text.primary',
           fontSize: 13.5,
@@ -192,12 +192,12 @@ export const ProviderButton = () => {
             sx: ({ palette }) => ({
               ...getShellThemeVars(palette),
               display: 'flex',
-              width: 'min(640px, calc(100vw - 24px))',
+              width: 'min(680px, calc(100vw - 24px))',
               m: 1.5,
               maxHeight: 'calc(100% - 24px)',
               overflow: 'hidden',
               border: '1px solid var(--shell-border-strong) !important',
-              borderRadius: 2,
+              borderRadius: 'var(--radius-overlay)',
               bgcolor: 'var(--shell-panel) !important',
               backgroundImage: 'none',
               boxShadow: 'var(--shell-shadow) !important',
@@ -205,7 +205,7 @@ export const ProviderButton = () => {
           },
         }}
       >
-        <DialogTitle sx={{ px: 2.5, pt: 2.25, pb: 1.75 }}>
+        <DialogTitle sx={{ px: 3, pt: 2.75, pb: 2 }}>
           <Box
             sx={{
               display: 'flex',
@@ -248,7 +248,7 @@ export const ProviderButton = () => {
                 onClick={updateAllProviders}
                 sx={{
                   minHeight: 32,
-                  borderRadius: 1.25,
+                  borderRadius: 'var(--radius-compact)',
                   px: 1.25,
                   textTransform: 'none',
                   '&:focus-visible': {
@@ -284,14 +284,14 @@ export const ProviderButton = () => {
         </DialogTitle>
 
         <DialogContent
-          sx={{ minHeight: 0, overflowY: 'auto', px: 2.5, pt: 0, pb: 2.5 }}
+          sx={{ minHeight: 0, overflowY: 'auto', px: 3, pt: 0, pb: 3 }}
         >
           <List
             sx={{
               minHeight: 120,
               overflow: 'hidden',
               border: '1px solid var(--shell-border)',
-              borderRadius: 1.5,
+              borderRadius: 'var(--radius-container)',
               py: 0,
             }}
           >

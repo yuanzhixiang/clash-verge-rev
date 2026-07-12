@@ -71,7 +71,7 @@ const SettingPage = () => {
         <Grid size={6}>
           <Box
             sx={{
-              borderRadius: 2,
+              borderRadius: 'var(--radius-control)',
               marginBottom: 1.5,
               backgroundColor: isDark ? '#282a36' : '#ffffff',
             }}
@@ -80,7 +80,7 @@ const SettingPage = () => {
           </Box>
           <Box
             sx={{
-              borderRadius: 2,
+              borderRadius: 'var(--radius-control)',
               backgroundColor: isDark ? '#282a36' : '#ffffff',
             }}
           >
@@ -90,7 +90,7 @@ const SettingPage = () => {
         <Grid size={6}>
           <Box
             sx={{
-              borderRadius: 2,
+              borderRadius: 'var(--radius-control)',
               marginBottom: 1.5,
               backgroundColor: isDark ? '#282a36' : '#ffffff',
             }}
@@ -99,7 +99,7 @@ const SettingPage = () => {
           </Box>
           <Box
             sx={{
-              borderRadius: 2,
+              borderRadius: 'var(--radius-control)',
               backgroundColor: isDark ? '#282a36' : '#ffffff',
             }}
           >

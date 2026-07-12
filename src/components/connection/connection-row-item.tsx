@@ -20,7 +20,7 @@ const tagStyle = {
   maxWidth: '100%',
   padding: '1px 6px',
   border: '1px solid rgba(94, 106, 210, 0.16)',
-  borderRadius: 4,
+  borderRadius: 'var(--radius-container)',
   background: 'rgba(94, 106, 210, 0.08)',
   color: 'var(--primary-main, #5e6ad2)',
   fontSize: 10,

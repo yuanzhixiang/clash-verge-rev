@@ -874,7 +874,7 @@ export const CurrentProxyCard = () => {
             variant="outlined"
             size="small"
             onClick={goToProxies}
-            sx={{ borderRadius: 1.5 }}
+            sx={{ borderRadius: 'var(--radius-control)' }}
             endIcon={<ChevronRight fontSize="small" />}
           >
             {t('layout.components.navigation.tabs.proxies')}
@@ -894,7 +894,7 @@ export const CurrentProxyCard = () => {
               justifyContent: 'space-between',
               p: 1,
               mb: 2,
-              borderRadius: 1,
+              borderRadius: 'var(--radius-compact)',
               bgcolor: alpha(theme.palette.primary.main, 0.05),
               border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
             }}

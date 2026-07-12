@@ -34,7 +34,7 @@ export const ProxyItemMini = (props: Props) => {
       sx={[
         {
           height: 56,
-          borderRadius: 1.5,
+          borderRadius: 'var(--radius-control)',
           pl: 1.5,
           pr: 1,
           justifyContent: 'space-between',
@@ -225,7 +225,7 @@ const Widget = styled(Box)(({ theme: { typography } }) => ({
   padding: '2px 4px',
   fontSize: 14,
   fontFamily: typography.fontFamily,
-  borderRadius: '4px',
+  borderRadius: 'var(--radius-compact)',
 }))
 
 const TypeBox = styled(Box, {
@@ -235,7 +235,7 @@ const TypeBox = styled(Box, {
   border: '1px solid #ccc',
   borderColor: 'text.secondary',
   color: 'text.secondary',
-  borderRadius: 4,
+  borderRadius: 'var(--radius-container)',
   fontSize: 10,
   fontFamily: typography.fontFamily,
   marginRight: '4px',

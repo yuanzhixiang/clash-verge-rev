@@ -201,7 +201,7 @@ const Layout = () => {
           },
           OS === 'linux'
             ? {
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-control)',
                 width: '100vw',
                 height: '100vh',
               }

@@ -36,14 +36,16 @@ export const LayoutItem = (props: Props) => {
   }, [onPreload])
 
   return (
-    <ListItem sx={{ width: '100%', maxWidth: 250, mx: 'auto', px: 0, py: 0.2 }}>
+    <ListItem
+      sx={{ width: '100%', maxWidth: 250, mx: 'auto', px: 0, py: 0.35 }}
+    >
       <ListItemButton
         selected={!!match}
         sx={[
           {
-            minHeight: 42,
-            borderRadius: 1.75,
-            px: 1.5,
+            minHeight: 44,
+            borderRadius: 'var(--radius-control)',
+            px: 1.625,
             py: 0.5,
             cursor: 'pointer',
             transition:
@@ -60,7 +62,7 @@ export const LayoutItem = (props: Props) => {
             },
             '& .MuiListItemText-primary': {
               color: 'text.primary',
-              fontSize: 14,
+              fontSize: 14.5,
               fontWeight: 450,
               letterSpacing: '-0.005em',
             },

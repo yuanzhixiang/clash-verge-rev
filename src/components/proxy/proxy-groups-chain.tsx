@@ -146,7 +146,7 @@ function ChainRuleHeader({
             sx={{
               border: '1px solid',
               borderColor: 'divider',
-              borderRadius: '4px',
+              borderRadius: 'var(--radius-compact)',
               padding: '4px 8px',
             }}
           >

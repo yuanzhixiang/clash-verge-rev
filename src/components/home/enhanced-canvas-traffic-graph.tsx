@@ -1093,7 +1093,7 @@ export const EnhancedCanvasTrafficGraph = memo(
           height: '100%',
           position: 'relative',
           bgcolor: 'action.hover',
-          borderRadius: 1,
+          borderRadius: 'var(--radius-compact)',
           cursor: 'pointer',
           overflow: 'hidden',
         }}
@@ -1151,7 +1151,7 @@ export const EnhancedCanvasTrafficGraph = memo(
               pointerEvents: 'all',
               px: 1,
               py: 0.5,
-              borderRadius: 0.5,
+              borderRadius: 'var(--radius-compact)',
               bgcolor: 'rgba(0,0,0,0.05)',
               '&:hover': {
                 bgcolor: 'rgba(0,0,0,0.1)',
@@ -1234,7 +1234,7 @@ export const EnhancedCanvasTrafficGraph = memo(
                 bgcolor: theme.palette.background.paper,
                 border: 1,
                 borderColor: 'divider',
-                borderRadius: 0.5,
+                borderRadius: 'var(--radius-compact)',
                 px: 1,
                 py: 0.5,
                 fontSize: '10px',

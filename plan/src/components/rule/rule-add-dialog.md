@@ -16,7 +16,7 @@
 
 ## 视觉状态
 
-- 使用紧凑单列表单、主题表面、hairline 边框和 8px 控件圆角。
+- 使用紧凑单列表单、主题表面和 hairline 边框；Dialog 使用 Overlay 级 18px 圆角，内部控件使用 Control 级 9px 圆角。
 - 表单内容区必须为首个浮动标签预留安全顶部间距，Rule Type 标签不得被内容区滚动边界或描边裁切。
 - Rule Type 与 Proxy Policy 使用相同的 Autocomplete、Popper 定位、输入框宽度和主题表面；弹层由 MUI 自动处理视口防溢出及内部滚动。
 - 默认位置为顶部，位置选项明确显示顶部与底部含义。

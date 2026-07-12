@@ -13,7 +13,7 @@ const Loading = styled('div')`
     width: 6px;
     height: 6px;
     margin: 2px;
-    border-radius: 100%;
+    border-radius: 50%;
     animation: loading 0.7s -0.15s infinite linear;
   }
 

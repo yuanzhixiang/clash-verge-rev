@@ -97,7 +97,7 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
           style={{
             background: itembackgroundcolor,
             height: '100%',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-control)',
           }}
           onClick={() => {
             if (headState?.open) {
@@ -113,7 +113,10 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
                   src={iconCachePath === '' ? group.icon : iconCachePath}
                   alt="group icon"
                   width="32px"
-                  style={{ marginRight: '12px', borderRadius: '6px' }}
+                  style={{
+                    marginRight: '12px',
+                    borderRadius: 'var(--radius-compact)',
+                  }}
                 />
               )}
               {enable_group_icon && group.icon?.trim().startsWith('data') && (
@@ -121,7 +124,10 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
                   src={group.icon}
                   alt="group icon"
                   width="32px"
-                  style={{ marginRight: '12px', borderRadius: '6px' }}
+                  style={{
+                    marginRight: '12px',
+                    borderRadius: 'var(--radius-compact)',
+                  }}
                 />
               )}
               {enable_group_icon && group.icon?.trim().startsWith('<svg') && (
@@ -307,7 +313,7 @@ const StyledTypeBox = styled(Box)(({ theme }) => ({
   border: '1px solid #ccc',
   borderColor: alpha(theme.palette.primary.main, 0.5),
   color: alpha(theme.palette.primary.main, 0.8),
-  borderRadius: 4,
+  borderRadius: 'var(--radius-container)',
   fontSize: 10,
   padding: '0 4px',
   lineHeight: 1.5,

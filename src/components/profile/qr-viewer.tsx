@@ -23,7 +23,7 @@ export const QrViewer = (props: Props) => {
             justifyContent: 'center',
             p: 2,
             bgcolor: '#fff',
-            borderRadius: 1,
+            borderRadius: 'var(--radius-compact)',
           }}
         >
           <QRCodeSVG value={value} size={256} level="M" />

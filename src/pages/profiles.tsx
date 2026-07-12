@@ -906,7 +906,7 @@ const ProfilePage = () => {
           placeholder={t('profiles.page.importForm.placeholder')}
           slotProps={{
             input: {
-              sx: { height: 38, pr: 1, borderRadius: 1.5 },
+              sx: { height: 38, pr: 1, borderRadius: 'var(--radius-control)' },
               endAdornment: !url ? (
                 <IconButton
                   size="small"
@@ -934,7 +934,11 @@ const ProfilePage = () => {
           loading={loading}
           variant="contained"
           size="small"
-          sx={{ height: 38, borderRadius: 1.5, px: 1.75 }}
+          sx={{
+            height: 38,
+            borderRadius: 'var(--radius-control)',
+            px: 1.75,
+          }}
           onClick={onImport}
         >
           {t('profiles.page.actions.import')}
@@ -942,7 +946,11 @@ const ProfilePage = () => {
         <Button
           variant="contained"
           size="small"
-          sx={{ height: 38, borderRadius: 1.5, px: 1.75 }}
+          sx={{
+            height: 38,
+            borderRadius: 'var(--radius-control)',
+            px: 1.75,
+          }}
           onClick={() => viewerRef.current?.create()}
         >
           {t('shared.actions.new')}
@@ -967,7 +975,7 @@ const ProfilePage = () => {
             sx={{
               overflow: 'hidden',
               border: '1px solid var(--shell-border)',
-              borderRadius: 1.5,
+              borderRadius: 'var(--radius-control)',
               bgcolor: 'var(--shell-panel)',
               '& .MuiGrid-root:last-of-type > div > .MuiBox-root:first-of-type':
                 {
@@ -1026,7 +1034,7 @@ const ProfilePage = () => {
               mb: 1,
               overflow: 'hidden',
               border: '1px solid var(--shell-border)',
-              borderRadius: 1.5,
+              borderRadius: 'var(--radius-control)',
               bgcolor: 'var(--shell-panel)',
               '& .MuiGrid-root:last-of-type .MuiBox-root:first-of-type': {
                 borderBottom: 0,

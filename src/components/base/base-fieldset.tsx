@@ -24,7 +24,7 @@ export const BaseFieldset: React.FC<Props> = ({
       sx={{
         position: 'relative',
         border: '1px solid #bbb',
-        borderRadius: '5px',
+        borderRadius: 'var(--radius-compact)',
         width: width ?? 'auto',
         padding: fieldsetPadding,
       }}

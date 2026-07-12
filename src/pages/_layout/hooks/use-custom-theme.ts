@@ -167,10 +167,143 @@ export const useCustomTheme = () => {
 
     try {
       muiTheme = createTheme({
+        shape: {
+          borderRadius: 9,
+        },
         components: {
           MuiButtonBase: {
             defaultProps: {
               disableRipple: true,
+            },
+          },
+          MuiButton: {
+            defaultProps: { disableElevation: true },
+            styleOverrides: {
+              root: {
+                minHeight: 36,
+                borderRadius: 'var(--radius-control)',
+                paddingInline: 14,
+                fontSize: 13.5,
+                fontWeight: 550,
+                letterSpacing: 0,
+                textTransform: 'none',
+              },
+              contained: {
+                boxShadow: 'none',
+              },
+              outlined: {
+                borderColor:
+                  mode === 'light'
+                    ? 'rgba(31, 35, 40, 0.14)'
+                    : 'rgba(255, 255, 255, 0.14)',
+              },
+            },
+          },
+          MuiIconButton: {
+            styleOverrides: {
+              root: {
+                borderRadius: 'var(--radius-control)',
+                transition: 'background-color 160ms ease, color 160ms ease',
+              },
+            },
+          },
+          MuiPaper: {
+            styleOverrides: {
+              rounded: { borderRadius: 'var(--radius-container)' },
+            },
+          },
+          MuiCard: {
+            styleOverrides: {
+              root: { borderRadius: 'var(--radius-container)' },
+            },
+          },
+          MuiChip: {
+            styleOverrides: {
+              root: { borderRadius: 'var(--radius-pill)' },
+            },
+          },
+          MuiDialog: {
+            styleOverrides: {
+              paper: {
+                border:
+                  mode === 'light'
+                    ? '1px solid rgba(31, 35, 40, 0.1)'
+                    : '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: 'var(--radius-overlay)',
+                boxShadow:
+                  mode === 'light'
+                    ? '0 28px 80px rgba(25, 35, 48, 0.2)'
+                    : '0 28px 80px rgba(0, 0, 0, 0.45)',
+              },
+            },
+          },
+          MuiDialogTitle: {
+            styleOverrides: {
+              root: {
+                padding: '22px 24px 12px',
+                fontSize: 20,
+                fontWeight: 650,
+                letterSpacing: '-0.025em',
+              },
+            },
+          },
+          MuiDialogContent: {
+            styleOverrides: { root: { paddingInline: 24 } },
+          },
+          MuiDialogActions: {
+            styleOverrides: { root: { padding: '16px 24px 22px', gap: 8 } },
+          },
+          MuiTextField: {
+            defaultProps: { size: 'small' },
+          },
+          MuiOutlinedInput: {
+            styleOverrides: {
+              root: {
+                borderRadius: 'var(--radius-control)',
+                backgroundColor:
+                  mode === 'light'
+                    ? 'rgba(255, 255, 255, 0.76)'
+                    : 'rgba(255, 255, 255, 0.035)',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor:
+                    mode === 'light'
+                      ? 'rgba(31, 35, 40, 0.13)'
+                      : 'rgba(255, 255, 255, 0.13)',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor:
+                    mode === 'light'
+                      ? 'rgba(31, 35, 40, 0.22)'
+                      : 'rgba(255, 255, 255, 0.22)',
+                },
+              },
+            },
+          },
+          MuiSwitch: {
+            styleOverrides: {
+              root: { padding: 8 },
+              switchBase: { padding: 10 },
+              thumb: { width: 16, height: 16, boxShadow: 'none' },
+              track: { borderRadius: 'var(--radius-pill)', opacity: 0.16 },
+            },
+          },
+          MuiMenu: {
+            styleOverrides: {
+              paper: { borderRadius: 'var(--radius-overlay)' },
+            },
+          },
+          MuiPopover: {
+            styleOverrides: {
+              paper: { borderRadius: 'var(--radius-overlay)' },
+            },
+          },
+          MuiTooltip: {
+            styleOverrides: {
+              tooltip: {
+                borderRadius: 'var(--radius-compact)',
+                fontSize: 12,
+                padding: '6px 9px',
+              },
             },
           },
         },
@@ -199,6 +332,7 @@ export const useCustomTheme = () => {
           fontFamily: setting.font_family
             ? `${setting.font_family}, ${dt.font_family}`
             : dt.font_family,
+          button: { textTransform: 'none' },
         },
       })
     } catch (e) {
@@ -234,9 +368,9 @@ export const useCustomTheme = () => {
 
     const rootEle = document.documentElement
     if (rootEle) {
-      const backgroundColor = mode === 'light' ? '#ECECEC' : dt.background_color
+      const backgroundColor = getShellCanvasColor(mode)
       const selectColor = mode === 'light' ? '#f5f5f5' : '#3E3E3E'
-      const scrollColor = mode === 'light' ? '#90939980' : '#555555'
+      const scrollColor = mode === 'light' ? '#7d87934d' : '#8d929b66'
       const dividerColor =
         mode === 'light' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)'
       rootEle.style.setProperty('--divider-color', dividerColor)
@@ -250,16 +384,10 @@ export const useCustomTheme = () => {
       )
       rootEle.style.setProperty(
         '--window-border-color',
-        mode === 'light' ? '#cccccc' : '#1E1E1E',
+        mode === 'light' ? 'rgba(31, 35, 40, 0.1)' : 'rgba(255, 255, 255, 0.1)',
       )
-      rootEle.style.setProperty(
-        '--scrollbar-bg',
-        mode === 'light' ? '#f1f1f1' : '#2E303D',
-      )
-      rootEle.style.setProperty(
-        '--scrollbar-thumb',
-        mode === 'light' ? '#c1c1c1' : '#555555',
-      )
+      rootEle.style.setProperty('--scrollbar-bg', 'transparent')
+      rootEle.style.setProperty('--scrollbar-thumb', scrollColor)
       rootEle.style.setProperty(
         '--user-background-image',
         hasUserBackground ? `url('${userBackgroundImage}')` : 'none',
@@ -299,7 +427,7 @@ export const useCustomTheme = () => {
         }
         ::-webkit-scrollbar-thumb {
           background-color: var(--scrollbar-thumb);
-          border-radius: 4px;
+          border-radius: var(--radius-compact);
         }
         ::-webkit-scrollbar-thumb:hover {
           background-color: ${mode === 'light' ? '#a1a1a1' : '#666666'};
@@ -322,20 +450,14 @@ export const useCustomTheme = () => {
           }
         }
 
-        /* 修复可能的白色边框 */
-        .MuiPaper-root {
-          border-color: var(--window-border-color) !important;
-        }
-
         /* 确保模态框和对话框也使用暗色主题 */
         .MuiDialog-paper {
-          background-color: ${mode === 'light' ? '#ffffff' : '#2E303D'} !important;
+          background-color: ${mode === 'light' ? '#ffffff' : '#232429'} !important;
         }
 
-        /* 移除可能的白色点或线条 */
-        * {
-          outline: none !important;
-          box-shadow: none !important;
+        :where(button, [role='button'], [tabindex]:not(input):not(textarea):not(select)):focus-visible {
+          outline: 2px solid ${alpha(muiTheme.palette.primary.main, 0.72)} !important;
+          outline-offset: 2px;
         }
       `
 

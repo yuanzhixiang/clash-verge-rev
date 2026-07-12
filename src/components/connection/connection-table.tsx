@@ -786,7 +786,7 @@ export const ConnectionTable = (props: Props) => {
             overflow: 'auto',
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain',
-            borderRadius: 8,
+            borderRadius: 'var(--radius-control)',
           }}
         >
           <div

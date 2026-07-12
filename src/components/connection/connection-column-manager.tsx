@@ -152,7 +152,7 @@ const SortableColumnItem = ({
       sx={{
         px: 1,
         py: 0.5,
-        borderRadius: 1,
+        borderRadius: 'var(--radius-compact)',
         border: (theme) => `1px solid ${theme.palette.divider}`,
         backgroundColor: isDragging ? 'action.hover' : 'transparent',
         display: 'flex',

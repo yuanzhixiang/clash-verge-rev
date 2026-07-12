@@ -22,7 +22,12 @@ body {
   --scroller-color: #8c8c8c;
   --background-color: #f5f5f5;
   --background-color-alpha: rgba(24, 103, 192, 0.1);
-  --border-radius: 8px;
+  --radius-compact: 6px;
+  --radius-control: 9px;
+  --radius-container: 12px;
+  --radius-overlay: 18px;
+  --radius-shell: 20px;
+  --radius-pill: 999px;
 }
 
 ::selection {
@@ -36,7 +41,7 @@ body {
   background: transparent;
 }
 *::-webkit-scrollbar-thumb {
-  border-radius: 6px;
+  border-radius: var(--radius-compact);
   background-color: var(--scroller-color);
 }
 *::-webkit-scrollbar-corner {

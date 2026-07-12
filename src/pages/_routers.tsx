@@ -137,24 +137,6 @@ export const navItems = [
     ...createLazyRoute(() => import('./connections'), 'connections'),
   },
   {
-    label: 'layout.components.navigation.tabs.proxies',
-    path: '/proxies',
-    icon: [
-      <AltRouteRoundedIcon key="mui" />,
-      <AltRouteRoundedIcon key="color" />,
-    ],
-    ...createLazyRoute(() => import('./proxies')),
-  },
-  {
-    label: 'layout.components.navigation.tabs.rules',
-    path: '/rules',
-    icon: [
-      <ChecklistRoundedIcon key="mui" />,
-      <ChecklistRoundedIcon key="color" />,
-    ],
-    ...createLazyRoute(() => import('./rules'), 'rules'),
-  },
-  {
     label: 'layout.components.navigation.tabs.logs',
     path: '/logs',
     icon: [<SubjectRoundedIcon key="mui" />, <LogsSvg key="svg" />],
@@ -172,6 +154,24 @@ export const navItems = [
     path: '/settings',
     icon: [<SettingsRoundedIcon key="mui" />, <SettingsSvg key="svg" />],
     ...createLazyRoute(() => import('./settings')),
+  },
+  {
+    label: 'layout.components.navigation.tabs.proxies',
+    path: '/proxies',
+    icon: [
+      <AltRouteRoundedIcon key="mui" />,
+      <AltRouteRoundedIcon key="color" />,
+    ],
+    ...createLazyRoute(() => import('./proxies')),
+  },
+  {
+    label: 'layout.components.navigation.tabs.rules',
+    path: '/rules',
+    icon: [
+      <ChecklistRoundedIcon key="mui" />,
+      <ChecklistRoundedIcon key="color" />,
+    ],
+    ...createLazyRoute(() => import('./rules'), 'rules'),
   },
 ]
 

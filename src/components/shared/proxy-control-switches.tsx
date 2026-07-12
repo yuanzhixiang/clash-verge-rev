@@ -85,7 +85,7 @@ const SwitchRow = ({
         justifyContent: 'space-between',
         p: 1,
         pr: 2,
-        borderRadius: 1.5,
+        borderRadius: 'var(--radius-control)',
         bgcolor: highlight
           ? alpha(theme.palette.success.main, 0.07)
           : 'transparent',

@@ -26,13 +26,13 @@
     overflow: hidden;
 
     &__left {
-      flex: 0 0 220px;
+      flex: 0 0 232px;
       display: flex;
       height: 100%;
-      width: 220px;
-      min-width: 220px;
-      max-width: 220px;
-      padding: 8px 6px 10px;
+      width: 232px;
+      min-width: 232px;
+      max-width: 232px;
+      padding: 8px 8px 12px;
       flex-direction: column;
       align-self: stretch;
       box-sizing: border-box;
@@ -50,7 +50,7 @@
         min-height: 0;
         overflow-y: auto;
         margin: 0;
-        padding: 22px 6px 12px;
+        padding: 24px 6px 14px;
         scrollbar-width: none;
 
         &::-webkit-scrollbar {
@@ -59,9 +59,9 @@
         }
 
         &__group-label {
-          margin: 18px 12px 5px;
+          margin: 20px 12px 7px;
           color: var(--shell-nav-group, currentColor);
-          font-size: 11px;
+          font-size: 12px;
           font-weight: 500;
           line-height: 1.4;
           letter-spacing: 0.02em;
@@ -105,7 +105,7 @@
         min-height: 0;
         overflow: hidden;
         border: 1px solid var(--shell-border);
-        border-radius: 16px;
+        border-radius: var(--radius-shell);
         background: var(--shell-panel);
         box-shadow: var(--shell-shadow) !important;
 
@@ -293,7 +293,6 @@
 @mixin compact-navigation {
   --layout-nav-collapsed-width: 72px;
   --layout-nav-item-size: 48px;
-  --layout-nav-item-radius: 11px;
 
   .layout-content {
     &__left {
@@ -342,7 +341,7 @@
           flex-shrink: 0 !important;
           margin: 3px auto !important;
           padding: 0 !important;
-          border-radius: var(--layout-nav-item-radius) !important;
+          border-radius: var(--radius-control) !important;
         }
 
         .MuiListItemIcon-root {
@@ -374,7 +373,7 @@
       padding: 8px 8px 8px 2px;
 
       .the-content {
-        border-radius: 12px;
+        border-radius: var(--radius-container);
       }
     }
   }

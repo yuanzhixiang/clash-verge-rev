@@ -189,7 +189,7 @@ const ConnectionsPage = () => {
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-control)',
         minHeight: 0,
         position: 'relative',
       }}
@@ -323,7 +323,7 @@ const ConnectionsPage = () => {
           )}
           style={{
             flex: 1,
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-control)',
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain',
           }}

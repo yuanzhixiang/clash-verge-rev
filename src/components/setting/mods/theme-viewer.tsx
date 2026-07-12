@@ -206,7 +206,7 @@ const Item = styled(ListItem)(() => ({
 const Round = styled('div')(() => ({
   width: '24px',
   height: '24px',
-  borderRadius: '18px',
+  borderRadius: 'var(--radius-overlay)',
   display: 'inline-block',
   marginRight: '8px',
 }))

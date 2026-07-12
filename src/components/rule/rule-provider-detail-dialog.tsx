@@ -115,7 +115,7 @@ export const RuleProviderDetailDialog = ({
             m: 1.5,
             overflow: 'hidden',
             border: '1px solid var(--shell-border-strong) !important',
-            borderRadius: 2,
+            borderRadius: 'var(--radius-overlay)',
             bgcolor: 'var(--shell-panel) !important',
             backgroundImage: 'none',
             boxShadow: 'var(--shell-shadow) !important',
@@ -123,7 +123,7 @@ export const RuleProviderDetailDialog = ({
         },
       }}
     >
-      <DialogTitle sx={{ px: { xs: 1.5, sm: 2.5 }, pt: 2, pb: 1.5 }}>
+      <DialogTitle sx={{ px: { xs: 1.5, sm: 3 }, pt: 2.5, pb: 1.75 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <IconButton
             size="small"
@@ -174,9 +174,9 @@ export const RuleProviderDetailDialog = ({
           display: 'flex',
           minHeight: 0,
           flexDirection: 'column',
-          px: { xs: 1.5, sm: 2.5 },
+          px: { xs: 1.5, sm: 3 },
           pt: 0,
-          pb: 2.5,
+          pb: 3,
         }}
       >
         {content?.status === 'ready' && (
@@ -190,7 +190,7 @@ export const RuleProviderDetailDialog = ({
               sx={{
                 '& .MuiOutlinedInput-root': {
                   height: 36,
-                  borderRadius: '999px',
+                  borderRadius: 'var(--radius-pill)',
                   bgcolor: 'var(--shell-panel-muted)',
                   '& fieldset': { borderColor: 'var(--shell-border)' },
                 },
@@ -207,7 +207,7 @@ export const RuleProviderDetailDialog = ({
             flex: 1,
             overflow: 'hidden',
             border: '1px solid var(--shell-border)',
-            borderRadius: 1.5,
+            borderRadius: 'var(--radius-container)',
           }}
         >
           {loading && (

@@ -1,12 +1,12 @@
 import { LanOutlined, LanRounded, WarningRounded } from '@mui/icons-material'
-import { Box, Button, ButtonGroup } from '@mui/material'
+import { Box, Button, Typography } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import { useCallback, useEffect, useReducer, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { closeAllConnections } from 'tauri-plugin-mihomo-api'
 
 import { BasePage, TooltipIcon } from '@/components/base'
-import { ProviderButton } from '@/components/proxy/provider-button'
+import { PolicyDashboard } from '@/components/proxy/policy-dashboard'
 import { ProxyGroups } from '@/components/proxy/proxy-groups'
 import { useVerge } from '@/hooks/use-verge'
 import {
@@ -56,6 +56,7 @@ const ProxyPage = () => {
   const normalizedMode = clashConfig?.mode?.toLowerCase()
   const curMode = isMode(normalizedMode) ? normalizedMode : undefined
   const chainWarning = t('proxies.page.chain.warning')
+  const activeMode = curMode ?? 'rule'
 
   const onChangeMode = useLockFn(async (mode: Mode) => {
     // 断开连接
@@ -141,64 +142,154 @@ const ProxyPage = () => {
       full
       contentStyle={{ height: '100%' }}
       title={
-        isChainMode ? (
-          <Box
-            component="span"
-            data-tauri-drag-region="true"
-            sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}
-          >
-            {t('proxies.page.title.chainMode')}
+        <Box
+          component="span"
+          data-tauri-drag-region="true"
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 0.75,
+            fontSize: { xs: 28, sm: 34 },
+            fontWeight: 720,
+            lineHeight: 1.08,
+            letterSpacing: '-0.045em',
+          }}
+        >
+          {isChainMode
+            ? t('proxies.page.title.chainMode')
+            : t('proxies.page.title.default')}
+          {isChainMode && (
             <TooltipIcon
               title={chainWarning}
               icon={WarningRounded}
               color="warning"
               sx={{ p: 0.25 }}
             />
-          </Box>
-        ) : (
-          t('proxies.page.title.default')
-        )
-      }
-      header={
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <ProviderButton />
-
-          <ButtonGroup size="small">
-            {MODES.map((mode) => (
-              <Button
-                key={mode}
-                variant={mode === curMode ? 'contained' : 'outlined'}
-                onClick={() => onChangeMode(mode)}
-                sx={{ textTransform: 'capitalize' }}
-              >
-                {t(`proxies.page.modes.${mode}`)}
-              </Button>
-            ))}
-          </ButtonGroup>
-
-          <Button
-            size="small"
-            variant={isChainMode ? 'contained' : 'outlined'}
-            onClick={onToggleChainMode}
-            sx={{ ml: 1 }}
-            startIcon={
-              isChainMode ? (
-                <LanRounded fontSize="small" />
-              ) : (
-                <LanOutlined fontSize="small" />
-              )
-            }
-          >
-            {t('proxies.page.actions.toggleChain')}
-          </Button>
+          )}
         </Box>
       }
     >
-      <ProxyGroups
-        mode={curMode ?? 'rule'}
-        isChainMode={isChainMode}
-        chainConfigData={chainConfigData}
-      />
+      <Box sx={{ display: 'flex', height: '100%', flexDirection: 'column' }}>
+        <Box
+          sx={{
+            flex: '0 0 auto',
+            px: { xs: 2, sm: 3 },
+            pt: 2,
+            pb: 1,
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              gap: 1.5,
+            }}
+          >
+            <Box
+              role="group"
+              aria-label={t('proxies.page.labels.outboundMode')}
+              sx={{
+                display: 'grid',
+                minWidth: 0,
+                maxWidth: 860,
+                flex: '1 1 620px',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gap: 0.5,
+                borderRadius: 'var(--radius-pill)',
+                bgcolor: 'var(--shell-panel-muted)',
+                p: 0.5,
+              }}
+            >
+              {MODES.map((mode) => {
+                const selected = mode === activeMode
+                return (
+                  <Button
+                    key={mode}
+                    aria-pressed={selected}
+                    variant={selected ? 'contained' : 'text'}
+                    onClick={() => onChangeMode(mode)}
+                    sx={{
+                      minWidth: 0,
+                      height: 38,
+                      border: 0,
+                      borderRadius: 'var(--radius-pill)',
+                      color: selected ? 'primary.contrastText' : 'text.primary',
+                      '&:hover': {
+                        border: 0,
+                        bgcolor: selected
+                          ? 'primary.main'
+                          : 'var(--shell-nav-hover)',
+                      },
+                    }}
+                  >
+                    {t(`proxies.page.modes.${mode}`)}
+                  </Button>
+                )
+              })}
+            </Box>
+
+            <Button
+              size="small"
+              variant={isChainMode ? 'contained' : 'text'}
+              onClick={onToggleChainMode}
+              sx={{
+                height: 38,
+                flex: '0 0 auto',
+                borderRadius: 'var(--radius-control)',
+                bgcolor: isChainMode
+                  ? 'primary.main'
+                  : 'var(--shell-panel-muted)',
+                '&:hover': {
+                  bgcolor: isChainMode
+                    ? 'primary.main'
+                    : 'var(--shell-nav-hover)',
+                },
+              }}
+              startIcon={
+                isChainMode ? (
+                  <LanRounded fontSize="small" />
+                ) : (
+                  <LanOutlined fontSize="small" />
+                )
+              }
+            >
+              {t('proxies.page.actions.toggleChain')}
+            </Button>
+          </Box>
+
+          <Typography
+            color="text.secondary"
+            sx={{ mt: 1.25, fontSize: 13, lineHeight: 1.4 }}
+          >
+            {t(`proxies.page.modeDescriptions.${activeMode}`)}
+          </Typography>
+        </Box>
+
+        <Box sx={{ minHeight: 0, flex: 1 }}>
+          {isChainMode ? (
+            <Box
+              sx={{
+                height: '100%',
+                mx: { xs: 1, sm: 2 },
+                mt: 1,
+                overflow: 'hidden',
+                border: '1px solid var(--shell-border)',
+                borderRadius: 'var(--radius-control)',
+                bgcolor: 'var(--shell-panel-muted)',
+              }}
+            >
+              <ProxyGroups
+                mode={activeMode}
+                isChainMode
+                chainConfigData={chainConfigData}
+              />
+            </Box>
+          ) : (
+            <PolicyDashboard />
+          )}
+        </Box>
+      </Box>
     </BasePage>
   )
 }

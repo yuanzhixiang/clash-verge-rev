@@ -232,7 +232,7 @@ const ProfileDetails = ({
                 value={trafficPercentage}
                 sx={{
                   height: 8,
-                  borderRadius: 4,
+                  borderRadius: 'var(--radius-compact)',
                   backgroundColor: alpha(theme.palette.primary.main, 0.12),
                 }}
               />
@@ -258,7 +258,7 @@ const EmptyProfile = ({ onClick }: { onClick: () => void }) => {
         py: 2.4,
         cursor: 'pointer',
         '&:hover': { bgcolor: 'action.hover' },
-        borderRadius: 2,
+        borderRadius: 'var(--radius-container)',
       }}
       onClick={onClick}
     >
@@ -361,7 +361,7 @@ export const HomeProfileCard = ({
         size="small"
         onClick={goToProfiles}
         endIcon={<StorageOutlined fontSize="small" />}
-        sx={{ borderRadius: 1.5 }}
+        sx={{ borderRadius: 'var(--radius-control)' }}
       >
         {t('layout.components.navigation.tabs.profiles')}
       </Button>

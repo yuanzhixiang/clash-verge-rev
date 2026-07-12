@@ -49,7 +49,7 @@ const TabButton: FC<TabButtonProps> = memo(
         gap: 1,
         bgcolor: isActive ? 'primary.main' : 'background.paper',
         color: isActive ? 'primary.contrastText' : 'text.primary',
-        borderRadius: 1.5,
+        borderRadius: 'var(--radius-container)',
         flex: 1,
         maxWidth: 160,
         transition: 'all 0.2s ease-in-out',
@@ -110,7 +110,7 @@ const TabDescription: FC<TabDescriptionProps> = memo(
           textAlign: 'center',
           color: 'text.secondary',
           p: 0.8,
-          borderRadius: 1,
+          borderRadius: 'var(--radius-compact)',
           borderColor: 'primary.main',
           borderWidth: 1,
           borderStyle: 'solid',
@@ -231,7 +231,7 @@ export const ProxyTunCard: FC = () => {
           mt: 0,
           p: 1,
           bgcolor: alpha(theme.palette.primary.main, 0.04),
-          borderRadius: 2,
+          borderRadius: 'var(--radius-container)',
         }}
       >
         <ProxyControlSwitches

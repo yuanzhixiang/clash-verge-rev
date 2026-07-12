@@ -27,7 +27,7 @@ interface Props {
 const Widget = styled(Box)(() => ({
   padding: '3px 6px',
   fontSize: 14,
-  borderRadius: '4px',
+  borderRadius: 'var(--radius-compact)',
 }))
 
 const TypeBox = styled('span')(({ theme }) => ({
@@ -35,7 +35,7 @@ const TypeBox = styled('span')(({ theme }) => ({
   border: '1px solid #ccc',
   borderColor: alpha(theme.palette.text.secondary, 0.36),
   color: alpha(theme.palette.text.secondary, 0.42),
-  borderRadius: 4,
+  borderRadius: 'var(--radius-container)',
   fontSize: 10,
   marginRight: '4px',
   padding: '0 2px',
@@ -58,7 +58,7 @@ export const ProxyItem = (props: Props) => {
         selected={selected}
         onClick={() => onClick?.(proxy.name)}
         sx={[
-          { borderRadius: 1 },
+          { borderRadius: 'var(--radius-compact)' },
           ({ palette: { mode, primary } }) => {
             const bgcolor = mode === 'light' ? '#ffffff' : '#24252f'
             const selectColor = mode === 'light' ? primary.main : primary.light

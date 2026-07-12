@@ -7,6 +7,8 @@
     },
     "actions": {
       "toggleChain": "Zincir Proxy",
+      "test": "Tap to Test",
+      "testAll": "Test All",
       "connect": "Connect",
       "disconnect": "Disconnect",
       "connecting": "Connecting...",
@@ -25,7 +27,9 @@
     },
     "labels": {
       "proxyCount": "Vekil Sayısı",
-      "delayCheckReset": "Sabit iptali için gecikme kontrolü"
+      "delayCheckReset": "Sabit iptali için gecikme kontrolü",
+      "outboundMode": "Outbound Mode",
+      "readonlyGroup": "Automatic selection"
     },
     "tooltips": {
       "locate": "konum",
@@ -39,7 +43,8 @@
       "filter": "Filtre"
     },
     "placeholders": {
-      "delayCheckUrl": "Gecikme kontrol URL'si"
+      "delayCheckUrl": "Gecikme kontrol URL'si",
+      "searchNodes": "Search nodes"
     },
     "chain": {
       "header": "Chain Proxy Config",
@@ -55,7 +60,18 @@
       "exitNode": "Çıkış"
     },
     "messages": {
-      "directMode": "Doğrudan Mod"
+      "directMode": "Doğrudan Mod",
+      "noNodes": "No proxy nodes",
+      "noGroups": "No policy groups"
+    },
+    "modeDescriptions": {
+      "rule": "Requests are routed according to the configured rules.",
+      "global": "All requests are sent through the selected global proxy.",
+      "direct": "All requests are sent directly to their destination."
+    },
+    "sections": {
+      "proxy": "Proxy",
+      "policyGroup": "Policy Group"
     },
     "title": {
       "default": "Politika",

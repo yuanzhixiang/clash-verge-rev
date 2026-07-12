@@ -443,6 +443,8 @@ export interface TranslationResources {
           connect: string
           connecting: string
           disconnect: string
+          test: string
+          testAll: string
           toggleChain: string
         }
         chain: {
@@ -460,10 +462,19 @@ export interface TranslationResources {
         }
         labels: {
           delayCheckReset: string
+          outboundMode: string
           proxyCount: string
+          readonlyGroup: string
         }
         messages: {
           directMode: string
+          noGroups: string
+          noNodes: string
+        }
+        modeDescriptions: {
+          direct: string
+          global: string
+          rule: string
         }
         modes: {
           direct: string
@@ -472,6 +483,7 @@ export interface TranslationResources {
         }
         placeholders: {
           delayCheckUrl: string
+          searchNodes: string
         }
         provider: {
           actions: {
@@ -483,6 +495,10 @@ export interface TranslationResources {
         rules: {
           select: string
           title: string
+        }
+        sections: {
+          policyGroup: string
+          proxy: string
         }
         title: {
           chainMode: string

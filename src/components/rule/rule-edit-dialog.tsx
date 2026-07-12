@@ -90,7 +90,7 @@ export const RuleEditDialog = ({
             ...getShellThemeVars(palette),
             overflow: 'hidden',
             border: '1px solid var(--shell-border-strong) !important',
-            borderRadius: 2,
+            borderRadius: 'var(--radius-overlay)',
             bgcolor: 'var(--shell-panel) !important',
             backgroundImage: 'none',
             boxShadow: 'var(--shell-shadow) !important',

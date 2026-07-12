@@ -495,7 +495,7 @@ const RulesPage = () => {
               sx={({ palette }) => ({
                 '& .MuiOutlinedInput-root': {
                   height: 38,
-                  borderRadius: '999px',
+                  borderRadius: 'var(--radius-pill)',
                   bgcolor:
                     palette.mode === 'dark'
                       ? alpha(palette.common.white, 0.045)
@@ -537,7 +537,7 @@ const RulesPage = () => {
           overflowX: 'auto',
           overflowY: 'hidden',
           border: '1px solid var(--shell-border)',
-          borderRadius: '9px',
+          borderRadius: 'var(--radius-control)',
           bgcolor: 'var(--shell-panel)',
         }}
       >
@@ -653,7 +653,7 @@ const RulesPage = () => {
                   sx={{
                     width: 30,
                     height: 28,
-                    borderRadius: 1,
+                    borderRadius: 'var(--radius-compact)',
                     bgcolor: 'transparent',
                     '&:hover': {
                       bgcolor: 'var(--shell-nav-hover)',
@@ -690,7 +690,7 @@ const RulesPage = () => {
                   sx={{
                     width: 30,
                     height: 28,
-                    borderRadius: 1,
+                    borderRadius: 'var(--radius-compact)',
                     bgcolor: 'transparent',
                     '&:hover': {
                       bgcolor: 'var(--shell-nav-hover)',
@@ -758,7 +758,7 @@ const RulesPage = () => {
               ...getShellThemeVars(palette),
               overflow: 'hidden',
               border: '1px solid var(--shell-border-strong) !important',
-              borderRadius: 2,
+              borderRadius: 'var(--radius-overlay)',
               bgcolor: 'var(--shell-panel) !important',
               backgroundImage: 'none',
               boxShadow: 'var(--shell-shadow) !important',
@@ -782,7 +782,7 @@ const RulesPage = () => {
               p: 1.25,
               overflow: 'hidden',
               border: '1px solid var(--shell-border)',
-              borderRadius: 1.25,
+              borderRadius: 'var(--radius-control)',
               bgcolor: 'var(--shell-panel-muted)',
               fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
               fontSize: 12.5,
