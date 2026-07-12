@@ -1,5 +1,8 @@
 {
   "page": {
+    "sections": {
+      "extensions": "Киңәйтүләр"
+    },
     "actions": {
       "updateAll": "Барлык профильләрне яңарту",
       "viewRuntimeConfig": "Кулланылган конфигурацияне карау",
@@ -68,6 +71,7 @@
       "extendConfig": "Merge-ны үзгәртергә",
       "extendScript": "Script-ны үзгәртергә",
       "openFile": "Файлны ачу",
+      "revealInFinder": "Finder'да күрсәтү",
       "update": "Яңарту",
       "updateViaProxy": "Update via proxy"
     },

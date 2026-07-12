@@ -20,7 +20,7 @@ import {
   RefreshRounded,
   TextSnippetOutlined,
 } from '@mui/icons-material'
-import { Box, Button, Divider, Grid, IconButton, Stack } from '@mui/material'
+import { Box, Button, Grid, IconButton, Stack, Typography } from '@mui/material'
 import { TauriEvent } from '@tauri-apps/api/event'
 import { readText } from '@tauri-apps/plugin-clipboard-manager'
 import { readTextFile } from '@tauri-apps/plugin-fs'
@@ -69,11 +69,7 @@ import {
   revalidateQueries,
   useQuery,
 } from '@/services/query-client'
-import {
-  useLoadingCache,
-  useSetLoadingCache,
-  useThemeMode,
-} from '@/services/states'
+import { useLoadingCache, useSetLoadingCache } from '@/services/states'
 import { debugLog } from '@/utils/debug'
 
 // 与 src-tauri/src/main.rs 的 worker_limit 上限(8)保持一致，避免前后端更新风暴不对齐
@@ -741,12 +737,6 @@ const ProfilePage = () => {
     }
   })
 
-  const mode = useThemeMode()
-  const isLight = mode === 'light'
-  const dividercolor = isLight
-    ? 'rgba(0, 0, 0, 0.06)'
-    : 'rgba(255, 255, 255, 0.06)'
-
   // 组件卸载时清理中断控制器
   useEffect(() => {
     return () => {
@@ -760,8 +750,25 @@ const ProfilePage = () => {
   return (
     <BasePage
       full
-      title={t('profiles.page.title')}
-      contentStyle={{ height: '100%' }}
+      title={
+        <Typography
+          component="span"
+          sx={{
+            m: 0,
+            fontSize: { xs: 28, sm: 34 },
+            fontWeight: 720,
+            lineHeight: 1.08,
+            letterSpacing: '-0.045em',
+          }}
+        >
+          {t('profiles.page.title')}
+        </Typography>
+      }
+      contentStyle={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
       header={
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {!batchMode ? (
@@ -871,17 +878,18 @@ const ProfilePage = () => {
     >
       <Stack
         direction="row"
-        spacing={1}
+        spacing={1.5}
         sx={{
-          pt: 1,
-          mb: 0.5,
-          mx: '10px',
-          height: '36px',
+          px: { xs: 2, sm: 3 },
+          pt: { xs: 2, sm: 2.5 },
+          pb: 1.5,
           display: 'flex',
+          flexWrap: 'wrap',
           alignItems: 'center',
         }}
       >
         <BaseStyledTextField
+          sx={{ flex: '1 1 360px', minWidth: { xs: '100%', sm: 240 } }}
           value={url}
           variant="outlined"
           onChange={(e) => setUrl(e.target.value)}
@@ -898,7 +906,7 @@ const ProfilePage = () => {
           placeholder={t('profiles.page.importForm.placeholder')}
           slotProps={{
             input: {
-              sx: { pr: 1 },
+              sx: { height: 38, pr: 1, borderRadius: 1.5 },
               endAdornment: !url ? (
                 <IconButton
                   size="small"
@@ -926,7 +934,7 @@ const ProfilePage = () => {
           loading={loading}
           variant="contained"
           size="small"
-          sx={{ borderRadius: '6px' }}
+          sx={{ height: 38, borderRadius: 1.5, px: 1.75 }}
           onClick={onImport}
         >
           {t('profiles.page.actions.import')}
@@ -934,7 +942,7 @@ const ProfilePage = () => {
         <Button
           variant="contained"
           size="small"
-          sx={{ borderRadius: '6px' }}
+          sx={{ height: 38, borderRadius: 1.5, px: 1.75 }}
           onClick={() => viewerRef.current?.create()}
         >
           {t('shared.actions.new')}
@@ -948,21 +956,33 @@ const ProfilePage = () => {
       >
         <Box
           sx={{
-            pl: '10px',
-            pr: '10px',
-            height: 'calc(100% - 48px)',
+            px: { xs: 2, sm: 3 },
+            pb: { xs: 2, sm: 3 },
+            flex: 1,
+            minHeight: 0,
             overflowY: 'auto',
           }}
         >
-          <Box sx={{ mb: 1.5 }}>
-            <Grid container spacing={{ xs: 1, lg: 1 }}>
+          <Box
+            sx={{
+              overflow: 'hidden',
+              border: '1px solid var(--shell-border)',
+              borderRadius: 1.5,
+              bgcolor: 'var(--shell-panel)',
+              '& .MuiGrid-root:last-of-type > div > .MuiBox-root:first-of-type':
+                {
+                  borderBottom: 0,
+                },
+            }}
+          >
+            <Grid container spacing={0}>
               <SortableContext
                 items={profileItems.map((x) => {
                   return x.uid
                 })}
               >
                 {profileItems.map((item) => (
-                  <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={item.file}>
+                  <Grid size={12} key={item.file}>
                     <ProfileItem
                       id={item.uid}
                       selected={profiles.current === item.uid}
@@ -994,14 +1014,27 @@ const ProfilePage = () => {
               </SortableContext>
             </Grid>
           </Box>
-          <Divider
-            variant="middle"
-            flexItem
-            sx={{ width: `calc(100% - 32px)`, borderColor: dividercolor }}
-          ></Divider>
-          <Box sx={{ mt: 1.5, mb: '10px' }}>
-            <Grid container spacing={{ xs: 1, lg: 1 }}>
-              <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
+          <Typography
+            component="h2"
+            color="text.secondary"
+            sx={{ mt: 2.5, mb: 0.75, px: 0.5, fontSize: 11, fontWeight: 550 }}
+          >
+            {t('profiles.page.sections.extensions')}
+          </Typography>
+          <Box
+            sx={{
+              mb: 1,
+              overflow: 'hidden',
+              border: '1px solid var(--shell-border)',
+              borderRadius: 1.5,
+              bgcolor: 'var(--shell-panel)',
+              '& .MuiGrid-root:last-of-type .MuiBox-root:first-of-type': {
+                borderBottom: 0,
+              },
+            }}
+          >
+            <Grid container spacing={0}>
+              <Grid size={12}>
                 <ProfileMore
                   id="Merge"
                   onSave={async (prev, curr) => {
@@ -1011,7 +1044,7 @@ const ProfilePage = () => {
                   }}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
+              <Grid size={12}>
                 <ProfileMore
                   id="Script"
                   logInfo={chainLogs['Script']}

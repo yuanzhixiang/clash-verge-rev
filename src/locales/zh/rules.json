@@ -6,6 +6,18 @@
       "actions": {
         "updateAll": "更新全部",
         "update": "更新"
+      },
+      "detail": {
+        "open": "查看 {{name}} 的具体规则",
+        "back": "返回规则集合",
+        "searchPlaceholder": "搜索此规则集合",
+        "empty": "没有匹配的规则",
+        "loadFailed": "无法读取此规则集合",
+        "unavailable": {
+          "mrs": "暂不支持预览 MRS 规则集合",
+          "cachePathUnavailable": "此规则集合没有明确的缓存路径",
+          "cacheMissing": "本地规则集合缓存尚不可用"
+        }
       }
     },
     "actions": {

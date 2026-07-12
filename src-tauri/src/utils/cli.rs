@@ -574,11 +574,15 @@ async fn connections(action: &str, id: Option<String>) -> Result<JsonValue> {
 }
 
 async fn rules(action: &str, provider: Option<String>) -> Result<JsonValue> {
-    let mihomo = handle::Handle::mihomo().await;
     match action {
-        "list" => to_json(&mihomo.get_rules().await?),
-        "providers" => to_json(&mihomo.get_rule_providers().await?),
+        "list" => to_json(&handle::Handle::mihomo().await.get_rules().await?),
+        "providers" => to_json(&handle::Handle::mihomo().await.get_rule_providers().await?),
+        "content" => {
+            let provider = required(provider, "provider")?;
+            to_json(&cmd(crate::cmd::get_rule_provider_content(provider.into()).await)?)
+        }
         "update_provider" | "update-provider" => {
+            let mihomo = handle::Handle::mihomo().await;
             let provider = required(provider, "provider")?;
             if provider == "__all__" {
                 let providers = mihomo.get_rule_providers().await?;

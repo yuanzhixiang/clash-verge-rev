@@ -1,5 +1,8 @@
 {
   "page": {
+    "sections": {
+      "extensions": "Extensions"
+    },
     "actions": {
       "updateAll": "Update All Profiles",
       "viewRuntimeConfig": "View Runtime Config",
@@ -68,6 +71,7 @@
       "extendConfig": "Extend Config",
       "extendScript": "Extend Script",
       "openFile": "Open File",
+      "revealInFinder": "Reveal in Finder",
       "update": "Update",
       "updateViaProxy": "Update via proxy"
     },

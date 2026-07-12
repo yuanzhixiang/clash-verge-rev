@@ -3,13 +3,16 @@
     "navigation": {
       "tabs": {
         "home": "Home",
-        "proxies": "Proxies",
+        "proxies": "Policy",
         "profiles": "Profiles",
         "connections": "Connections",
-        "rules": "Rules",
+        "rules": "Rule",
         "logs": "Logs",
         "unlock": "Test",
         "settings": "Settings"
+      },
+      "groups": {
+        "proxies": "Proxies"
       },
       "menu": {
         "reorderMode": "Menu reorder mode",

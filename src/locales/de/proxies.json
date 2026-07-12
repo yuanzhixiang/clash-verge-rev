@@ -58,7 +58,7 @@
       "directMode": "Direktverbindungs-Modus"
     },
     "title": {
-      "default": "Proxy-Gruppen",
+      "default": "Richtlinie",
       "chainMode": "Proxy Chain Mode"
     }
   },

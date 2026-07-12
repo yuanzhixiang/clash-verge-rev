@@ -3,13 +3,16 @@
     "navigation": {
       "tabs": {
         "home": "Home",
-        "proxies": "پراکسی‌ها",
+        "proxies": "سیاست",
         "profiles": "پروفایل‌ها",
         "connections": "اتصالات",
         "rules": "قوانین",
         "logs": "لاگ‌ها",
         "unlock": "Test",
         "settings": "تنظیمات"
+      },
+      "groups": {
+        "proxies": "پراکسی‌ها"
       },
       "menu": {
         "reorderMode": "Menu reorder mode",

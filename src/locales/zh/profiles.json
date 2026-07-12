@@ -1,5 +1,8 @@
 {
   "page": {
+    "sections": {
+      "extensions": "扩展"
+    },
     "actions": {
       "updateAll": "更新所有订阅",
       "viewRuntimeConfig": "查看运行时订阅",
@@ -68,6 +71,7 @@
       "extendConfig": "扩展覆写配置",
       "extendScript": "扩展脚本",
       "openFile": "打开文件",
+      "revealInFinder": "在访达中显示",
       "update": "更新",
       "updateViaProxy": "更新（代理）"
     },

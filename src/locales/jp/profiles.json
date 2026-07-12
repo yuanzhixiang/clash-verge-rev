@@ -1,5 +1,8 @@
 {
   "page": {
+    "sections": {
+      "extensions": "拡張"
+    },
     "actions": {
       "updateAll": "すべてのプロファイルを更新",
       "viewRuntimeConfig": "実行時のプロファイルを表示",
@@ -68,6 +71,7 @@
       "extendConfig": "拡張上書き設定",
       "extendScript": "拡張スクリプト",
       "openFile": "ファイルを開く",
+      "revealInFinder": "Finderに表示",
       "update": "更新",
       "updateViaProxy": "Update via proxy"
     },

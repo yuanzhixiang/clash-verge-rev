@@ -37,6 +37,10 @@ export async function viewProfile(index: string) {
   return invoke<void>('view_profile', { index })
 }
 
+export async function revealProfileFile(index: string) {
+  return invoke<void>('reveal_profile_file', { index })
+}
+
 export async function readProfileFile(index: string) {
   return invoke<string>('read_profile_file', { index })
 }
@@ -106,6 +110,24 @@ export async function getRuntimeExists() {
 
 export async function getRuntimeLogs() {
   return invoke<Record<string, [string, string][]>>('get_runtime_logs')
+}
+
+export type RuleProviderContent =
+  | {
+      status: 'ready'
+      providerName: string
+      format: string
+      rules: string[]
+    }
+  | {
+      status: 'unavailable'
+      reason: 'mrs' | 'cachePathUnavailable' | 'cacheMissing'
+    }
+
+export async function getRuleProviderContent(providerName: string) {
+  return invoke<RuleProviderContent>('get_rule_provider_content', {
+    providerName,
+  })
 }
 
 export async function getRuntimeProxyChainConfig(proxyChainExitNode: string) {

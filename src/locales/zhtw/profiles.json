@@ -1,5 +1,8 @@
 {
   "page": {
+    "sections": {
+      "extensions": "擴充"
+    },
     "actions": {
       "updateAll": "更新所有訂閱",
       "viewRuntimeConfig": "查看執行時訂閱",
@@ -68,6 +71,7 @@
       "extendConfig": "擴充覆寫設定",
       "extendScript": "擴充指令碼",
       "openFile": "開啟檔案",
+      "revealInFinder": "在 Finder 中顯示",
       "update": "更新",
       "updateViaProxy": "更新（代理）"
     },

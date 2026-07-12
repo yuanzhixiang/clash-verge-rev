@@ -1,5 +1,8 @@
 {
   "page": {
+    "sections": {
+      "extensions": "Расширения"
+    },
     "actions": {
       "updateAll": "Обновить все профили",
       "viewRuntimeConfig": "Просмотреть текущую конфигурацию",
@@ -68,6 +71,7 @@
       "extendConfig": "Изменить Merge-конфигурацию",
       "extendScript": "Изменить Script",
       "openFile": "Открыть файл",
+      "revealInFinder": "Показать в Finder",
       "update": "Обновить",
       "updateViaProxy": "Обновить через прокси"
     },

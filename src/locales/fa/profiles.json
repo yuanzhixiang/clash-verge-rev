@@ -1,5 +1,8 @@
 {
   "page": {
+    "sections": {
+      "extensions": "افزونه‌ها"
+    },
     "actions": {
       "updateAll": "به‌روزرسانی همه پروفایل‌ها",
       "viewRuntimeConfig": "مشاهده پیکربندی زمان اجرا",
@@ -68,6 +71,7 @@
       "extendConfig": "توسعه پیکربندی",
       "extendScript": "ادغام اسکریپت",
       "openFile": "باز کردن فایل",
+      "revealInFinder": "نمایش در Finder",
       "update": "به‌روزرسانی",
       "updateViaProxy": "Update via proxy"
     },

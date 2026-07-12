@@ -3,13 +3,16 @@
     "navigation": {
       "tabs": {
         "home": "Home",
-        "proxies": "الوكلاء",
+        "proxies": "السياسة",
         "profiles": "الملفات الشخصية",
         "connections": "الاتصالات",
         "rules": "القواعد",
         "logs": "السجلات",
         "unlock": "Test",
         "settings": "الإعدادات"
+      },
+      "groups": {
+        "proxies": "الوكلاء"
       },
       "menu": {
         "reorderMode": "Menu reorder mode",

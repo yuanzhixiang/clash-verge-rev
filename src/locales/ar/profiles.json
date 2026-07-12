@@ -1,5 +1,8 @@
 {
   "page": {
+    "sections": {
+      "extensions": "الإضافات"
+    },
     "actions": {
       "updateAll": "تحديث جميع الملفات الشخصية",
       "viewRuntimeConfig": "عرض تكوين وقت التشغيل",
@@ -68,6 +71,7 @@
       "extendConfig": "توسيع الإعدادات",
       "extendScript": "توسيع السكربت",
       "openFile": "فتح الملف",
+      "revealInFinder": "إظهار في Finder",
       "update": "تحديث",
       "updateViaProxy": "Update via proxy"
     },

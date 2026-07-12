@@ -373,6 +373,7 @@ const READ_ONLY_MIHOMO_COMMANDS = new Set([
   'plugin:mihomo|get_proxy_provider_by_name',
   'plugin:mihomo|get_rules',
   'plugin:mihomo|get_rule_providers',
+  'get_rule_provider_content',
   'plugin:mihomo|get_base_config',
   'plugin:mihomo|ws_connections',
   'plugin:mihomo|ws_traffic',
@@ -619,6 +620,12 @@ const handleMihomo = async (cmd: string, args: InvokePayload) => {
         action: 'update_provider',
         provider: stringOf(args, 'providerName'),
       })
+    case 'get_rule_provider_content':
+      return cli({
+        cmd: 'rules',
+        action: 'content',
+        provider: stringOf(args, 'providerName'),
+      })
     case 'plugin:mihomo|get_base_config':
       return configGet('runtime')
     case 'plugin:mihomo|patch_base_config':
@@ -781,6 +788,7 @@ const handleCommand = async (cmd: string, args: InvokePayload) => {
         profile: args.profile,
       })
     case 'view_profile':
+    case 'reveal_profile_file':
       return null
     case 'read_profile_file': {
       const data = await cli<{ content?: string }>({

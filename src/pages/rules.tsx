@@ -15,16 +15,10 @@ import {
   Typography,
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import {
-  BaseEmpty,
-  BaseSearchBox,
-  VirtualList,
-  type VirtualListHandle,
-} from '@/components/base'
-import { ScrollTopButton } from '@/components/layout/scroll-top-button'
+import { BaseEmpty, BaseSearchBox, VirtualList } from '@/components/base'
 import { ProviderButton } from '@/components/rule/provider-button'
 import { RuleAddDialog } from '@/components/rule/rule-add-dialog'
 import {
@@ -89,8 +83,6 @@ const RulesPage = () => {
   const { refreshRules, refreshRuleProviders } = useAppRefreshers()
   const { current: currentProfile } = useProfiles()
   const [match, setMatch] = useState(() => (_: string) => true)
-  const virtuosoRef = useRef<VirtualListHandle>(null)
-  const [showScrollTop, setShowScrollTop] = useState(false)
   const [selectedRuleTarget, setSelectedRuleTarget] =
     useState<SelectedRuleTarget | null>(null)
   const [addOpen, setAddOpen] = useState(false)
@@ -139,14 +131,6 @@ const RulesPage = () => {
     },
     [],
   )
-
-  const handleScroll = useCallback((event: Event) => {
-    setShowScrollTop((event.target as HTMLElement).scrollTop > 120)
-  }, [])
-
-  const scrollToTop = useCallback(() => {
-    virtuosoRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [])
 
   const selectedRule = useMemo(
     () =>
@@ -487,17 +471,21 @@ const RulesPage = () => {
             minWidth: 0,
             alignItems: 'center',
             justifyContent: 'flex-end',
-            gap: 1,
+            gap: 1.5,
             '@media (max-width: 620px)': {
               flexBasis: '100%',
               flexWrap: 'wrap',
               justifyContent: 'stretch',
-              '& > *': { flexGrow: 1 },
+              '& > .rule-provider-trigger': { flex: '0 0 auto' },
+              '& > .rule-search': { flex: '1 1 100%' },
             },
           }}
         >
           <ProviderButton />
-          <Box sx={{ width: { xs: '100%', sm: 340 }, maxWidth: '100%' }}>
+          <Box
+            className="rule-search"
+            sx={{ width: { xs: '100%', sm: 340 }, maxWidth: '100%' }}
+          >
             <BaseSearchBox
               placeholder={t('rules.page.searchPlaceholder')}
               startAdornment={
@@ -607,7 +595,6 @@ const RulesPage = () => {
 
           {filteredRules.length > 0 ? (
             <VirtualList
-              ref={virtuosoRef}
               count={filteredRules.length}
               estimateSize={32}
               overscan={8}
@@ -628,7 +615,6 @@ const RulesPage = () => {
                 />
               )}
               style={{ flex: 1, minHeight: 0, overflowX: 'hidden' }}
-              onScroll={handleScroll}
             />
           ) : (
             <Box sx={{ flex: 1, minHeight: 0 }}>
@@ -726,25 +712,6 @@ const RulesPage = () => {
           </Box>
         </Box>
       </Box>
-
-      <ScrollTopButton
-        ariaLabel={t('rules.page.actions.scrollTop')}
-        onClick={scrollToTop}
-        show={showScrollTop && filteredRules.length > 0}
-        sx={{
-          right: { xs: 20, sm: 36 },
-          bottom: { xs: 60, sm: 76 },
-          border: '1px solid transparent',
-          bgcolor: 'var(--shell-panel-muted) !important',
-          '&:hover': {
-            borderColor: 'var(--shell-border)',
-          },
-          '&:focus-visible': {
-            outline: '2px solid var(--shell-focus) !important',
-            outlineOffset: 2,
-          },
-        }}
-      />
 
       {addContext && (
         <RuleAddDialog

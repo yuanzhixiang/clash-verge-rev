@@ -1,5 +1,8 @@
 {
   "page": {
+    "sections": {
+      "extensions": "Erweiterungen"
+    },
     "actions": {
       "updateAll": "Alle Abonnements aktualisieren",
       "viewRuntimeConfig": "Laufzeit-Abonnement anzeigen",
@@ -68,6 +71,7 @@
       "extendConfig": "Erweiterte Überdeckungskonfiguration",
       "extendScript": "Erweitertes Skript",
       "openFile": "Datei öffnen",
+      "revealInFinder": "Im Finder anzeigen",
       "update": "Aktualisieren",
       "updateViaProxy": "Update via proxy"
     },

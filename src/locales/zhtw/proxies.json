@@ -58,7 +58,7 @@
       "directMode": "直連模式"
     },
     "title": {
-      "default": "代理組",
+      "default": "策略",
       "chainMode": "鏈式代理模式"
     }
   },

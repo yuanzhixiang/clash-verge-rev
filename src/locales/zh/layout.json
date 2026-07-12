@@ -3,13 +3,16 @@
     "navigation": {
       "tabs": {
         "home": "首 页",
-        "proxies": "代 理",
+        "proxies": "策 略",
         "profiles": "订 阅",
         "connections": "连 接",
         "rules": "规 则",
         "logs": "日 志",
         "unlock": "测 试",
         "settings": "设 置"
+      },
+      "groups": {
+        "proxies": "代 理"
       },
       "menu": {
         "reorderMode": "菜单排序模式",

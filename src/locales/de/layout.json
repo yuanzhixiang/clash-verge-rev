@@ -3,13 +3,16 @@
     "navigation": {
       "tabs": {
         "home": "Startseite",
-        "proxies": "Proxy",
+        "proxies": "Richtlinie",
         "profiles": "Abonnement",
         "connections": "Verbindungen",
-        "rules": "Regeln",
+        "rules": "Regel",
         "logs": "Protokolle",
         "unlock": "Testen",
         "settings": "Einstellungen"
+      },
+      "groups": {
+        "proxies": "Proxys"
       },
       "menu": {
         "reorderMode": "Menu reorder mode",

@@ -1,5 +1,8 @@
 {
   "page": {
+    "sections": {
+      "extensions": "Ekstensi"
+    },
     "actions": {
       "updateAll": "Perbarui Semua Profil",
       "viewRuntimeConfig": "Lihat Konfigurasi Runtime",
@@ -68,6 +71,7 @@
       "extendConfig": "Perluas Konfigurasi",
       "extendScript": "Perluas Skrip",
       "openFile": "Buka Berkas",
+      "revealInFinder": "Tampilkan di Finder",
       "update": "Perbarui",
       "updateViaProxy": "Update via proxy"
     },

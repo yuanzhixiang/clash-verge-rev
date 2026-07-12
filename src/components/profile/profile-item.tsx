@@ -4,6 +4,7 @@ import {
   CheckBoxOutlineBlankRounded,
   CheckBoxRounded,
   DragIndicatorRounded,
+  MoreHorizRounded,
   RefreshRounded,
 } from '@mui/icons-material'
 import {
@@ -31,6 +32,7 @@ import { useEditorDocument } from '@/hooks/use-editor-document'
 import {
   getNextUpdateTime,
   readProfileFile,
+  revealProfileFile,
   saveProfileFile,
   updateProfile,
   viewProfile,
@@ -389,6 +391,15 @@ export const ProfileItem = (props: Props) => {
     }
   })
 
+  const onRevealFile = useLockFn(async () => {
+    setAnchorEl(null)
+    try {
+      await revealProfileFile(itemData.uid)
+    } catch (err) {
+      showNotice.error(err)
+    }
+  })
+
   /// 0 不使用任何代理
   /// 1 使用订阅好的代理
   /// 2 至少使用一个代理，根据订阅，如果没订阅，默认使用系统代理
@@ -444,6 +455,7 @@ export const ProfileItem = (props: Props) => {
     extendConfig: 'profiles.components.menu.extendConfig',
     extendScript: 'profiles.components.menu.extendScript',
     openFile: 'profiles.components.menu.openFile',
+    revealInFinder: 'profiles.components.menu.revealInFinder',
     update: 'profiles.components.menu.update',
     updateViaProxy: 'profiles.components.menu.updateViaProxy',
     delete: 'shared.actions.delete',
@@ -507,6 +519,11 @@ export const ProfileItem = (props: Props) => {
     {
       label: menuLabels.openFile,
       handler: onOpenFile,
+      disabled: false,
+    },
+    {
+      label: menuLabels.revealInFinder,
+      handler: onRevealFile,
       disabled: false,
     },
     {
@@ -582,6 +599,11 @@ export const ProfileItem = (props: Props) => {
       disabled: false,
     },
     {
+      label: menuLabels.revealInFinder,
+      handler: onRevealFile,
+      disabled: false,
+    },
+    {
       label: menuLabels.delete,
       handler: () => {
         setAnchorEl(null)
@@ -597,13 +619,6 @@ export const ProfileItem = (props: Props) => {
       disabled: false,
     },
   ]
-
-  const boxStyle = {
-    height: 26,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  }
 
   // 监听自动更新事件
   useEffect(() => {
@@ -735,171 +750,149 @@ export const ProfileItem = (props: Props) => {
             />
           </Box>
         )}
-        <Box sx={{ position: 'relative' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'start' }}>
-            {batchMode && (
-              <IconButton
-                size="small"
-                sx={{ padding: '2px', marginRight: '4px', marginLeft: '-8px' }}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  if (onSelectionChange) {
-                    onSelectionChange()
-                  }
-                }}
-              >
-                {isSelected ? (
-                  <CheckBoxRounded color="primary" />
-                ) : (
-                  <CheckBoxOutlineBlankRounded />
-                )}
-              </IconButton>
-            )}
-            <Box
-              ref={setNodeRef}
-              sx={{
-                display: 'flex',
-                margin: 'auto 0',
-                ...(batchMode && { marginLeft: '-4px' }),
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'auto auto minmax(0, 1fr) auto auto',
+            alignItems: 'center',
+            columnGap: 1,
+          }}
+        >
+          {batchMode && (
+            <IconButton
+              size="small"
+              onClick={(event) => {
+                event.stopPropagation()
+                onSelectionChange?.()
               }}
-              {...attributes}
-              {...listeners}
             >
-              <DragIndicatorRounded
-                sx={[
-                  { cursor: 'move', marginLeft: '-6px' },
-                  ({ palette: { text } }) => {
-                    return { color: text.primary }
-                  },
-                ]}
-              />
-            </Box>
+              {isSelected ? (
+                <CheckBoxRounded color="primary" />
+              ) : (
+                <CheckBoxOutlineBlankRounded />
+              )}
+            </IconButton>
+          )}
 
+          <Box
+            ref={setNodeRef}
+            sx={{ display: 'flex', color: 'text.secondary', cursor: 'grab' }}
+            {...attributes}
+            {...listeners}
+          >
+            <DragIndicatorRounded fontSize="small" />
+          </Box>
+
+          <Box sx={{ minWidth: 0 }}>
             <Typography
-              sx={{
-                width: batchMode ? 'calc(100% - 56px)' : 'calc(100% - 36px)',
-                fontSize: '18px',
-                fontWeight: '600',
-                lineHeight: '26px',
-              }}
-              variant="h6"
               component="h2"
               noWrap
               title={name}
+              sx={{ fontSize: 14, fontWeight: 550, lineHeight: 1.35 }}
             >
               {name}
             </Typography>
+            <Typography
+              color="text.secondary"
+              noWrap
+              title={description || (hasUrl ? from : undefined)}
+              sx={{ mt: 0.25, fontSize: 11.5, lineHeight: 1.4 }}
+            >
+              {description || (hasUrl ? from : '')}
+            </Typography>
           </Box>
 
-          {/* only if has url can it be updated */}
-          {hasUrl && (
-            <IconButton
-              title={t('shared.actions.refresh')}
-              sx={{
-                position: 'absolute',
-                p: '3px',
-                top: -1,
-                right: -5,
-                animation: loading ? `1s linear infinite ${round}` : 'none',
-              }}
-              size="small"
-              color="inherit"
-              disabled={loading}
-              onClick={(e) => {
-                e.stopPropagation()
-                // 如果正在激活或加载中，阻止更新操作
-                if (activating || loading) {
-                  return
+          <Box
+            sx={{
+              minWidth: 150,
+              textAlign: 'right',
+              color: 'text.secondary',
+              '@media (max-width: 680px)': { display: 'none' },
+            }}
+          >
+            {hasExtra && (
+              <Typography sx={{ fontSize: 11.5, lineHeight: 1.4 }}>
+                {parseTraffic(upload + download)} / {parseTraffic(total)} ·{' '}
+                {expire}
+              </Typography>
+            )}
+            {hasUrl ? (
+              <Typography
+                component="button"
+                title={
+                  showNextUpdate
+                    ? t('profiles.components.profileItem.tooltips.showLast')
+                    : `${t('shared.labels.updateTime')}: ${parseExpire(updated)}\n${t('profiles.components.profileItem.tooltips.showNext')}`
                 }
-                onUpdate(1)
+                onClick={toggleUpdateTimeDisplay}
+                sx={{
+                  m: 0,
+                  p: 0,
+                  border: 0,
+                  bgcolor: 'transparent',
+                  color: 'inherit',
+                  font: 'inherit',
+                  fontSize: 11.5,
+                  cursor: 'pointer',
+                }}
+              >
+                {showNextUpdate
+                  ? nextUpdateTime
+                  : updated > 0
+                    ? dayjs(updated * 1000).fromNow()
+                    : parseExpire(updated)}
+              </Typography>
+            ) : (
+              <Typography sx={{ fontSize: 11.5 }}>
+                {parseExpire(updated)}
+              </Typography>
+            )}
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {hasUrl && (
+              <IconButton
+                title={t('shared.actions.refresh')}
+                size="small"
+                disabled={loading}
+                sx={{
+                  color: 'text.secondary',
+                  animation: loading ? `1s linear infinite ${round}` : 'none',
+                }}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  if (!activating && !loading) onUpdate(1)
+                }}
+              >
+                <RefreshRounded fontSize="small" />
+              </IconButton>
+            )}
+            <IconButton
+              title={t('shared.actions.showDetails')}
+              size="small"
+              sx={{ color: 'text.secondary' }}
+              onClick={(event) => {
+                event.stopPropagation()
+                const rect = event.currentTarget.getBoundingClientRect()
+                setPosition({ top: rect.bottom, left: rect.right })
+                setAnchorEl(event.currentTarget)
               }}
             >
-              <RefreshRounded color="inherit" />
+              <MoreHorizRounded fontSize="small" />
             </IconButton>
-          )}
-        </Box>
-        {/* the second line show url's info or description */}
-        <Box sx={boxStyle}>
-          {
-            <>
-              {description ? (
-                <Typography
-                  noWrap
-                  title={description}
-                  sx={{ fontSize: '14px' }}
-                >
-                  {description}
-                </Typography>
-              ) : (
-                hasUrl && (
-                  <Typography
-                    noWrap
-                    title={`${t('shared.labels.from')} ${from}`}
-                  >
-                    {from}
-                  </Typography>
-                )
-              )}
-              {hasUrl && (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    ml: 'auto',
-                  }}
-                >
-                  <Typography
-                    noWrap
-                    component="span"
-                    title={
-                      showNextUpdate
-                        ? t('profiles.components.profileItem.tooltips.showLast')
-                        : `${t('shared.labels.updateTime')}: ${parseExpire(updated)}\n${t('profiles.components.profileItem.tooltips.showNext')}`
-                    }
-                    sx={{
-                      fontSize: 14,
-                      textAlign: 'right',
-                      cursor: 'pointer',
-                      display: 'inline-block',
-                      borderBottom: '1px dashed transparent',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        borderBottomColor: 'primary.main',
-                        color: 'primary.main',
-                      },
-                    }}
-                    onClick={toggleUpdateTimeDisplay}
-                  >
-                    {showNextUpdate
-                      ? nextUpdateTime
-                      : updated > 0
-                        ? dayjs(updated * 1000).fromNow()
-                        : ''}
-                  </Typography>
-                </Box>
-              )}
-            </>
-          }
-        </Box>
-        {/* the third line show extra info or last updated time */}
-        {hasExtra ? (
-          <Box sx={{ ...boxStyle, fontSize: 14 }}>
-            <span title={t('shared.labels.usedTotal')}>
-              {parseTraffic(upload + download)} / {parseTraffic(total)}
-            </span>
-            <span title={t('shared.labels.expireTime')}>{expire}</span>
           </Box>
-        ) : (
-          <Box sx={{ ...boxStyle, fontSize: 12, justifyContent: 'flex-end' }}>
-            <span title={t('shared.labels.updateTime')}>
-              {parseExpire(updated)}
-            </span>
-          </Box>
-        )}
+        </Box>
         <LinearProgress
           variant="determinate"
           value={progress}
-          style={{ opacity: total > 0 ? 1 : 0 }}
+          sx={{
+            position: 'absolute',
+            right: 0,
+            bottom: 0,
+            left: 0,
+            height: 2,
+            opacity: total > 0 ? 0.7 : 0,
+          }}
         />
       </ProfileBox>
 

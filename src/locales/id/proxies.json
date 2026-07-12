@@ -58,7 +58,7 @@
       "directMode": "Mode Langsung"
     },
     "title": {
-      "default": "Grup Proksi",
+      "default": "Kebijakan",
       "chainMode": "Proxy Chain Mode"
     }
   },

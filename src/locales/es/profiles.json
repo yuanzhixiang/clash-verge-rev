@@ -1,5 +1,8 @@
 {
   "page": {
+    "sections": {
+      "extensions": "Extensiones"
+    },
     "actions": {
       "updateAll": "Actualizar todas las suscripciones",
       "viewRuntimeConfig": "Ver configuración en tiempo de ejecución",
@@ -68,6 +71,7 @@
       "extendConfig": "Configurar sobrescritura extendida",
       "extendScript": "Script extendido",
       "openFile": "Abrir archivo",
+      "revealInFinder": "Mostrar en Finder",
       "update": "Actualizar",
       "updateViaProxy": "Update via proxy"
     },

@@ -3,13 +3,16 @@
     "navigation": {
       "tabs": {
         "home": "Home",
-        "proxies": "Прокси",
+        "proxies": "Сәясәт",
         "profiles": "Профильләр",
         "connections": "Тоташулар",
-        "rules": "Кагыйдәләр",
+        "rules": "Кагыйдә",
         "logs": "Логлар",
         "unlock": "Test",
         "settings": "Көйләүләр"
+      },
+      "groups": {
+        "proxies": "Прокси"
       },
       "menu": {
         "reorderMode": "Menu reorder mode",

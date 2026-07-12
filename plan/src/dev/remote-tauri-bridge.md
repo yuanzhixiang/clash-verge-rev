@@ -18,7 +18,7 @@
 
 ## 只读策略
 
-- `VITE_VERGE_REMOTE_READ_ONLY=1` 时使用默认拒绝白名单；只有配置与状态读取、Profiles/Rules/Connections/Logs 查询及轮询可以访问正式 App CLI。
+- `VITE_VERGE_REMOTE_READ_ONLY=1` 时使用默认拒绝白名单；只有配置与状态读取、Profiles/Rules/Connections/Logs 查询及轮询可以访问正式 App CLI。规则集合内容读取仅按 provider 名称调用后端受限命令，属于允许的只读 Rules 查询。
 - 代理选择、连接关闭、规则与 Profile 编辑、配置 patch、核心/服务控制、Provider 更新、备份写入及系统代理/TUN 操作必须在发出 HTTP 请求前拒绝。
 - 只读约束在 invoke 命令和 CLI payload 两层执行；Vite 的 `/__verge/cli` relay 还会在服务端重复校验，页面不能通过直接 POST 绕过前端 bridge。
 - 安全模式中的 HTTP 插件只允许 `GET` 与 `HEAD`，其它方法在创建请求前拒绝。
@@ -30,4 +30,5 @@
 - 这是 dev-only 能力，不参与生产运行。
 - 浏览器 `web:remote` 未显式启用只读变量时保持现有行为；严格只读只作为默认 `pnpm dev` 的安全边界。
 - 浏览器模式的窗口控制仍为 no-op；安全 Tauri 模式使用真实本地窗口命令。
+- `reveal_profile_file` 在浏览器远程模式中为 no-op，不启动 Finder、Explorer 或 Linux 文件管理器；生产 Tauri 运行时仍执行真实定位命令。
 - 未映射命令必须抛错，方便开发时发现缺口。

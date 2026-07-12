@@ -1,41 +1,45 @@
-import { RefreshRounded, StorageOutlined } from '@mui/icons-material'
+import {
+  CloseRounded,
+  RefreshRounded,
+  StorageOutlined,
+} from '@mui/icons-material'
 import {
   Box,
   Button,
+  ButtonBase,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
   IconButton,
   List,
   ListItem,
-  ListItemText,
   Typography,
   alpha,
   styled,
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { updateRuleProvider } from 'tauri-plugin-mihomo-api'
 
+import { RuleProviderDetailDialog } from '@/components/rule/rule-provider-detail-dialog'
 import { useAppRefreshers, useRulesData } from '@/providers/app-data-context'
+import type { RuleProviderContent } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { getShellThemeVars } from '@/utils/shell-theme'
 
-// 辅助组件 - 类型框
-const TypeBox = styled(Box)<{ component?: React.ElementType }>(({ theme }) => ({
-  display: 'inline-block',
-  border: '1px solid #ccc',
-  borderColor: alpha(theme.palette.secondary.main, 0.5),
-  color: alpha(theme.palette.secondary.main, 0.8),
-  borderRadius: 4,
-  fontSize: 10,
-  marginRight: '4px',
-  padding: '0 2px',
-  lineHeight: 1.25,
+const MetaTag = styled(Box)<{ component?: React.ElementType }>(({ theme }) => ({
+  display: 'inline-flex',
+  height: 20,
+  alignItems: 'center',
+  borderRadius: 5,
+  padding: '0 6px',
+  backgroundColor: alpha(theme.palette.text.primary, 0.055),
+  color: theme.palette.text.secondary,
+  fontSize: 11,
+  fontWeight: 500,
+  lineHeight: 1,
 }))
 
 export const ProviderButton = () => {
@@ -44,6 +48,8 @@ export const ProviderButton = () => {
   const { ruleProviders } = useRulesData()
   const { refreshRules, refreshRuleProviders } = useAppRefreshers()
   const [updating, setUpdating] = useState<Record<string, boolean>>({})
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(null)
+  const contentCacheRef = useRef(new Map<string, RuleProviderContent>())
   const isUpdatingAny = Object.values(updating).some(Boolean)
 
   // 检查是否有提供者
@@ -56,6 +62,7 @@ export const ProviderButton = () => {
       setUpdating((prev) => ({ ...prev, [name]: true }))
 
       await updateRuleProvider(name)
+      contentCacheRef.current.delete(name)
 
       // 刷新数据
       await refreshRules()
@@ -110,6 +117,8 @@ export const ProviderButton = () => {
         }
       }
 
+      contentCacheRef.current.clear()
+
       // 刷新数据
       await refreshRules()
       await refreshRuleProviders()
@@ -126,6 +135,8 @@ export const ProviderButton = () => {
   })
 
   const handleClose = () => {
+    setSelectedProvider(null)
+    contentCacheRef.current.clear()
     setOpen(false)
   }
 
@@ -134,24 +145,38 @@ export const ProviderButton = () => {
   return (
     <>
       <Button
+        className="rule-provider-trigger"
         variant="text"
         size="small"
-        startIcon={<StorageOutlined />}
+        startIcon={<StorageOutlined sx={{ fontSize: '20px !important' }} />}
         onClick={() => setOpen(true)}
         sx={{
-          minHeight: 36,
-          borderRadius: 1.25,
+          flex: '0 0 auto',
+          height: 38,
+          minWidth: 0,
+          px: 1.5,
+          borderRadius: 1.5,
           bgcolor: 'var(--shell-panel-muted)',
           color: 'text.primary',
-          fontWeight: 600,
+          fontSize: 13.5,
+          fontWeight: 550,
+          lineHeight: 1,
           whiteSpace: 'nowrap',
           textTransform: 'none',
+          '& .MuiButton-startIcon': {
+            mr: 1,
+            ml: 0,
+            color: 'text.secondary',
+          },
           '&:hover': {
             bgcolor: 'var(--shell-nav-hover)',
           },
+          '&:active': {
+            bgcolor: 'var(--shell-nav-selected)',
+          },
           '&:focus-visible': {
             outline: '2px solid var(--shell-focus) !important',
-            outlineOffset: 2,
+            outlineOffset: 1,
           },
         }}
       >
@@ -161,13 +186,14 @@ export const ProviderButton = () => {
       <Dialog
         open={open}
         onClose={handleClose}
-        maxWidth="sm"
-        fullWidth
+        maxWidth={false}
         slotProps={{
           paper: {
             sx: ({ palette }) => ({
               ...getShellThemeVars(palette),
               display: 'flex',
+              width: 'min(640px, calc(100vw - 24px))',
+              m: 1.5,
               maxHeight: 'calc(100% - 24px)',
               overflow: 'hidden',
               border: '1px solid var(--shell-border-strong) !important',
@@ -179,44 +205,96 @@ export const ProviderButton = () => {
           },
         }}
       >
-        <DialogTitle sx={{ px: 2.5, pt: 2.25, pb: 1.5 }}>
+        <DialogTitle sx={{ px: 2.5, pt: 2.25, pb: 1.75 }}>
           <Box
             sx={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              gap: 1.5,
+              gap: 2,
               '@media (max-width: 520px)': {
-                alignItems: 'stretch',
-                flexDirection: 'column',
+                alignItems: 'flex-start',
               },
             }}
           >
-            <Typography variant="h6">
-              {t('rules.page.provider.dialogTitle')}
-            </Typography>
-            <Button
-              variant="contained"
-              size="small"
-              loading={isUpdatingAny}
-              disabled={isUpdatingAny}
-              onClick={updateAllProviders}
+            <Box sx={{ minWidth: 0 }}>
+              <Typography
+                component="h2"
+                sx={{
+                  minWidth: 0,
+                  fontSize: 20,
+                  fontWeight: 650,
+                  lineHeight: 1.25,
+                  letterSpacing: '-0.025em',
+                }}
+              >
+                {t('rules.page.provider.dialogTitle')}
+              </Typography>
+            </Box>
+
+            <Box
               sx={{
-                borderRadius: 1.25,
-                textTransform: 'none',
-                '&:focus-visible': {
-                  outline: '2px solid var(--shell-focus) !important',
-                  outlineOffset: 2,
-                },
+                display: 'flex',
+                flex: '0 0 auto',
+                alignItems: 'center',
+                gap: 0.5,
               }}
             >
-              {t('rules.page.provider.actions.updateAll')}
-            </Button>
+              <Button
+                variant="contained"
+                size="small"
+                loading={isUpdatingAny}
+                disabled={isUpdatingAny}
+                onClick={updateAllProviders}
+                sx={{
+                  minHeight: 32,
+                  borderRadius: 1.25,
+                  px: 1.25,
+                  textTransform: 'none',
+                  '&:focus-visible': {
+                    outline: '2px solid var(--shell-focus) !important',
+                    outlineOffset: 2,
+                  },
+                  '@media (max-width: 420px)': {
+                    minWidth: 32,
+                    px: 0.75,
+                  },
+                }}
+              >
+                {t('rules.page.provider.actions.updateAll')}
+              </Button>
+              <IconButton
+                size="small"
+                onClick={handleClose}
+                aria-label={t('shared.actions.close')}
+                title={t('shared.actions.close')}
+                sx={{
+                  color: 'text.secondary',
+                  '&:hover': { bgcolor: 'var(--shell-nav-hover)' },
+                  '&:focus-visible': {
+                    outline: '2px solid var(--shell-focus) !important',
+                    outlineOffset: 1,
+                  },
+                }}
+              >
+                <CloseRounded fontSize="small" />
+              </IconButton>
+            </Box>
           </Box>
         </DialogTitle>
 
-        <DialogContent sx={{ minHeight: 0, overflowY: 'auto', px: 2.5, py: 1 }}>
-          <List sx={{ py: 0, minHeight: 180 }}>
+        <DialogContent
+          sx={{ minHeight: 0, overflowY: 'auto', px: 2.5, pt: 0, pb: 2.5 }}
+        >
+          <List
+            sx={{
+              minHeight: 120,
+              overflow: 'hidden',
+              border: '1px solid var(--shell-border)',
+              borderRadius: 1.5,
+              py: 0,
+            }}
+          >
             {Object.entries(ruleProviders || {})
               .sort()
               .map(([key, item]) => {
@@ -227,70 +305,88 @@ export const ProviderButton = () => {
                 return (
                   <ListItem
                     key={key}
-                    sx={({ palette }) => ({
-                      p: 0,
-                      mb: 1,
-                      overflow: 'hidden',
-                      border: '1px solid var(--shell-border)',
-                      borderRadius: 1.5,
-                      bgcolor: 'var(--shell-panel-muted)',
-                      transition:
-                        'background-color 160ms ease, border-color 160ms ease',
-                      '&:hover': {
-                        bgcolor: alpha(palette.text.primary, 0.055),
-                        borderColor: 'var(--shell-border-strong)',
-                      },
-                    })}
+                    disablePadding
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: 'minmax(0, 1fr) 44px',
+                      minHeight: 64,
+                      borderBottom: '1px solid var(--shell-border)',
+                      '&:last-child': { borderBottom: 0 },
+                    }}
                   >
-                    <ListItemText
-                      sx={{ px: 2, py: 1 }}
-                      slotProps={{ secondary: { component: 'div' } }}
-                      primary={
-                        <Box
+                    <ButtonBase
+                      onClick={() => setSelectedProvider(key)}
+                      aria-label={t('rules.page.provider.detail.open', {
+                        name: key,
+                      })}
+                      sx={({ palette }) => ({
+                        display: 'grid',
+                        gridTemplateColumns: 'minmax(0, 1fr) auto',
+                        minWidth: 0,
+                        minHeight: 64,
+                        alignItems: 'center',
+                        columnGap: 1.5,
+                        px: 2,
+                        py: 1.25,
+                        textAlign: 'left',
+                        transition: 'background-color 160ms ease',
+                        '&:hover': {
+                          bgcolor: alpha(palette.text.primary, 0.055),
+                        },
+                        '&:focus-visible': {
+                          outline: '2px solid var(--shell-focus)',
+                          outlineOffset: -2,
+                        },
+                        '@media (max-width: 520px)': {
+                          gridTemplateColumns: 'minmax(0, 1fr)',
+                          rowGap: 0.75,
+                          px: 1.5,
+                        },
+                      })}
+                    >
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography
+                          component="div"
+                          noWrap
+                          title={key}
                           sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
+                            mb: 0.75,
+                            fontSize: 14,
+                            fontWeight: 600,
+                            lineHeight: 1.25,
+                            letterSpacing: '-0.01em',
                           }}
                         >
-                          <Typography
-                            variant="subtitle1"
-                            component="div"
-                            noWrap
-                            title={key}
-                            sx={{ display: 'flex', alignItems: 'center' }}
-                          >
-                            <span style={{ marginRight: '8px' }}>{key}</span>
-                            <TypeBox component="span">
-                              {provider.ruleCount}
-                            </TypeBox>
-                          </Typography>
-
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            noWrap
-                          >
-                            <small>{t('shared.labels.updateAt')}: </small>
-                            {time.fromNow()}
-                          </Typography>
-                        </Box>
-                      }
-                      secondary={
-                        <Box sx={{ display: 'flex' }}>
-                          <TypeBox component="span">
+                          {key}
+                        </Typography>
+                        <Box
+                          sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}
+                        >
+                          <MetaTag component="span">
+                            {provider.ruleCount}
+                          </MetaTag>
+                          <MetaTag component="span">
                             {provider.vehicleType}
-                          </TypeBox>
-                          <TypeBox component="span">
+                          </MetaTag>
+                          <MetaTag component="span">
                             {provider.behavior}
-                          </TypeBox>
+                          </MetaTag>
                         </Box>
-                      }
-                    />
-                    <Divider orientation="vertical" flexItem />
+                      </Box>
+
+                      <Typography
+                        component="div"
+                        color="text.secondary"
+                        noWrap
+                        title={`${t('shared.labels.updateAt')}: ${time.fromNow()}`}
+                        sx={{ fontSize: 12, lineHeight: 1.4 }}
+                      >
+                        {t('shared.labels.updateAt')}: {time.fromNow()}
+                      </Typography>
+                    </ButtonBase>
+
                     <Box
                       sx={{
-                        width: 40,
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
@@ -298,14 +394,18 @@ export const ProviderButton = () => {
                     >
                       <IconButton
                         size="small"
-                        color="primary"
                         onClick={() => updateProvider(key)}
                         disabled={isUpdating}
                         aria-label={t('rules.page.provider.actions.update')}
                         sx={{
+                          color: 'text.secondary',
                           animation: isUpdating
                             ? 'spin 1s linear infinite'
                             : 'none',
+                          '&:hover': {
+                            color: 'primary.main',
+                            bgcolor: 'var(--shell-nav-hover)',
+                          },
                           '&:focus-visible': {
                             outline: '2px solid var(--shell-focus) !important',
                             outlineOffset: 2,
@@ -325,32 +425,18 @@ export const ProviderButton = () => {
               })}
           </List>
         </DialogContent>
-
-        <DialogActions
-          sx={{
-            px: 2.5,
-            py: 1.5,
-            borderTop: '1px solid var(--shell-border)',
-          }}
-        >
-          <Button
-            onClick={handleClose}
-            variant="outlined"
-            sx={{
-              borderColor: 'var(--shell-border-strong)',
-              borderRadius: 1.25,
-              color: 'text.primary',
-              textTransform: 'none',
-              '&:focus-visible': {
-                outline: '2px solid var(--shell-focus) !important',
-                outlineOffset: 2,
-              },
-            }}
-          >
-            {t('shared.actions.close')}
-          </Button>
-        </DialogActions>
       </Dialog>
+
+      <RuleProviderDetailDialog
+        key={selectedProvider}
+        open={selectedProvider !== null}
+        providerName={selectedProvider}
+        provider={
+          selectedProvider ? ruleProviders?.[selectedProvider] : undefined
+        }
+        cache={contentCacheRef.current}
+        onClose={() => setSelectedProvider(null)}
+      />
     </>
   )
 }

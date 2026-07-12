@@ -1,4 +1,4 @@
-import { FeaturedPlayListRounded } from '@mui/icons-material'
+import { FeaturedPlayListRounded, MoreHorizRounded } from '@mui/icons-material'
 import {
   Box,
   Badge,
@@ -14,7 +14,12 @@ import { useTranslation } from 'react-i18next'
 
 import { EditorViewer } from '@/components/profile/editor-viewer'
 import { useEditorDocument } from '@/hooks/use-editor-document'
-import { viewProfile, readProfileFile, saveProfileFile } from '@/services/cmds'
+import {
+  readProfileFile,
+  revealProfileFile,
+  saveProfileFile,
+  viewProfile,
+} from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 
 import { LogViewer } from './log-viewer'
@@ -68,6 +73,15 @@ export const ProfileMore = (props: Props) => {
     }
   })
 
+  const onRevealFile = useLockFn(async () => {
+    setAnchorEl(null)
+    try {
+      await revealProfileFile(id)
+    } catch (err) {
+      showNotice.error(err)
+    }
+  })
+
   const hasError = entries.some(([level]) => level === 'exception')
 
   const globalTitles: Record<Props['id'], string> = {
@@ -83,15 +97,11 @@ export const ProfileMore = (props: Props) => {
   const itemMenu = [
     { label: 'profiles.components.menu.editFile', handler: onEditFile },
     { label: 'profiles.components.menu.openFile', handler: onOpenFile },
+    {
+      label: 'profiles.components.menu.revealInFinder',
+      handler: onRevealFile,
+    },
   ]
-
-  const boxStyle = {
-    height: 26,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    lineHeight: 1,
-  }
 
   const handleSave = useLockFn(async () => {
     const currentValue = document.value
@@ -120,32 +130,29 @@ export const ProfileMore = (props: Props) => {
       >
         <Box
           sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) auto auto',
             alignItems: 'center',
-            mb: 0.5,
+            gap: 1,
           }}
         >
-          <Typography
-            variant="h6"
-            component="h2"
-            noWrap
-            title={t(globalTitles[id])}
-            sx={{ width: 'calc(100% - 52px)' }}
-          >
-            {t(globalTitles[id])}
-          </Typography>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography
+              component="h2"
+              noWrap
+              title={t(globalTitles[id])}
+              sx={{ fontSize: 14, fontWeight: 550, lineHeight: 1.35 }}
+            >
+              {t(globalTitles[id])}
+            </Typography>
+            <Typography
+              color="text.secondary"
+              sx={{ mt: 0.25, fontSize: 11.5, lineHeight: 1.4 }}
+            >
+              {t(chipLabels[id])}
+            </Typography>
+          </Box>
 
-          <Chip
-            label={t(chipLabels[id])}
-            color="primary"
-            size="small"
-            variant="outlined"
-            sx={{ height: 20, textTransform: 'capitalize' }}
-          />
-        </Box>
-
-        <Box sx={boxStyle}>
           {id === 'Script' &&
             (hasError ? (
               <Badge color="error" variant="dot" overlap="circular">
@@ -170,6 +177,26 @@ export const ProfileMore = (props: Props) => {
                 <FeaturedPlayListRounded fontSize="inherit" />
               </IconButton>
             ))}
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Chip
+              label={t(chipLabels[id])}
+              size="small"
+              sx={{ height: 20, color: 'text.secondary' }}
+            />
+            <IconButton
+              size="small"
+              title={t('shared.actions.showDetails')}
+              sx={{ ml: 0.5, color: 'text.secondary' }}
+              onClick={(event) => {
+                event.stopPropagation()
+                const rect = event.currentTarget.getBoundingClientRect()
+                setPosition({ top: rect.bottom, left: rect.right })
+                setAnchorEl(event.currentTarget)
+              }}
+            >
+              <MoreHorizRounded fontSize="small" />
+            </IconButton>
+          </Box>
         </Box>
       </ProfileBox>
 

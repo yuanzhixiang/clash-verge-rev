@@ -3,13 +3,16 @@
     "navigation": {
       "tabs": {
         "home": "Главная",
-        "proxies": "Прокси",
+        "proxies": "Политика",
         "profiles": "Профили",
         "connections": "Соединения",
-        "rules": "Правила",
+        "rules": "Правило",
         "logs": "Логи",
         "unlock": "Тест",
         "settings": "Настройки"
+      },
+      "groups": {
+        "proxies": "Прокси"
       },
       "menu": {
         "reorderMode": "Режим изменения порядка меню",

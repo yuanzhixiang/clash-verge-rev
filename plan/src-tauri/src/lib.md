@@ -17,3 +17,5 @@
 ## 普通运行
 
 - 非 safe-dev 的插件、command、初始化、单例、托盘、热键、更新和退出清理流程保持现状。
+- 规则集合详情注册只读 `get_rule_provider_content` 命令；命令只接收 provider 名称，路径解析和安全边界由后端模块负责。
+- Profiles 注册 `reveal_profile_file` 命令；命令只接收 Profile UID 或固定扩展标识，由后端解析实际文件并在系统文件管理器中定位。

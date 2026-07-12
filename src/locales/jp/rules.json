@@ -6,6 +6,18 @@
       "actions": {
         "updateAll": "すべて更新",
         "update": "更新"
+      },
+      "detail": {
+        "open": "View rules in {{name}}",
+        "back": "Back to rule providers",
+        "searchPlaceholder": "Search this rule set",
+        "empty": "No matching rules",
+        "loadFailed": "Failed to load this rule set",
+        "unavailable": {
+          "mrs": "MRS rule sets cannot be previewed yet",
+          "cachePathUnavailable": "This rule set has no explicit cache path",
+          "cacheMissing": "The local rule set cache is not available"
+        }
       }
     },
     "actions": {

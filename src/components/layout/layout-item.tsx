@@ -1,7 +1,3 @@
-import type {
-  DraggableAttributes,
-  DraggableSyntheticListeners,
-} from '@dnd-kit/core'
 import {
   ListItem,
   ListItemButton,
@@ -9,30 +5,20 @@ import {
   ListItemText,
   useMediaQuery,
 } from '@mui/material'
-import type { CSSProperties, PointerEvent, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { useCallback } from 'react'
 import { useMatch, useNavigate, useResolvedPath } from 'react-router'
 
 import { useVerge } from '@/hooks/use-verge'
 
-interface SortableProps {
-  setNodeRef?: (element: HTMLElement | null) => void
-  attributes?: DraggableAttributes
-  listeners?: DraggableSyntheticListeners
-  style?: CSSProperties
-  isDragging?: boolean
-  disabled?: boolean
-}
-
 interface Props {
   to: string
   children: string
   icon: ReactNode[]
-  sortable?: SortableProps
   onPreload?: () => Promise<unknown>
 }
 export const LayoutItem = (props: Props) => {
-  const { to, children, icon, sortable, onPreload } = props
+  const { to, children, icon, onPreload } = props
   const { verge } = useVerge()
   const { menu_icon } = verge ?? {}
   const navCollapsed = verge?.collapse_navbar ?? false
@@ -45,55 +31,26 @@ export const LayoutItem = (props: Props) => {
   const effectiveMenuIcon =
     compact && menu_icon === 'disable' ? 'monochrome' : menu_icon
 
-  const { setNodeRef, attributes, listeners, style, isDragging, disabled } =
-    sortable ?? {}
-
-  const draggable = Boolean(sortable) && !disabled
-  const { onPointerDown, ...otherListeners } = draggable
-    ? (listeners ?? {})
-    : {}
-
   const handlePreload = useCallback(() => {
     void onPreload?.().catch(() => {})
   }, [onPreload])
 
-  const handlePointerDown = useCallback(
-    (event: PointerEvent<HTMLDivElement>) => {
-      handlePreload()
-      onPointerDown?.(event)
-    },
-    [handlePreload, onPointerDown],
-  )
-
   return (
-    <ListItem
-      ref={setNodeRef}
-      style={style}
-      sx={[
-        {
-          width: '100%',
-          maxWidth: 250,
-          mx: 'auto',
-          px: 0.75,
-          py: 0.25,
-        },
-        isDragging ? { opacity: 0.78 } : {},
-      ]}
-    >
+    <ListItem sx={{ width: '100%', maxWidth: 250, mx: 'auto', px: 0, py: 0.2 }}>
       <ListItemButton
         selected={!!match}
-        {...(draggable ? (attributes ?? {}) : {})}
-        {...(draggable ? otherListeners : {})}
         sx={[
           {
             minHeight: 42,
-            borderRadius: 1.5,
-            px: 1.25,
+            borderRadius: 1.75,
+            px: 1.5,
             py: 0.5,
-            cursor: draggable ? 'grab' : 'pointer',
+            cursor: 'pointer',
             transition:
               'background-color 160ms ease, color 160ms ease, transform 160ms ease',
-            '&:active': draggable ? { cursor: 'grabbing' } : {},
+            '&:active': {
+              bgcolor: 'var(--shell-nav-selected)',
+            },
             '&:hover': {
               bgcolor: 'var(--shell-nav-hover)',
             },
@@ -104,41 +61,32 @@ export const LayoutItem = (props: Props) => {
             '& .MuiListItemText-primary': {
               color: 'text.primary',
               fontSize: 14,
-              fontWeight: 550,
-              letterSpacing: '-0.01em',
+              fontWeight: 450,
+              letterSpacing: '-0.005em',
             },
-          },
-          ({ palette }) => {
-            const color = palette.text.primary
-            return {
-              '&.Mui-selected': {
-                bgcolor: 'var(--shell-nav-selected)',
-                color,
-              },
-              '&.Mui-selected:hover': {
-                bgcolor: 'var(--shell-nav-selected)',
-              },
-              '&.Mui-selected .MuiListItemText-primary': {
-                color,
-                fontWeight: 680,
-              },
-            }
+            '&.Mui-selected': {
+              bgcolor: 'var(--shell-nav-selected)',
+            },
+            '&.Mui-selected:hover': {
+              bgcolor: 'var(--shell-nav-selected)',
+            },
           },
         ]}
         title={compact ? children : undefined}
         aria-label={children}
         onFocus={handlePreload}
         onMouseEnter={handlePreload}
-        onPointerDown={handlePointerDown}
+        onPointerDown={handlePreload}
         onClick={() => navigate(to)}
       >
         {(effectiveMenuIcon === 'monochrome' || !effectiveMenuIcon) && (
           <ListItemIcon
             sx={{
-              color: 'text.primary',
-              minWidth: 38,
-              cursor: draggable ? 'grab' : 'inherit',
-              '& .MuiSvgIcon-root': { fontSize: 21 },
+              color: 'text.secondary',
+              minWidth: 36,
+              cursor: 'inherit',
+              transition: 'color 160ms ease',
+              '& .MuiSvgIcon-root': { fontSize: 20 },
             }}
           >
             {icon[0]}
@@ -147,9 +95,11 @@ export const LayoutItem = (props: Props) => {
         {effectiveMenuIcon === 'colorful' && (
           <ListItemIcon
             sx={{
-              minWidth: 38,
-              cursor: draggable ? 'grab' : 'inherit',
-              '& .MuiSvgIcon-root': { fontSize: 21 },
+              minWidth: 36,
+              cursor: 'inherit',
+              opacity: 0.72,
+              transition: 'opacity 160ms ease',
+              '& .MuiSvgIcon-root': { fontSize: 20 },
             }}
           >
             {icon[1]}

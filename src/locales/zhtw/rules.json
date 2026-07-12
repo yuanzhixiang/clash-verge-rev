@@ -6,6 +6,18 @@
       "actions": {
         "updateAll": "全部更新",
         "update": "更新"
+      },
+      "detail": {
+        "open": "查看 {{name}} 的具體規則",
+        "back": "返回規則集合",
+        "searchPlaceholder": "搜尋此規則集合",
+        "empty": "沒有符合的規則",
+        "loadFailed": "無法讀取此規則集合",
+        "unavailable": {
+          "mrs": "暫不支援預覽 MRS 規則集合",
+          "cachePathUnavailable": "此規則集合沒有明確的快取路徑",
+          "cacheMissing": "本機規則集合快取尚不可用"
+        }
       }
     },
     "actions": {

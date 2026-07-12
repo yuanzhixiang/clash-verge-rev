@@ -3,13 +3,16 @@
     "navigation": {
       "tabs": {
         "home": "Ana Sayfa",
-        "proxies": "Vekil'ler",
+        "proxies": "Politika",
         "profiles": "Profiller",
         "connections": "Bağlantılar",
-        "rules": "Kurallar",
+        "rules": "Kural",
         "logs": "Günlükler",
         "unlock": "Test",
         "settings": "Ayarlar"
+      },
+      "groups": {
+        "proxies": "Proxy'ler"
       },
       "menu": {
         "reorderMode": "Menu reorder mode",

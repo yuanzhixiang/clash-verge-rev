@@ -1,5 +1,8 @@
 {
   "page": {
+    "sections": {
+      "extensions": "Uzantılar"
+    },
     "actions": {
       "updateAll": "Tüm Profilleri Güncelle",
       "viewRuntimeConfig": "Çalışma Zamanı Yapılandırmasını Görüntüle",
@@ -68,6 +71,7 @@
       "extendConfig": "Yapılandırma Genişletme",
       "extendScript": "Betik Genişletme",
       "openFile": "Dosyayı Aç",
+      "revealInFinder": "Finder'da Göster",
       "update": "Güncelle",
       "updateViaProxy": "Update via proxy"
     },

@@ -60,7 +60,7 @@ export const isReadOnlyCliPayload = (payload: RemoteCliPayload) => {
     case 'connections':
       return action === 'list'
     case 'rules':
-      return hasValue(['list', 'providers'], action)
+      return hasValue(['list', 'providers', 'content'], action)
     case 'unlock':
       return action === 'list'
     case 'backup':

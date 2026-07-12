@@ -18,7 +18,7 @@
 - `clash` 复用 Clash command，DNS flow 仍通过独立 DNS 配置文件保存、校验和应用。
 - `runtime` 复用 runtime command，proxy-chain 更新仍通过 `CoreManager::update_runtime_config`。
 - `profiles` 复用 profiles command 和安全 helper，覆盖导入、创建、更新、删除、重排、patch、读写文件和增强。
-- `proxies`、`connections`、`rules` 直接复用 `handle::Handle::mihomo().await` 的现有 API，不新增远程端口。
+- `proxies`、`connections`、`rules` 优先复用 `handle::Handle::mihomo().await` 的现有 API；`rules content` 复用受限的 `get_rule_provider_content` 本地缓存读取命令，不新增远程端口。
 - `unlock`、`backup`、`validate` 复用现有 Tauri command/feat 函数。
 - `logs` 优先读取内存中的 core logs，缺失时回退日志文件。
 - `core` 复用现有 `start_core`、`stop_core`、`restart_core` 命令。

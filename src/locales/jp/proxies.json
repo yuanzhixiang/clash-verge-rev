@@ -58,7 +58,7 @@
       "directMode": "直接接続モード"
     },
     "title": {
-      "default": "プロキシグループ",
+      "default": "ポリシー",
       "chainMode": "Proxy Chain Mode"
     }
   },

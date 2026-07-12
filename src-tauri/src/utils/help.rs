@@ -4,8 +4,7 @@ use clash_verge_logging::{Type, logging};
 use nanoid::nanoid;
 use serde::{Serialize, de::DeserializeOwned};
 use serde_yaml_ng::{Mapping, Value};
-#[cfg(target_os = "windows")]
-use std::path::Path;
+use std::{ffi::OsString, path::Path};
 use std::{path::PathBuf, str::FromStr};
 
 /// read data from yaml as struct T
@@ -200,6 +199,76 @@ pub fn get_last_part_and_decode(url: &str) -> Option<String> {
 pub fn open_file(path: PathBuf) -> Result<()> {
     open::that_detached(path.as_os_str())?;
     Ok(())
+}
+
+#[derive(Debug, PartialEq, Eq)]
+enum RevealTarget {
+    Command { program: &'static str, args: Vec<OsString> },
+    Directory(PathBuf),
+}
+
+fn reveal_target(path: &Path, platform: &str) -> Result<RevealTarget> {
+    match platform {
+        "macos" => Ok(RevealTarget::Command {
+            program: "open",
+            args: vec![OsString::from("-R"), path.as_os_str().to_owned()],
+        }),
+        "windows" => Ok(RevealTarget::Command {
+            program: "explorer",
+            args: vec![OsString::from("/select,"), path.as_os_str().to_owned()],
+        }),
+        _ => Ok(RevealTarget::Directory(
+            path.parent()
+                .ok_or_else(|| anyhow!("file has no parent directory"))?
+                .to_path_buf(),
+        )),
+    }
+}
+
+pub fn reveal_file(path: PathBuf) -> Result<()> {
+    let platform = if cfg!(target_os = "macos") {
+        "macos"
+    } else if cfg!(target_os = "windows") {
+        "windows"
+    } else {
+        "linux"
+    };
+
+    match reveal_target(&path, platform)? {
+        RevealTarget::Command { program, args } => {
+            std::process::Command::new(program).args(args).spawn()?;
+        }
+        RevealTarget::Directory(directory) => open::that_detached(directory)?,
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod reveal_tests {
+    use super::*;
+
+    #[test]
+    fn builds_platform_reveal_targets() {
+        let path = PathBuf::from("/tmp/profiles/example.yaml");
+        assert_eq!(
+            reveal_target(&path, "macos").unwrap(),
+            RevealTarget::Command {
+                program: "open",
+                args: vec![OsString::from("-R"), path.as_os_str().to_owned()],
+            }
+        );
+        assert_eq!(
+            reveal_target(&path, "windows").unwrap(),
+            RevealTarget::Command {
+                program: "explorer",
+                args: vec![OsString::from("/select,"), path.as_os_str().to_owned()],
+            }
+        );
+        assert_eq!(
+            reveal_target(&path, "linux").unwrap(),
+            RevealTarget::Directory(PathBuf::from("/tmp/profiles"))
+        );
+    }
 }
 
 pub fn open_latest_log(path: PathBuf) -> Result<()> {

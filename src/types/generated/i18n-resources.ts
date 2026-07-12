@@ -185,6 +185,9 @@ export interface TranslationResources {
     layout: {
       components: {
         navigation: {
+          groups: {
+            proxies: string
+          }
           menu: {
             collapseNavBar: string
             expandNavBar: string
@@ -235,6 +238,7 @@ export interface TranslationResources {
           extendScript: string
           home: string
           openFile: string
+          revealInFinder: string
           select: string
           shareQrCode: string
           update: string
@@ -397,6 +401,9 @@ export interface TranslationResources {
             paste: string
           }
           placeholder: string
+        }
+        sections: {
+          extensions: string
         }
         title: string
       }
@@ -614,6 +621,18 @@ export interface TranslationResources {
           actions: {
             update: string
             updateAll: string
+          }
+          detail: {
+            back: string
+            empty: string
+            loadFailed: string
+            open: string
+            searchPlaceholder: string
+            unavailable: {
+              cacheMissing: string
+              cachePathUnavailable: string
+              mrs: string
+            }
           }
           dialogTitle: string
           trigger: string
