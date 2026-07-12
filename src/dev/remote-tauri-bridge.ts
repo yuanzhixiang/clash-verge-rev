@@ -12,9 +12,19 @@ type NativeInvoke = <T>(
   args?: InvokeArgs,
   options?: InvokeOptions,
 ) => Promise<T>
+type SafeTauriInvokeBridge = (
+  nativeInvoke: NativeInvoke,
+  cmd: string,
+  args?: InvokeArgs,
+  options?: InvokeOptions,
+) => Promise<unknown>
 type TauriInternals = {
   plugins?: { path?: { sep: string; delimiter: string } }
   invoke?: NativeInvoke
+}
+type TauriWindow = Window & {
+  __TAURI_INTERNALS__?: TauriInternals
+  __VERGE_SAFE_TAURI_INVOKE__?: SafeTauriInvokeBridge
 }
 type HttpRequest = {
   method?: string
@@ -49,8 +59,14 @@ const recordOf = (value: unknown): InvokePayload =>
 const currentTheme = () =>
   window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 const tauriInternals = () =>
-  (window as unknown as { __TAURI_INTERNALS__: TauriInternals })
-    .__TAURI_INTERNALS__
+  (window as unknown as TauriWindow).__TAURI_INTERNALS__
+const requireTauriInternals = () => {
+  const internals = tauriInternals()
+  if (!internals) {
+    throw new Error('[Remote App] Tauri internals are unavailable')
+  }
+  return internals
+}
 
 const cli = async <T = unknown>(payload: CliPayload): Promise<T> => {
   if (READ_ONLY && !isReadOnlyCliPayload(payload)) {
@@ -1069,23 +1085,22 @@ export const setupRemoteTauriBridge = () => {
   if (bridgeInstalled) return
   bridgeInstalled = true
 
-  const internals = tauriInternals()
-
   if (SAFE_TAURI) {
-    const nativeInvoke = internals.invoke?.bind(internals)
-    if (!nativeInvoke) {
+    const internals = requireTauriInternals()
+    if (!internals.invoke) {
       throw new Error('[Safe Dev] native Tauri invoke is unavailable')
     }
 
-    internals.invoke = <T>(
+    ;(window as unknown as TauriWindow).__VERGE_SAFE_TAURI_INVOKE__ = (
+      nativeInvoke,
       cmd: string,
       args?: InvokeArgs,
       options?: InvokeOptions,
     ) => {
       if (cmd.startsWith('plugin:window|') || cmd.startsWith('plugin:event|')) {
-        return nativeInvoke<T>(cmd, args, options)
+        return nativeInvoke(cmd, args, options)
       }
-      return handleCommand(cmd, payloadOf(args)) as Promise<T>
+      return handleCommand(cmd, payloadOf(args))
     }
     window.addEventListener('beforeunload', closeAllSockets)
     return
@@ -1099,6 +1114,7 @@ export const setupRemoteTauriBridge = () => {
         ? 'macos'
         : 'linux',
   )
+  const internals = requireTauriInternals()
   internals.plugins = {
     ...internals.plugins,
     path: {

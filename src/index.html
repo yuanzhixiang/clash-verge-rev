@@ -12,6 +12,7 @@
     <style>
       :root {
         --bg-color: #edf2f7;
+        --shell-canvas: var(--bg-color);
         --text-color: #333;
         color-scheme: light;
       }
@@ -29,12 +30,14 @@
         width: 100%;
         height: 100%;
         margin: 0;
+        background: var(--shell-canvas);
         color: var(--text-color);
       }
 
       #root {
         width: 100%;
         height: 100%;
+        background: var(--shell-canvas);
       }
 
       #initial-loading-overlay {

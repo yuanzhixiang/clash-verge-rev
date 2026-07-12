@@ -3,10 +3,7 @@ import {
   getCurrentWebviewWindow,
   WebviewWindow,
 } from '@tauri-apps/api/webviewWindow'
-import {
-  getCurrentWindow,
-  Theme as TauriOsTheme,
-} from '@tauri-apps/api/window'
+import { getCurrentWindow, Theme as TauriOsTheme } from '@tauri-apps/api/window'
 import { useEffect, useMemo } from 'react'
 
 import { useVerge } from '@/hooks/use-verge'
@@ -149,11 +146,16 @@ export const useCustomTheme = () => {
   }, [mode, appWindow, theme_mode])
 
   useEffect(() => {
+    const shellCanvasColor = getShellCanvasColor(mode)
+    const root = document.documentElement
+    root.style.setProperty('--bg-color', shellCanvasColor)
+    root.style.setProperty('--shell-canvas', shellCanvasColor)
+
     if (OS !== 'macos') {
       return
     }
 
-    nativeWindow.setBackgroundColor(getShellCanvasColor(mode)).catch((err) => {
+    nativeWindow.setBackgroundColor(shellCanvasColor).catch((err) => {
       console.error('Failed to sync the macOS window background color:', err)
     })
   }, [mode, nativeWindow])
@@ -165,6 +167,13 @@ export const useCustomTheme = () => {
 
     try {
       muiTheme = createTheme({
+        components: {
+          MuiButtonBase: {
+            defaultProps: {
+              disableRipple: true,
+            },
+          },
+        },
         breakpoints: {
           values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
         },
@@ -195,6 +204,13 @@ export const useCustomTheme = () => {
     } catch (e) {
       console.error('Error creating MUI theme, falling back to defaults:', e)
       muiTheme = createTheme({
+        components: {
+          MuiButtonBase: {
+            defaultProps: {
+              disableRipple: true,
+            },
+          },
+        },
         breakpoints: {
           values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
         },

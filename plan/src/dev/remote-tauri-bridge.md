@@ -7,12 +7,14 @@
 ## 数据流
 
 - 普通浏览器远程模式用 Tauri 官方 `mockIPC` 拦截 `invoke`。
+- 普通浏览器远程模式必须先通过 `mockWindows`、`mockConvertFileSrc` 创建 Tauri internals，再读取并补充 path plugin、安装 `mockIPC`；不得在 mock 初始化前访问 internals。
 - `main.tsx` 在 preload 前动态安装 bridge；被静态导入的页面/组件不能在模块顶层调用 Tauri window APIs，否则浏览器 dev 模式会早于 mock setup 执行。
 - mock 命令通过 Vite 代理访问 `/__verge/cli`。
 - Vite 代理转发到已运行 App 的 `127.0.0.1:33331/commands/cli`。
 - Connections、Traffic、Logs 的 WebSocket 命令用轮询 CLI bridge 模拟，避免启动第二个 Tauri 后端。
 - 常用 Tauri 插件命令提供浏览器内轻量 mock，例如 window、path、clipboard、dialog、shell、fs、process、http。
-- 安全 Tauri 模式不安装 `mockIPC`，而是在保留其它 Tauri internals 的前提下包装原生 invoke；只把 Window 与 Event 命令委托回当前开发窗口，保留真实标题栏、窗口控制、尺寸、主题与拖拽行为。
+- 安全 Tauri 模式不安装 `mockIPC`，也不直接覆盖 Tauri 2.11 中不可写的原生 `internals.invoke`。Vite 仅在 `VITE_VERGE_SAFE_TAURI=1` 时把 `@tauri-apps/api/core` 导向开发期 invoke 适配层：Window 与 Event 命令委托回当前开发窗口，其它命令进入只读远程 bridge，从而保留真实标题栏、窗口控制、尺寸、主题与拖拽行为。
+- 安全 Tauri 模式直接使用 WebView 已创建的原生 Tauri internals；两种模式若在各自初始化完成后仍无法取得 internals，必须立即抛出明确错误，不得带着空数据继续启动。
 
 ## 只读策略
 

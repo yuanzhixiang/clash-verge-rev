@@ -667,7 +667,10 @@ const RulesPage = () => {
                     width: 30,
                     height: 28,
                     borderRadius: 1,
-                    bgcolor: 'var(--shell-nav-hover)',
+                    bgcolor: 'transparent',
+                    '&:hover': {
+                      bgcolor: 'var(--shell-nav-hover)',
+                    },
                     '&:focus-visible': {
                       outline: '2px solid var(--shell-focus)',
                       outlineOffset: 1,
@@ -701,7 +704,10 @@ const RulesPage = () => {
                     width: 30,
                     height: 28,
                     borderRadius: 1,
-                    bgcolor: 'var(--shell-nav-hover)',
+                    bgcolor: 'transparent',
+                    '&:hover': {
+                      bgcolor: 'var(--shell-nav-hover)',
+                    },
                     '&:focus-visible': {
                       outline: '2px solid var(--shell-focus)',
                       outlineOffset: 1,

@@ -16,7 +16,9 @@ const devServerPort = Number(process.env.VERGE_DEV_PORT || '3000')
 const safeRemoteReadOnly =
   process.env.VITE_VERGE_SAFE_TAURI === '1' ||
   process.env.VITE_VERGE_REMOTE_READ_ONLY === '1'
+const safeTauriCoreBridge = process.env.VITE_VERGE_SAFE_TAURI === '1'
 const MAX_CLI_PAYLOAD_BYTES = 1024 * 1024
+const SAFE_TAURI_CORE_MODULE_ID = '\0verge-safe-tauri-core'
 
 if (
   !Number.isInteger(devServerPort) ||
@@ -123,6 +125,33 @@ const safeReadOnlyCliRelay: Plugin = {
   },
 }
 
+const safeTauriCoreInvokeBridge: Plugin = {
+  name: 'verge-safe-tauri-core-invoke-bridge',
+  enforce: 'pre',
+  resolveId(source) {
+    if (safeTauriCoreBridge && source === '@tauri-apps/api/core') {
+      return SAFE_TAURI_CORE_MODULE_ID
+    }
+  },
+  load(id) {
+    if (id !== SAFE_TAURI_CORE_MODULE_ID) return
+
+    const nativeCorePath = JSON.stringify(
+      path.resolve('./node_modules/@tauri-apps/api/core.js'),
+    )
+    return `
+      import * as nativeCore from ${nativeCorePath}
+      export * from ${nativeCorePath}
+      export const invoke = (cmd, payload = {}, options) => {
+        const bridge = window.__VERGE_SAFE_TAURI_INVOKE__
+        return bridge
+          ? bridge(nativeCore.invoke, cmd, payload, options)
+          : nativeCore.invoke(cmd, payload, options)
+      }
+    `
+  },
+}
+
 export default defineConfig({
   root: 'src',
   server: {
@@ -140,6 +169,7 @@ export default defineConfig({
         },
   },
   plugins: [
+    safeTauriCoreInvokeBridge,
     safeReadOnlyCliRelay,
     svgr(),
     react(),

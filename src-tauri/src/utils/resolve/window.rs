@@ -108,7 +108,9 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
 
     #[cfg(target_os = "macos")]
     {
-        builder = builder.title_bar_style(tauri::TitleBarStyle::Overlay);
+        builder = builder
+            .title_bar_style(tauri::TitleBarStyle::Overlay)
+            .hidden_title(true);
     }
 
     builder = builder.background_color(background_color);

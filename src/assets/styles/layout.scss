@@ -13,6 +13,8 @@
     min-height: 28px;
     box-sizing: border-box;
     background: var(--shell-canvas);
+    border: 0;
+    box-shadow: none;
     user-select: none;
     -webkit-user-select: none;
   }
@@ -128,6 +130,8 @@
 
       .the-content {
         position: relative;
+        display: flex;
+        flex-direction: column;
         flex: 1 1 auto;
         min-width: 0;
         min-height: 0;
@@ -136,7 +140,44 @@
         border-radius: 16px;
         background: var(--shell-panel);
         box-shadow: var(--shell-shadow) !important;
+
+        .macos-content-titlebar {
+          flex: 0 0 28px;
+          width: 100%;
+          height: 28px;
+          min-height: 28px;
+          background: var(--shell-panel);
+          user-select: none;
+          -webkit-user-select: none;
+        }
+
+        .the-content-body {
+          position: relative;
+          flex: 1 1 auto;
+          min-width: 0;
+          min-height: 0;
+          overflow: hidden;
+        }
       }
+    }
+  }
+
+  &.macos .layout-content__left {
+    background: var(--shell-canvas);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  &.macos .layout-content__right .the-content {
+    box-shadow: none !important;
+  }
+
+  &.layout--native-macos-titlebar.layout--nav-collapsed
+    .layout-content__right {
+    padding-top: 40px;
+
+    .macos-content-titlebar {
+      display: none;
     }
   }
 }
@@ -405,6 +446,14 @@
       .the-content {
         border-radius: 12px;
       }
+    }
+  }
+
+  .layout.layout--native-macos-titlebar .layout-content__right {
+    padding: 36px 8px 8px 2px;
+
+    .macos-content-titlebar {
+      display: none;
     }
   }
 }

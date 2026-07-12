@@ -300,7 +300,7 @@ const Layout = () => {
       <Paper
         square
         elevation={0}
-        className={`${OS} layout${navCollapsed ? ' layout--nav-collapsed' : ''}`}
+        className={`${OS} layout${navCollapsed ? ' layout--nav-collapsed' : ''}${OS === 'macos' && decorated !== false ? ' layout--native-macos-titlebar' : ''}`}
         style={{
           borderTopLeftRadius: '0px',
           borderTopRightRadius: '0px',
@@ -337,16 +337,15 @@ const Layout = () => {
         {/* Custom titlebar - rendered only when decorated is false, memoized for performance */}
         {customTitlebar}
 
-        {OS === 'macos' && decorated !== false && (
-          <div
-            aria-hidden="true"
-            className="macos-titlebar-spacer"
-            data-tauri-drag-region="true"
-          />
-        )}
-
         <div className="layout-content">
           <div className="layout-content__left">
+            {OS === 'macos' && decorated !== false && (
+              <div
+                aria-hidden="true"
+                className="macos-titlebar-spacer"
+                data-tauri-drag-region="true"
+              />
+            )}
             <div className="the-logo" data-tauri-drag-region="false">
               <div
                 data-tauri-drag-region="true"
@@ -491,37 +490,46 @@ const Layout = () => {
           <div className="layout-content__right">
             <div className="the-bar"></div>
             <div className="the-content">
-              <BaseErrorBoundary>
-                <Outlet />
-              </BaseErrorBoundary>
-              {isLogsPage && (
+              {OS === 'macos' && decorated !== false && (
                 <div
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                  }}
-                >
-                  <Suspense
-                    fallback={
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          height: '100%',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <BaseLoading />
-                      </Box>
-                    }
-                  >
-                    <LogsPage />
-                  </Suspense>
-                </div>
+                  aria-hidden="true"
+                  className="macos-content-titlebar"
+                  data-tauri-drag-region="true"
+                />
               )}
+              <div className="the-content-body">
+                <BaseErrorBoundary>
+                  <Outlet />
+                </BaseErrorBoundary>
+                {isLogsPage && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                    }}
+                  >
+                    <Suspense
+                      fallback={
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            height: '100%',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <BaseLoading />
+                        </Box>
+                      }
+                    >
+                      <LogsPage />
+                    </Suspense>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

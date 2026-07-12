@@ -21,6 +21,7 @@
 - 表格固定展示 `ID / Type / Value / Policy / Used` 五列。
 - ID 使用接口返回的 `index`；Used 使用 Mihomo `extra.hitCount`，字段缺失时显示 `—`。
 - 表格底部为固定操作栏，左侧提供 `＋ / －`，不提供 Reset Counter。
+- `＋ / －` 按钮默认背景透明，仅在 hover 时显示操作背景高亮。
 
 ## 主要交互
 

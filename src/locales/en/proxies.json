@@ -83,10 +83,10 @@
         "relay": "Pass through the defined proxy chain"
       },
       "policies": {
-        "DIRECT": "Data goes directly outbound (DIRECT)",
-        "REJECT": "Intercepts requests (REJECT)",
-        "REJECT-DROP": "Discards requests (REJECT-DROP)",
-        "PASS": "Skips this rule when matched (PASS)"
+        "DIRECT": "DIRECT - Data goes directly outbound",
+        "REJECT": "REJECT - Intercepts requests",
+        "REJECT-DROP": "REJECT-DROP - Discards requests",
+        "PASS": "PASS - Skips this rule when matched"
       }
     }
   }

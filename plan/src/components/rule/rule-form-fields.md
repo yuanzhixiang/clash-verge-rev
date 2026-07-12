@@ -10,6 +10,7 @@
 - Type 使用不可清空、不可自由输入的 Autocomplete；切换 Type 时清空内容并关闭 no-resolve。
 - RULE-SET、SUB-RULE 使用可输入 Autocomplete，其余内容使用 TextField；MATCH 隐藏内容字段。
 - Proxy Policy 保持现有 freeSolo 行为；所有字段支持主题焦点态和键盘操作。
+- 英文环境下，内置策略选项以策略标识开头并在短横线后补充说明，例如 `DIRECT - Data goes directly outbound`，确保弹层和已选值都能优先看到实际规则值；保存时仍只写入 `DIRECT` 等原始策略标识。
 - 当 Type 为 `DOMAIN` 或 `DOMAIN-SUFFIX` 时，Rule Content 粘贴单个 URL 或带路径域名会即时替换为可注册主域名；其它类型和普通键盘输入不归一化。
 - 同时识别 paste 事件和 WebView 的 `insertFromPaste` 输入事件；仅在一次性插入内容可解析为域名时转换，兼容不同浏览器粘贴实现。
 
