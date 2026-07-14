@@ -85,6 +85,9 @@ impl Sysopt {
     }
 
     pub async fn refresh_guard(&self) {
+        if Self::skip_in_dev("refresh_guard") {
+            return;
+        }
         logging!(info, Type::Core, "Refreshing system proxy guard...");
         let verge = Config::verge().await.latest_arc();
         if !verge.enable_system_proxy.unwrap_or_default() {
@@ -124,8 +127,21 @@ impl Sysopt {
         let _ = self.update_lock.lock().await;
     }
 
+    /// dev 构建（verge-dev / safe-dev）不触碰系统级代理设置，
+    /// 避免开发实例顶掉正式版应用配置的系统代理。
+    fn skip_in_dev(operation: &str) -> bool {
+        if cfg!(feature = "verge-dev") {
+            logging!(info, Type::Core, "dev build: skip system proxy operation `{operation}`");
+            return true;
+        }
+        false
+    }
+
     /// init the sysproxy
     pub async fn update_sysproxy(&self) -> Result<()> {
+        if Self::skip_in_dev("update_sysproxy") {
+            return Ok(());
+        }
         let _lock = self.update_lock.lock().await;
 
         let verge = Config::verge().await.latest_arc();
@@ -198,6 +214,9 @@ impl Sysopt {
 
     /// reset the sysproxy
     pub async fn reset_sysproxy(&self) -> Result<()> {
+        if Self::skip_in_dev("reset_sysproxy") {
+            return Ok(());
+        }
         if self
             .reset_sysproxy
             .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)

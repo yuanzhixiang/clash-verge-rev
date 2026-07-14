@@ -1,8 +1,21 @@
 use clash_verge_logging::{Type, logging};
 
+/// dev 构建（verge-dev / safe-dev）不修改系统 DNS，
+/// 避免开发实例影响正式版应用与本机网络环境。
+fn skip_in_dev(operation: &str) -> bool {
+    if cfg!(feature = "verge-dev") {
+        logging!(info, Type::Config, "dev build: skip system dns operation `{operation}`");
+        return true;
+    }
+    false
+}
+
 pub async fn set_public_dns(dns_server: String) {
     use crate::{core::handle, utils::dirs};
     use tauri_plugin_shell::ShellExt as _;
+    if skip_in_dev("set_public_dns") {
+        return;
+    }
     let app_handle = handle::Handle::app_handle();
 
     logging!(info, Type::Config, "try to set system dns");
@@ -45,6 +58,9 @@ pub async fn set_public_dns(dns_server: String) {
 pub async fn restore_public_dns() {
     use crate::{core::handle, utils::dirs};
     use tauri_plugin_shell::ShellExt as _;
+    if skip_in_dev("restore_public_dns") {
+        return;
+    }
     let app_handle = handle::Handle::app_handle();
     logging!(info, Type::Config, "try to unset system dns");
     let resource_dir = match dirs::app_resources_dir() {

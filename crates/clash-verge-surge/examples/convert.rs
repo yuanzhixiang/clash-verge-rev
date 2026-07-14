@@ -19,13 +19,7 @@ fn main() -> anyhow::Result<()> {
     let mut doc = serde_yaml_ng::Mapping::new();
     doc.insert(
         serde_yaml_ng::Value::String("proxies".into()),
-        serde_yaml_ng::Value::Sequence(
-            output
-                .proxies
-                .into_iter()
-                .map(serde_yaml_ng::Value::Mapping)
-                .collect(),
-        ),
+        serde_yaml_ng::Value::Sequence(output.proxies.into_iter().map(serde_yaml_ng::Value::Mapping).collect()),
     );
     println!("{}", serde_yaml_ng::to_string(&doc)?);
     Ok(())

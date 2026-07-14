@@ -226,8 +226,11 @@ pub fn ensure_mihomo_safe_dir() -> Option<PathBuf> {
 
 #[cfg(unix)]
 pub fn ipc_path() -> Result<PathBuf> {
+    // dev 构建使用独立 IPC namespace，避免与正式版内核互抢 socket
     let namespace = if crate::utils::dev_mode::is_safe_dev() {
         "verge-safe-dev"
+    } else if cfg!(feature = "verge-dev") {
+        "verge-dev"
     } else {
         "verge"
     };
@@ -245,6 +248,8 @@ pub fn ipc_path() -> Result<PathBuf> {
 pub fn ipc_path() -> Result<PathBuf> {
     if crate::utils::dev_mode::is_safe_dev() {
         Ok(PathBuf::from(r"\\.\pipe\verge-mihomo-safe-dev"))
+    } else if cfg!(feature = "verge-dev") {
+        Ok(PathBuf::from(r"\\.\pipe\verge-mihomo-dev"))
     } else {
         Ok(PathBuf::from(r"\\.\pipe\verge-mihomo"))
     }

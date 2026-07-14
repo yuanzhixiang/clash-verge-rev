@@ -128,11 +128,6 @@ pub async fn use_external_providers(mut config: Mapping) -> Mapping {
     config
 }
 
-/// 判断某个 provider 是否由本适配层托管。
-pub fn is_external_provider(name: &str) -> bool {
-    REGISTRY.read().contains_key(name)
-}
-
 /// 当前托管的 provider 名字列表。
 pub fn list_external_providers() -> Vec<String> {
     REGISTRY.read().keys().cloned().collect()
