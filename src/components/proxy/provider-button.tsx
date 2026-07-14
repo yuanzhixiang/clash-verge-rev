@@ -21,9 +21,9 @@ import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { updateProxyProvider } from 'tauri-plugin-mihomo-api'
 
 import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
+import { updateProxyProviderEx } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import parseTraffic from '@/utils/parse-traffic'
 import { getShellThemeVars } from '@/utils/shell-theme'
@@ -68,7 +68,7 @@ export const ProviderButton = () => {
       // 设置更新状态
       setUpdating((prev) => ({ ...prev, [name]: true }))
 
-      await updateProxyProvider(name)
+      await updateProxyProviderEx(name)
 
       // 刷新数据
       await refreshProxy()
@@ -114,7 +114,7 @@ export const ProviderButton = () => {
       // 改为串行逐个更新所有provider
       for (const name of allProviders) {
         try {
-          await updateProxyProvider(name)
+          await updateProxyProviderEx(name)
           // 每个更新完成后更新状态
           setUpdating((prev) => ({ ...prev, [name]: false }))
         } catch (err) {

@@ -49,15 +49,8 @@ pub fn convert_node_list(content: &str) -> ConversionOutput {
 fn try_extract_yaml_proxies(content: &str) -> Option<Vec<Mapping>> {
     let value: Value = serde_yaml_ng::from_str(content).ok()?;
     let mapping = value.as_mapping()?;
-    let proxies = mapping
-        .get(Value::String("proxies".into()))?
-        .as_sequence()?;
-    Some(
-        proxies
-            .iter()
-            .filter_map(|item| item.as_mapping().cloned())
-            .collect(),
-    )
+    let proxies = mapping.get(Value::String("proxies".into()))?.as_sequence()?;
+    Some(proxies.iter().filter_map(|item| item.as_mapping().cloned()).collect())
 }
 
 fn convert_surge_lines(content: &str) -> ConversionOutput {

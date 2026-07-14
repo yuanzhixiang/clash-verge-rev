@@ -21,8 +21,7 @@ fn insert(map: &mut Mapping, key: &str, value: Value) {
 }
 
 fn insert_bool(map: &mut Mapping, key: &str, raw: &str) -> anyhow::Result<()> {
-    let parsed = parse_bool(raw)
-        .ok_or_else(|| anyhow::anyhow!("invalid boolean for {key}: {raw:?}"))?;
+    let parsed = parse_bool(raw).ok_or_else(|| anyhow::anyhow!("invalid boolean for {key}: {raw:?}"))?;
     insert(map, key, Value::Bool(parsed));
     Ok(())
 }
@@ -104,17 +103,25 @@ pub(crate) fn to_mihomo_proxy(line: &SurgeLine<'_>) -> anyhow::Result<Mapping> {
             (_, "underlying-proxy") => insert(&mut proxy, "dialer-proxy", value_str(value)),
             (_, "skip-cert-verify") => insert_bool(&mut proxy, "skip-cert-verify", value)?,
             (_, "tfo") => insert_bool(&mut proxy, "tfo", value)?,
-            (_, "server-cert-fingerprint-sha256") => {
-                insert(&mut proxy, "fingerprint", value_str(value))
-            }
+            (_, "server-cert-fingerprint-sha256") => insert(&mut proxy, "fingerprint", value_str(value)),
             (_, "ip-version") => {
                 if let Some(mapped) = map_ip_version(value) {
                     insert(&mut proxy, "ip-version", value_str(mapped));
                 }
             }
             // Surge 专属、mihomo 无对应概念的参数，静默忽略
-            (_, "test-url" | "interface" | "no-error-alert" | "hybrid" | "allow-other-interface"
-            | "update-interval" | "block-quic" | "ecn" | "test-timeout") => {}
+            (
+                _,
+                "test-url"
+                | "interface"
+                | "no-error-alert"
+                | "hybrid"
+                | "allow-other-interface"
+                | "update-interval"
+                | "block-quic"
+                | "ecn"
+                | "test-timeout",
+            ) => {}
 
             // ---- ss ----
             ("ss", "encrypt-method") => insert(&mut proxy, "cipher", value_str(value)),
@@ -141,13 +148,9 @@ pub(crate) fn to_mihomo_proxy(line: &SurgeLine<'_>) -> anyhow::Result<Mapping> {
             ("vmess", "username") => insert(&mut proxy, "uuid", value_str(value)),
             ("vmess", "encrypt-method") => insert(&mut proxy, "cipher", value_str(value)),
             ("vmess", "vmess-aead") => {
-                let aead = parse_bool(value)
-                    .ok_or_else(|| anyhow::anyhow!("invalid boolean for vmess-aead: {value:?}"))?;
-                insert(
-                    &mut proxy,
-                    "alterId",
-                    Value::Number(if aead { 0 } else { 1 }.into()),
-                );
+                let aead =
+                    parse_bool(value).ok_or_else(|| anyhow::anyhow!("invalid boolean for vmess-aead: {value:?}"))?;
+                insert(&mut proxy, "alterId", Value::Number(if aead { 0 } else { 1 }.into()));
             }
             ("vmess", "tls") => insert_bool(&mut proxy, "tls", value)?,
             ("vmess", "sni") => insert(&mut proxy, "servername", value_str(value)),
@@ -251,9 +254,8 @@ mod tests {
 
     #[test]
     fn converts_socks5_with_underlying_proxy() {
-        let proxy = convert(
-            "US‑Static‑NY = socks5, 64.50.132.50, 443, username=user, password=pw, underlying-proxy=manual",
-        );
+        let proxy =
+            convert("US‑Static‑NY = socks5, 64.50.132.50, 443, username=user, password=pw, underlying-proxy=manual");
         assert_eq!(get(&proxy, "type"), &value_str("socks5"));
         assert_eq!(get(&proxy, "username"), &value_str("user"));
         assert_eq!(get(&proxy, "dialer-proxy"), &value_str("manual"));
@@ -281,9 +283,7 @@ mod tests {
 
     #[test]
     fn converts_vmess_aead_and_tls() {
-        let proxy = convert(
-            "node = vmess, example.com, 443, username=uuid-123, vmess-aead=true, tls=true, sni=v.com",
-        );
+        let proxy = convert("node = vmess, example.com, 443, username=uuid-123, vmess-aead=true, tls=true, sni=v.com");
         assert_eq!(get(&proxy, "uuid"), &value_str("uuid-123"));
         assert_eq!(get(&proxy, "alterId"), &Value::Number(0.into()));
         assert_eq!(get(&proxy, "cipher"), &value_str("auto"));
@@ -301,9 +301,7 @@ mod tests {
 
     #[test]
     fn converts_snell() {
-        let proxy = convert(
-            "node = snell, example.com, 443, psk=secret, version=4, obfs=tls, obfs-host=bing.com",
-        );
+        let proxy = convert("node = snell, example.com, 443, psk=secret, version=4, obfs=tls, obfs-host=bing.com");
         assert_eq!(get(&proxy, "psk"), &value_str("secret"));
         assert_eq!(get(&proxy, "version"), &Value::Number(4.into()));
         let opts = get(&proxy, "obfs-opts").as_mapping().unwrap();

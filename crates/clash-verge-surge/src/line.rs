@@ -49,10 +49,7 @@ pub(crate) fn parse_surge_line(line: &str) -> anyhow::Result<Option<SurgeLine<'_
     let mut params = Vec::new();
     for token in &tokens[1..] {
         match token.split_once('=') {
-            Some((key, value)) => params.push((
-                key.trim().to_ascii_lowercase(),
-                unquote(value.trim()).to_string(),
-            )),
+            Some((key, value)) => params.push((key.trim().to_ascii_lowercase(), unquote(value.trim()).to_string())),
             None => positional.push(unquote(token).to_string()),
         }
     }
@@ -135,11 +132,9 @@ mod tests {
 
     #[test]
     fn keeps_quoted_commas_intact() {
-        let line = parse_surge_line(
-            r#"node = trojan, example.com, 443, password=p, ws-headers="Host:a.com,b.com""#,
-        )
-        .unwrap()
-        .unwrap();
+        let line = parse_surge_line(r#"node = trojan, example.com, 443, password=p, ws-headers="Host:a.com,b.com""#)
+            .unwrap()
+            .unwrap();
         assert_eq!(
             line.params.last().unwrap(),
             &("ws-headers".into(), "Host:a.com,b.com".into())

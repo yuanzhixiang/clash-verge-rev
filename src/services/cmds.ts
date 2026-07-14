@@ -56,6 +56,10 @@ export async function saveProfileFile(index: string, fileData: string) {
   )
 }
 
+export async function updateProxyProviderEx(name: string) {
+  return invoke<void>('update_proxy_provider_ex', { name })
+}
+
 export async function importProfile(url: string, option?: IProfileOption) {
   return invoke<void>('import_profile', {
     url,

@@ -764,6 +764,9 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     let config = enforce_dns_ipv6(config, dns_ipv6);
     let config = ensure_lan_bind_address(config);
 
+    // fork: Surge 外部节点列表 provider 适配（拦截 verge-format 并重写为 file provider）
+    let config = crate::module::external_provider::use_external_providers(config).await;
+
     let config = cleanup_proxy_groups(config);
     let config = use_sort(config);
 
