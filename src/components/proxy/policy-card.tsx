@@ -115,39 +115,79 @@ interface ProxyCardProps {
   testLabel: string
 }
 
-export const PolicyProxyCard = ({ proxy, testLabel }: ProxyCardProps) => (
-  <Box sx={cardSx}>
-    <Box sx={{ minWidth: 0 }}>
-      <Typography
-        noWrap
-        title={proxy.type}
-        sx={({ palette }) => ({
-          mb: 0.5,
-          color: alpha(
-            palette.text.primary,
-            palette.mode === 'dark' ? 0.47 : 0.32,
-          ),
-          fontSize: 11.5,
-          lineHeight: 1.25,
-        })}
+export const PolicyProxyCard = ({ proxy, testLabel }: ProxyCardProps) => {
+  const { delayValue, timeout, onDelay } = useProxyDelayState(
+    proxy,
+    'policy-standalone',
+  )
+
+  return (
+    <ButtonBase
+      onClick={() => void onDelay(proxy.provider)}
+      aria-label={`${testLabel}: ${proxy.name}`}
+      title={`${testLabel}: ${proxy.name}`}
+      sx={cardSx}
+    >
+      <Box sx={{ width: '100%', minWidth: 0 }}>
+        <Typography
+          noWrap
+          title={proxy.type}
+          sx={({ palette }) => ({
+            mb: 0.5,
+            color: alpha(
+              palette.text.primary,
+              palette.mode === 'dark' ? 0.47 : 0.32,
+            ),
+            fontSize: 11.5,
+            lineHeight: 1.25,
+          })}
+        >
+          {proxy.type}
+        </Typography>
+        <Typography
+          noWrap
+          title={proxy.name}
+          sx={{ fontSize: 15, fontWeight: 600, lineHeight: 1.3 }}
+        >
+          {proxy.name}
+        </Typography>
+      </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          width: '100%',
+          minWidth: 0,
+          minHeight: 24,
+          alignItems: 'center',
+        }}
       >
-        {proxy.type}
-      </Typography>
-      <Typography
-        noWrap
-        title={proxy.name}
-        sx={{ fontSize: 15, fontWeight: 600, lineHeight: 1.3 }}
-      >
-        {proxy.name}
-      </Typography>
-    </Box>
-    <PolicyDelayLabel
-      proxy={proxy}
-      groupName="policy-standalone"
-      testLabel={testLabel}
-    />
-  </Box>
-)
+        {delayValue === -2 ? (
+          <BaseLoading />
+        ) : (
+          <Typography
+            noWrap
+            sx={({ palette }) => ({
+              color:
+                delayValue >= 0
+                  ? delayManager.formatDelayColor(delayValue, timeout)
+                  : alpha(
+                      palette.text.primary,
+                      palette.mode === 'dark' ? 0.47 : 0.32,
+                    ),
+              fontSize: 12,
+              fontWeight: 500,
+              lineHeight: 1.3,
+            })}
+          >
+            {delayValue >= 0
+              ? delayManager.formatDelay(delayValue, timeout)
+              : testLabel}
+          </Typography>
+        )}
+      </Box>
+    </ButtonBase>
+  )
+}
 
 interface GroupCardProps {
   group: IProxyGroupItem

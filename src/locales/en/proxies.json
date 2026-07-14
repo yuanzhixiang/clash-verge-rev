@@ -1,9 +1,9 @@
 {
   "page": {
     "modes": {
-      "rule": "Rule",
-      "global": "Global",
-      "direct": "Direct"
+      "rule": "Rule-based Proxy",
+      "global": "Global Proxy",
+      "direct": "Direct Outbound"
     },
     "actions": {
       "toggleChain": "Chain Proxy",

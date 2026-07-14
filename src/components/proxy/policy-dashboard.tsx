@@ -43,7 +43,12 @@ const SectionHeader = ({
     <Typography
       component="h2"
       color="primary.main"
-      sx={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.01em' }}
+      sx={{
+        fontSize: 12,
+        fontWeight: 650,
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+      }}
     >
       {title}
     </Typography>
@@ -66,6 +71,14 @@ export const PolicyDashboard = () => {
     groupName: string
   } | null>(null)
 
+  const groups = useMemo(
+    () =>
+      ((proxies?.groups as IProxyGroupItem[] | undefined) ?? []).filter(
+        (group) => !group.hidden,
+      ),
+    [proxies?.groups],
+  )
+
   const standaloneProxies = useMemo(() => {
     const seen = new Set<string>()
     const providerNodes = new Set(
@@ -73,16 +86,22 @@ export const PolicyDashboard = () => {
         provider?.proxies.map((proxy) => proxy.name),
       ),
     )
+    // "组名 / 节点名" 是 Surge policy-path 组展开节点的命名约定，
+    // 这类节点只通过策略组浮层访问，与 provider 节点一样不进 Proxy 区
+    const groupPrefixes = (
+      (proxies?.groups as IProxyGroupItem[] | undefined) ?? []
+    ).map((group) => `${group.name} / `)
     const providerPrefixes = Object.keys(proxyProviders ?? {}).map(
       (providerName) => `${providerName} / `,
     )
+    const hiddenPrefixes = [...providerPrefixes, ...groupPrefixes]
     return ((proxies?.proxies as IProxyItem[] | undefined) ?? []).filter(
       (proxy) => {
         if (!proxy?.name || PRESET_PROXY_NAMES.has(proxy.name)) return false
         if (
           proxy.provider ||
           providerNodes.has(proxy.name) ||
-          providerPrefixes.some((prefix) => proxy.name.startsWith(prefix))
+          hiddenPrefixes.some((prefix) => proxy.name.startsWith(prefix))
         ) {
           return false
         }
@@ -100,15 +119,7 @@ export const PolicyDashboard = () => {
         return true
       },
     )
-  }, [proxies?.proxies, proxyProviders])
-
-  const groups = useMemo(
-    () =>
-      ((proxies?.groups as IProxyGroupItem[] | undefined) ?? []).filter(
-        (group) => !group.hidden,
-      ),
-    [proxies?.groups],
-  )
+  }, [proxies?.proxies, proxies?.groups, proxyProviders])
   const activeGroup = useMemo(
     () => groups.find((group) => group.name === active?.groupName) ?? null,
     [active?.groupName, groups],
@@ -158,46 +169,6 @@ export const PolicyDashboard = () => {
       }}
     >
       <Box component="section" sx={{ mt: 2.5 }}>
-        <SectionHeader title={t('proxies.page.sections.policyGroup')} />
-
-        {groups.length === 0 ? (
-          <Box sx={{ minHeight: 112 }}>
-            <BaseEmpty text={t('proxies.page.messages.noGroups')} />
-          </Box>
-        ) : (
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 240px))',
-              gap: 1.5,
-            }}
-          >
-            {groups.map((group) => {
-              const open = active?.groupName === group.name
-              return (
-                <PolicyGroupCard
-                  key={group.name}
-                  group={group}
-                  open={open}
-                  readonly={!MANUAL_GROUP_TYPES.has(group.type)}
-                  onClick={(event) => {
-                    setActive((current) =>
-                      current?.groupName === group.name
-                        ? null
-                        : {
-                            anchorEl: event.currentTarget,
-                            groupName: group.name,
-                          },
-                    )
-                  }}
-                />
-              )
-            })}
-          </Box>
-        )}
-      </Box>
-
-      <Box component="section" sx={{ mt: 4.5 }}>
         <SectionHeader
           title={t('proxies.page.sections.proxy')}
           actions={
@@ -237,6 +208,46 @@ export const PolicyDashboard = () => {
                 testLabel={t('proxies.page.actions.test')}
               />
             ))}
+          </Box>
+        )}
+      </Box>
+
+      <Box component="section" sx={{ mt: 4.5 }}>
+        <SectionHeader title={t('proxies.page.sections.policyGroup')} />
+
+        {groups.length === 0 ? (
+          <Box sx={{ minHeight: 112 }}>
+            <BaseEmpty text={t('proxies.page.messages.noGroups')} />
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 240px))',
+              gap: 1.5,
+            }}
+          >
+            {groups.map((group) => {
+              const open = active?.groupName === group.name
+              return (
+                <PolicyGroupCard
+                  key={group.name}
+                  group={group}
+                  open={open}
+                  readonly={!MANUAL_GROUP_TYPES.has(group.type)}
+                  onClick={(event) => {
+                    setActive((current) =>
+                      current?.groupName === group.name
+                        ? null
+                        : {
+                            anchorEl: event.currentTarget,
+                            groupName: group.name,
+                          },
+                    )
+                  }}
+                />
+              )
+            })}
           </Box>
         )}
       </Box>

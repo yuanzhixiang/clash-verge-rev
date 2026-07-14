@@ -1,9 +1,9 @@
 {
   "page": {
     "modes": {
-      "rule": "规则",
-      "global": "全局",
-      "direct": "直连"
+      "rule": "规则代理",
+      "global": "全局代理",
+      "direct": "直连出站"
     },
     "actions": {
       "toggleChain": "链式代理",

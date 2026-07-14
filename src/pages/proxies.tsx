@@ -1,4 +1,11 @@
-import { LanOutlined, LanRounded, WarningRounded } from '@mui/icons-material'
+import {
+  AltRouteRounded,
+  LanOutlined,
+  LanRounded,
+  PublicRounded,
+  SettingsEthernetRounded,
+  WarningRounded,
+} from '@mui/icons-material'
 import { Box, Button, Typography } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import { useCallback, useEffect, useReducer, useState } from 'react'
@@ -21,9 +28,14 @@ import {
 import { showNotice } from '@/services/notice-service'
 import { debugLog } from '@/utils/debug'
 
-const MODES = ['rule', 'global', 'direct'] as const
+const MODES = ['direct', 'global', 'rule'] as const
 type Mode = (typeof MODES)[number]
 const MODE_SET = new Set<string>(MODES)
+const MODE_ICONS: Record<Mode, typeof AltRouteRounded> = {
+  direct: SettingsEthernetRounded,
+  global: PublicRounded,
+  rule: AltRouteRounded,
+}
 const isMode = (value: unknown): value is Mode =>
   typeof value === 'string' && MODE_SET.has(value)
 
@@ -190,11 +202,9 @@ const ProxyPage = () => {
               role="group"
               aria-label={t('proxies.page.labels.outboundMode')}
               sx={{
-                display: 'grid',
+                display: 'inline-flex',
                 minWidth: 0,
-                maxWidth: 860,
-                flex: '1 1 620px',
-                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                flex: '0 1 auto',
                 gap: 0.5,
                 borderRadius: 'var(--radius-pill)',
                 bgcolor: 'var(--shell-panel-muted)',
@@ -203,17 +213,21 @@ const ProxyPage = () => {
             >
               {MODES.map((mode) => {
                 const selected = mode === activeMode
+                const ModeIcon = MODE_ICONS[mode]
                 return (
                   <Button
                     key={mode}
                     aria-pressed={selected}
                     variant={selected ? 'contained' : 'text'}
                     onClick={() => onChangeMode(mode)}
+                    startIcon={<ModeIcon sx={{ fontSize: 18 }} />}
                     sx={{
                       minWidth: 0,
-                      height: 38,
+                      height: 36,
+                      px: 1.75,
                       border: 0,
                       borderRadius: 'var(--radius-pill)',
+                      whiteSpace: 'nowrap',
                       color: selected ? 'primary.contrastText' : 'text.primary',
                       '&:hover': {
                         border: 0,

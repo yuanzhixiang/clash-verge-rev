@@ -65,8 +65,7 @@ pub struct ExternalProviderSpec {
     pub file_name: String,
 }
 
-static REGISTRY: Lazy<RwLock<HashMap<String, ExternalProviderSpec>>> =
-    Lazy::new(|| RwLock::new(HashMap::new()));
+static REGISTRY: Lazy<RwLock<HashMap<String, ExternalProviderSpec>>> = Lazy::new(|| RwLock::new(HashMap::new()));
 static SCHEDULER_STARTED: AtomicBool = AtomicBool::new(false);
 
 fn key(name: &str) -> Value {
@@ -113,10 +112,7 @@ pub async fn use_external_providers(mut config: Mapping) -> Mapping {
         }
     }
 
-    if let Some(providers) = config
-        .get_mut("proxy-providers")
-        .and_then(Value::as_mapping_mut)
-    {
+    if let Some(providers) = config.get_mut("proxy-providers").and_then(Value::as_mapping_mut) {
         for name in &failed {
             providers.remove(key(name));
         }
@@ -187,14 +183,9 @@ fn parse_spec(name: &str, entry: &Mapping) -> Result<ExternalProviderSpec> {
     }
     let interval_secs = match entry.get("interval") {
         None => DEFAULT_INTERVAL_SECS,
-        Some(value) => value
-            .as_u64()
-            .ok_or_else(|| anyhow!("invalid `interval`: {value:?}"))?,
+        Some(value) => value.as_u64().ok_or_else(|| anyhow!("invalid `interval`: {value:?}"))?,
     };
-    let user_agent = entry
-        .get(UA_KEY)
-        .and_then(Value::as_str)
-        .map(str::to_string);
+    let user_agent = entry.get(UA_KEY).and_then(Value::as_str).map(str::to_string);
     Ok(ExternalProviderSpec {
         name: name.to_string(),
         url: url.clone(),
@@ -242,10 +233,7 @@ async fn ensure_cache_file(spec: &ExternalProviderSpec) -> bool {
                     "external provider {} initial fetch failed: {error:#}",
                     spec.name
                 );
-                handle::Handle::notice_message(
-                    "config_validate::error",
-                    format!("{}: {error}", spec.name),
-                );
+                handle::Handle::notice_message("config_validate::error", format!("{}: {error}", spec.name));
                 false
             }
         },
@@ -383,7 +371,11 @@ async fn cleanup_orphan_files() {
             && !runtime_refs.contains(&file_name)
         {
             if let Err(error) = fs::remove_file(entry.path()).await {
-                logging!(warn, Type::Config, "failed to remove orphan provider file {file_name}: {error:#}");
+                logging!(
+                    warn,
+                    Type::Config,
+                    "failed to remove orphan provider file {file_name}: {error:#}"
+                );
             }
         }
     }
@@ -437,8 +429,12 @@ fn ensure_scheduler() {
     AsyncHandler::spawn(move || async move {
         loop {
             tokio::time::sleep(Duration::from_secs(SCHEDULER_TICK_SECS)).await;
-            let due: Vec<ExternalProviderSpec> =
-                REGISTRY.read().values().filter(|spec| is_stale(spec)).cloned().collect();
+            let due: Vec<ExternalProviderSpec> = REGISTRY
+                .read()
+                .values()
+                .filter(|spec| is_stale(spec))
+                .cloned()
+                .collect();
             for spec in due {
                 match refresh_provider(&spec.name).await {
                     Ok(_) => {}
