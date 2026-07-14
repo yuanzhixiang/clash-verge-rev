@@ -1193,6 +1193,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "clash-verge-surge"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "serde_yaml_ng",
+]
+
+[[package]]
 name = "clash_verge_logger"
 version = "0.2.2"
 source = "git+https://github.com/clash-verge-rev/clash-verge-logger#e4768e3852c4868ed86e7210df82c1178467820d"
