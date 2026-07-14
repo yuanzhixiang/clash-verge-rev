@@ -12,7 +12,9 @@
       "connect": "連線",
       "disconnect": "中斷",
       "connecting": "連線中...",
-      "clearChainConfig": "刪除鏈式設定"
+      "clearChainConfig": "刪除鏈式設定",
+      "addProxy": "New Proxy",
+      "addGroup": "New Policy Group"
     },
     "provider": {
       "title": "代理集合",
@@ -76,6 +78,25 @@
     "title": {
       "default": "策略",
       "chainMode": "鏈式代理模式"
+    },
+    "menus": {
+      "editProxy": "Edit Proxy…",
+      "editGroup": "Edit Group…",
+      "duplicate": "Duplicate",
+      "deleteProxy": "Delete Proxy…",
+      "deleteGroup": "Delete Group…",
+      "testLatency": "Test Proxy Latency",
+      "benchmark": "Benchmark"
+    },
+    "dialogs": {
+      "editProxy": "Edit Proxy",
+      "newProxy": "New Proxy",
+      "editGroup": "Edit Policy Group",
+      "newGroup": "New Policy Group",
+      "deleteProxyTitle": "Delete Proxy",
+      "deleteProxyMessage": "Delete proxy \"{{name}}\"? References in policy groups will be removed as well.",
+      "deleteGroupTitle": "Delete Policy Group",
+      "deleteGroupMessage": "Delete policy group \"{{name}}\"? References in other groups will be removed; rules referencing it must be updated manually."
     }
   },
   "feedback": {
@@ -87,6 +108,14 @@
         "none": "No providers available to update",
         "allUpdated": "All providers updated successfully"
       }
+    },
+    "editor": {
+      "invalidYaml": "Invalid YAML: {{detail}}",
+      "missingName": "The entry must contain a non-empty name field",
+      "duplicateName": "The name \"{{detail}}\" already exists",
+      "notFound": "\"{{detail}}\" no longer exists in the profile",
+      "emptyGroup": "Group \"{{detail}}\" would be left without any outlet",
+      "saveRejected": "Config validation failed: {{detail}}"
     }
   },
   "components": {

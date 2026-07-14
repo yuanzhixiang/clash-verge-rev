@@ -427,6 +427,14 @@ export interface TranslationResources {
         }
       }
       feedback: {
+        editor: {
+          duplicateName: string
+          emptyGroup: string
+          invalidYaml: string
+          missingName: string
+          notFound: string
+          saveRejected: string
+        }
         notifications: {
           provider: {
             allUpdated: string
@@ -439,6 +447,8 @@ export interface TranslationResources {
       }
       page: {
         actions: {
+          addGroup: string
+          addProxy: string
           clearChainConfig: string
           connect: string
           connecting: string
@@ -460,11 +470,30 @@ export interface TranslationResources {
           minimumNodesHint: string
           warning: string
         }
+        dialogs: {
+          deleteGroupMessage: string
+          deleteGroupTitle: string
+          deleteProxyMessage: string
+          deleteProxyTitle: string
+          editGroup: string
+          editProxy: string
+          newGroup: string
+          newProxy: string
+        }
         labels: {
           delayCheckReset: string
           outboundMode: string
           proxyCount: string
           readonlyGroup: string
+        }
+        menus: {
+          benchmark: string
+          deleteGroup: string
+          deleteProxy: string
+          duplicate: string
+          editGroup: string
+          editProxy: string
+          testLatency: string
         }
         messages: {
           directMode: string

@@ -12,7 +12,9 @@
       "connect": "연결",
       "disconnect": "연결 해제",
       "connecting": "연결 중...",
-      "clearChainConfig": "체인 구성 삭제"
+      "clearChainConfig": "체인 구성 삭제",
+      "addProxy": "New Proxy",
+      "addGroup": "New Policy Group"
     },
     "provider": {
       "title": "프록시 제공자",
@@ -76,6 +78,25 @@
     "title": {
       "default": "정책",
       "chainMode": "프록시 체인 모드"
+    },
+    "menus": {
+      "editProxy": "Edit Proxy…",
+      "editGroup": "Edit Group…",
+      "duplicate": "Duplicate",
+      "deleteProxy": "Delete Proxy…",
+      "deleteGroup": "Delete Group…",
+      "testLatency": "Test Proxy Latency",
+      "benchmark": "Benchmark"
+    },
+    "dialogs": {
+      "editProxy": "Edit Proxy",
+      "newProxy": "New Proxy",
+      "editGroup": "Edit Policy Group",
+      "newGroup": "New Policy Group",
+      "deleteProxyTitle": "Delete Proxy",
+      "deleteProxyMessage": "Delete proxy \"{{name}}\"? References in policy groups will be removed as well.",
+      "deleteGroupTitle": "Delete Policy Group",
+      "deleteGroupMessage": "Delete policy group \"{{name}}\"? References in other groups will be removed; rules referencing it must be updated manually."
     }
   },
   "feedback": {
@@ -87,6 +108,14 @@
         "none": "업데이트할 제공자가 없습니다",
         "allUpdated": "모든 제공자가 업데이트되었습니다"
       }
+    },
+    "editor": {
+      "invalidYaml": "Invalid YAML: {{detail}}",
+      "missingName": "The entry must contain a non-empty name field",
+      "duplicateName": "The name \"{{detail}}\" already exists",
+      "notFound": "\"{{detail}}\" no longer exists in the profile",
+      "emptyGroup": "Group \"{{detail}}\" would be left without any outlet",
+      "saveRejected": "Config validation failed: {{detail}}"
     }
   },
   "components": {

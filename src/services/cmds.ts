@@ -56,6 +56,13 @@ export async function saveProfileFile(index: string, fileData: string) {
   )
 }
 
+export async function saveProfileFileWithOutcome(
+  index: string,
+  fileData: string,
+) {
+  return invoke<ValidationOutcome>('save_profile_file', { index, fileData })
+}
+
 export async function updateProxyProviderEx(name: string) {
   return invoke<void>('update_proxy_provider_ex', { name })
 }

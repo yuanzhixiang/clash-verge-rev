@@ -12,7 +12,9 @@
       "connect": "连接",
       "disconnect": "断开",
       "connecting": "连接中...",
-      "clearChainConfig": "删除链式配置"
+      "clearChainConfig": "删除链式配置",
+      "addProxy": "新建节点",
+      "addGroup": "新建策略组"
     },
     "provider": {
       "title": "代理集合",
@@ -76,6 +78,25 @@
     "title": {
       "default": "策略",
       "chainMode": "链式代理模式"
+    },
+    "menus": {
+      "editProxy": "编辑节点…",
+      "editGroup": "编辑策略组…",
+      "duplicate": "创建副本",
+      "deleteProxy": "删除节点…",
+      "deleteGroup": "删除策略组…",
+      "testLatency": "测试节点延迟",
+      "benchmark": "组内测速"
+    },
+    "dialogs": {
+      "editProxy": "编辑节点",
+      "newProxy": "新建节点",
+      "editGroup": "编辑策略组",
+      "newGroup": "新建策略组",
+      "deleteProxyTitle": "删除节点",
+      "deleteProxyMessage": "确定删除节点「{{name}}」？策略组中对它的引用会一并移除。",
+      "deleteGroupTitle": "删除策略组",
+      "deleteGroupMessage": "确定删除策略组「{{name}}」？其它组对它的引用会一并移除；规则中的引用需自行处理。"
     }
   },
   "feedback": {
@@ -87,6 +108,14 @@
         "none": "没有可更新的 provider",
         "allUpdated": "所有 provider 均已更新"
       }
+    },
+    "editor": {
+      "invalidYaml": "YAML 语法错误：{{detail}}",
+      "missingName": "配置必须包含非空的 name 字段",
+      "duplicateName": "名称「{{detail}}」已存在",
+      "notFound": "「{{detail}}」已不存在于配置文件中",
+      "emptyGroup": "策略组「{{detail}}」将失去所有出口",
+      "saveRejected": "配置校验失败：{{detail}}"
     }
   },
   "components": {

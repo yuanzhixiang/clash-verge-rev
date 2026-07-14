@@ -1,4 +1,4 @@
-import { SpeedRounded } from '@mui/icons-material'
+import { AddRounded, SpeedRounded } from '@mui/icons-material'
 import { Box, ButtonBase, Typography, alpha } from '@mui/material'
 
 import { BaseLoading } from '@/components/base'
@@ -113,9 +113,17 @@ export const PolicyDelayLabel = ({
 interface ProxyCardProps {
   proxy: IProxyItem
   testLabel: string
+  onContextMenu?: (
+    event: React.MouseEvent<HTMLElement>,
+    proxy: IProxyItem,
+  ) => void
 }
 
-export const PolicyProxyCard = ({ proxy, testLabel }: ProxyCardProps) => {
+export const PolicyProxyCard = ({
+  proxy,
+  testLabel,
+  onContextMenu,
+}: ProxyCardProps) => {
   const { delayValue, timeout, onDelay } = useProxyDelayState(
     proxy,
     'policy-standalone',
@@ -124,6 +132,11 @@ export const PolicyProxyCard = ({ proxy, testLabel }: ProxyCardProps) => {
   return (
     <ButtonBase
       onClick={() => void onDelay(proxy.provider)}
+      onContextMenu={(event) => {
+        if (!onContextMenu) return
+        event.preventDefault()
+        onContextMenu(event, proxy)
+      }}
       aria-label={`${testLabel}: ${proxy.name}`}
       title={`${testLabel}: ${proxy.name}`}
       sx={cardSx}
@@ -188,6 +201,40 @@ export const PolicyProxyCard = ({ proxy, testLabel }: ProxyCardProps) => {
     </ButtonBase>
   )
 }
+
+interface AddCardProps {
+  label: string
+  onClick: () => void
+}
+
+/** 网格末尾的虚线 "+" 新增卡片（仅 Local profile 显示）。 */
+export const PolicyAddCard = ({ label, onClick }: AddCardProps) => (
+  <ButtonBase
+    onClick={onClick}
+    aria-label={label}
+    title={label}
+    sx={{
+      display: 'flex',
+      minHeight: 92,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 'var(--radius-container)',
+      border: '1.5px dashed var(--shell-border-strong)',
+      color: 'text.secondary',
+      transition: 'background-color 160ms ease, transform 160ms ease',
+      '&:hover': {
+        bgcolor: 'var(--shell-nav-hover)',
+        transform: 'translateY(-1px)',
+      },
+      '&:focus-visible': {
+        outline: '2px solid var(--shell-focus) !important',
+        outlineOffset: 2,
+      },
+    }}
+  >
+    <AddRounded sx={{ fontSize: 22 }} />
+  </ButtonBase>
+)
 
 interface GroupCardProps {
   group: IProxyGroupItem

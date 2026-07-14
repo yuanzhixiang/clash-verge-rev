@@ -1,17 +1,45 @@
-import { NetworkCheckRounded } from '@mui/icons-material'
-import { Box, Button, Typography } from '@mui/material'
+import {
+  ContentCopyRounded,
+  DeleteOutlineRounded,
+  EditRounded,
+  NetworkCheckRounded,
+  SpeedRounded,
+} from '@mui/icons-material'
+import {
+  Box,
+  Button,
+  Divider,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Typography,
+} from '@mui/material'
 import { useLockFn } from 'ahooks'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseEmpty, BaseLoading } from '@/components/base'
+import { BaseDialog, BaseEmpty, BaseLoading } from '@/components/base'
+import { useProfiles } from '@/hooks/use-profiles'
 import { useProxySelection } from '@/hooks/use-proxy-selection'
 import { useVerge } from '@/hooks/use-verge'
 import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
 import delayManager from '@/services/delay'
+import { showNotice } from '@/services/notice-service'
+import {
+  type EntryKind,
+  ProfileEditError,
+  addEntry,
+  deleteEntry,
+  duplicateEntry,
+  editEntry,
+  getEntryYaml,
+  parseYamlEntry,
+} from '@/services/profile-editor'
 
-import { PolicyGroupCard, PolicyProxyCard } from './policy-card'
+import { PolicyAddCard, PolicyGroupCard, PolicyProxyCard } from './policy-card'
 import { PolicyGroupPopover } from './policy-group-popover'
+import { PolicyYamlDialog } from './policy-yaml-dialog'
 import { ProviderButton } from './provider-button'
 
 const MANUAL_GROUP_TYPES = new Set(['Selector', 'URLTest', 'Fallback'])
@@ -22,6 +50,38 @@ const PRESET_PROXY_NAMES = new Set([
   'PASS',
   'COMPATIBLE',
 ])
+
+const PROXY_TEMPLATE = `name: new-proxy
+type: ss
+server: example.com
+port: 443
+cipher: aes-128-gcm
+password: password
+`
+
+const GROUP_TEMPLATE = `name: new-group
+type: select
+proxies:
+  - DIRECT
+`
+
+interface EditorState {
+  kind: EntryKind
+  /** 编辑既有条目时为原名称，新建时为 null。 */
+  oldName: string | null
+  title: string
+  initialText: string
+}
+
+interface ConfirmState {
+  kind: EntryKind
+  name: string
+}
+
+interface ProxyMenuState {
+  position: { left: number; top: number }
+  proxy: IProxyItem
+}
 
 const SectionHeader = ({
   title,
@@ -65,11 +125,19 @@ export const PolicyDashboard = () => {
   const { proxies, proxyProviders, isProxiesPending } = useProxiesData()
   const { refreshProxy } = useAppRefreshers()
   const { verge } = useVerge()
+  const { profiles, current: currentProfile, mutateProfiles } = useProfiles()
   const [testingAll, setTestingAll] = useState(false)
   const [active, setActive] = useState<{
     anchorEl: HTMLElement
     groupName: string
   } | null>(null)
+  const [proxyMenu, setProxyMenu] = useState<ProxyMenuState | null>(null)
+  const [editor, setEditor] = useState<EditorState | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [confirm, setConfirm] = useState<ConfirmState | null>(null)
+
+  const profileUid = profiles?.current
+  const canEdit = Boolean(profileUid) && currentProfile?.type === 'local'
 
   const groups = useMemo(
     () =>
@@ -150,6 +218,103 @@ export const PolicyDashboard = () => {
     }
   })
 
+  const notifyEditError = (err: unknown) => {
+    if (err instanceof ProfileEditError) {
+      showNotice.error(`proxies.feedback.editor.${err.code}`, {
+        detail: err.detail,
+      })
+    } else {
+      showNotice.error(err as Error)
+    }
+  }
+
+  const afterProfileMutation = async () => {
+    await mutateProfiles()
+    await refreshProxy()
+  }
+
+  const openCreateEditor = (kind: EntryKind) => {
+    setEditor({
+      kind,
+      oldName: null,
+      title: t(
+        kind === 'proxy'
+          ? 'proxies.page.dialogs.newProxy'
+          : 'proxies.page.dialogs.newGroup',
+      ),
+      initialText: kind === 'proxy' ? PROXY_TEMPLATE : GROUP_TEMPLATE,
+    })
+  }
+
+  const openEditEditor = async (kind: EntryKind, name: string) => {
+    if (!profileUid) return
+    try {
+      const initialText = await getEntryYaml(profileUid, kind, name)
+      setEditor({
+        kind,
+        oldName: name,
+        title: t(
+          kind === 'proxy'
+            ? 'proxies.page.dialogs.editProxy'
+            : 'proxies.page.dialogs.editGroup',
+        ),
+        initialText,
+      })
+    } catch (err) {
+      notifyEditError(err)
+    }
+  }
+
+  const handleEditorSave = async (text: string) => {
+    if (!editor || !profileUid) return
+    setSaving(true)
+    try {
+      const entry = parseYamlEntry(text)
+      if (editor.oldName === null) {
+        await addEntry(profileUid, editor.kind, entry)
+      } else {
+        await editEntry(profileUid, editor.kind, editor.oldName, entry)
+      }
+      setEditor(null)
+      await afterProfileMutation()
+    } catch (err) {
+      notifyEditError(err)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDuplicate = useLockFn(async (kind: EntryKind, name: string) => {
+    if (!profileUid) return
+    try {
+      await duplicateEntry(profileUid, kind, name)
+      await afterProfileMutation()
+    } catch (err) {
+      notifyEditError(err)
+    }
+  })
+
+  const handleConfirmDelete = useLockFn(async () => {
+    if (!confirm || !profileUid) return
+    try {
+      await deleteEntry(profileUid, confirm.kind, confirm.name)
+      setConfirm(null)
+      await afterProfileMutation()
+    } catch (err) {
+      notifyEditError(err)
+    }
+  })
+
+  const handleMenuTestLatency = (proxy: IProxyItem) => {
+    const timeout = verge?.default_latency_timeout || 10000
+    void delayManager.checkDelay(
+      proxy.name,
+      'policy-standalone',
+      timeout,
+      proxy.provider,
+    )
+  }
+
   if (isProxiesPending && !proxies) {
     return (
       <Box sx={{ display: 'grid', height: '100%', placeItems: 'center' }}>
@@ -189,7 +354,7 @@ export const PolicyDashboard = () => {
           }
         />
 
-        {standaloneProxies.length === 0 ? (
+        {standaloneProxies.length === 0 && !canEdit ? (
           <Box sx={{ minHeight: 112 }}>
             <BaseEmpty text={t('proxies.page.messages.noNodes')} />
           </Box>
@@ -206,8 +371,20 @@ export const PolicyDashboard = () => {
                 key={proxy.name}
                 proxy={proxy}
                 testLabel={t('proxies.page.actions.test')}
+                onContextMenu={(event, target) => {
+                  setProxyMenu({
+                    position: { left: event.clientX, top: event.clientY },
+                    proxy: target,
+                  })
+                }}
               />
             ))}
+            {canEdit && (
+              <PolicyAddCard
+                label={t('proxies.page.actions.addProxy')}
+                onClick={() => openCreateEditor('proxy')}
+              />
+            )}
           </Box>
         )}
       </Box>
@@ -215,7 +392,7 @@ export const PolicyDashboard = () => {
       <Box component="section" sx={{ mt: 4.5 }}>
         <SectionHeader title={t('proxies.page.sections.policyGroup')} />
 
-        {groups.length === 0 ? (
+        {groups.length === 0 && !canEdit ? (
           <Box sx={{ minHeight: 112 }}>
             <BaseEmpty text={t('proxies.page.messages.noGroups')} />
           </Box>
@@ -248,6 +425,12 @@ export const PolicyDashboard = () => {
                 />
               )
             })}
+            {canEdit && (
+              <PolicyAddCard
+                label={t('proxies.page.actions.addGroup')}
+                onClick={() => openCreateEditor('group')}
+              />
+            )}
           </Box>
         )}
       </Box>
@@ -259,10 +442,132 @@ export const PolicyDashboard = () => {
         readonly={
           activeGroup ? !MANUAL_GROUP_TYPES.has(activeGroup.type) : false
         }
+        canEdit={canEdit}
         onClose={() => setActive(null)}
         onUpdated={() => void refreshProxy()}
         onSelect={(group, proxy) => handleProxyGroupChange(group, proxy)}
+        onEdit={(group) => {
+          setActive(null)
+          void openEditEditor('group', group.name)
+        }}
+        onDuplicate={(group) => {
+          setActive(null)
+          void handleDuplicate('group', group.name)
+        }}
+        onDelete={(group) => {
+          setActive(null)
+          setConfirm({ kind: 'group', name: group.name })
+        }}
       />
+
+      <Menu
+        open={Boolean(proxyMenu)}
+        onClose={() => setProxyMenu(null)}
+        anchorReference="anchorPosition"
+        anchorPosition={proxyMenu?.position}
+        slotProps={{ list: { sx: { py: 0.5 } } }}
+        onContextMenu={(event) => {
+          event.preventDefault()
+          setProxyMenu(null)
+        }}
+      >
+        {canEdit && (
+          <MenuItem
+            dense
+            onClick={() => {
+              const target = proxyMenu?.proxy
+              setProxyMenu(null)
+              if (target) void openEditEditor('proxy', target.name)
+            }}
+          >
+            <ListItemIcon>
+              <EditRounded fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>{t('proxies.page.menus.editProxy')}</ListItemText>
+          </MenuItem>
+        )}
+        {canEdit && (
+          <MenuItem
+            dense
+            onClick={() => {
+              const target = proxyMenu?.proxy
+              setProxyMenu(null)
+              if (target) void handleDuplicate('proxy', target.name)
+            }}
+          >
+            <ListItemIcon>
+              <ContentCopyRounded fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>{t('proxies.page.menus.duplicate')}</ListItemText>
+          </MenuItem>
+        )}
+        {canEdit && (
+          <MenuItem
+            dense
+            onClick={() => {
+              const target = proxyMenu?.proxy
+              setProxyMenu(null)
+              if (target) setConfirm({ kind: 'proxy', name: target.name })
+            }}
+            sx={({ palette }) => ({ color: palette.error.main })}
+          >
+            <ListItemIcon>
+              <DeleteOutlineRounded fontSize="small" color="error" />
+            </ListItemIcon>
+            <ListItemText>{t('proxies.page.menus.deleteProxy')}</ListItemText>
+          </MenuItem>
+        )}
+        {canEdit && <Divider sx={{ my: 0.5 }} />}
+        <MenuItem
+          dense
+          onClick={() => {
+            const target = proxyMenu?.proxy
+            setProxyMenu(null)
+            if (target) handleMenuTestLatency(target)
+          }}
+        >
+          <ListItemIcon>
+            <SpeedRounded fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>{t('proxies.page.menus.testLatency')}</ListItemText>
+        </MenuItem>
+      </Menu>
+
+      <PolicyYamlDialog
+        key={editor ? `${editor.kind}-${editor.oldName ?? 'new'}` : 'closed'}
+        open={Boolean(editor)}
+        title={editor?.title ?? ''}
+        initialText={editor?.initialText ?? ''}
+        saving={saving}
+        onCancel={() => setEditor(null)}
+        onSave={(text) => void handleEditorSave(text)}
+      />
+
+      <BaseDialog
+        open={Boolean(confirm)}
+        title={t(
+          confirm?.kind === 'group'
+            ? 'proxies.page.dialogs.deleteGroupTitle'
+            : 'proxies.page.dialogs.deleteProxyTitle',
+        )}
+        okBtn={t('shared.actions.confirm')}
+        cancelBtn={t('shared.actions.cancel')}
+        contentSx={{ width: { xs: 320, sm: 420 }, userSelect: 'text' }}
+        onCancel={() => setConfirm(null)}
+        onClose={() => setConfirm(null)}
+        onOk={() => void handleConfirmDelete()}
+      >
+        <Typography variant="body2">
+          {confirm
+            ? t(
+                confirm.kind === 'group'
+                  ? 'proxies.page.dialogs.deleteGroupMessage'
+                  : 'proxies.page.dialogs.deleteProxyMessage',
+                { name: confirm.name },
+              )
+            : ''}
+        </Typography>
+      </BaseDialog>
     </Box>
   )
 }

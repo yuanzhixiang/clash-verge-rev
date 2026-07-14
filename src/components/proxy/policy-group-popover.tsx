@@ -1,42 +1,49 @@
 import {
-  AccessTimeRounded,
   CheckRounded,
-  CloseRounded,
+  ContentCopyRounded,
+  DeleteOutlineRounded,
+  EditRounded,
   NetworkCheckRounded,
-  SearchRounded,
-  SortByAlphaRounded,
-  SortRounded,
-  VisibilityOffRounded,
-  VisibilityRounded,
 } from '@mui/icons-material'
 import {
   Box,
   ButtonBase,
-  IconButton,
+  Divider,
+  ListItemIcon,
+  ListItemText,
+  MenuItem,
+  MenuList,
   Popover,
   Typography,
   alpha,
 } from '@mui/material'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { delayGroup } from 'tauri-plugin-mihomo-api'
 
-import { BaseEmpty, BaseSearchBox, VirtualList } from '@/components/base'
+import { BaseEmpty, VirtualList } from '@/components/base'
 import { useVerge } from '@/hooks/use-verge'
 import delayManager from '@/services/delay'
 import { getShellThemeVars } from '@/utils/shell-theme'
 
 import { PolicyDelayLabel } from './policy-card'
-import { filterSort, type ProxySortType } from './use-filter-sort'
 
 interface Props {
   anchorEl: HTMLElement | null
   group: IProxyGroupItem | null
   readonly: boolean
+  /** 当前 profile 是否允许编辑（Local 类型）。 */
+  canEdit: boolean
   onClose: () => void
   onSelect: (group: IProxyGroupItem, proxy: IProxyItem) => void
   onUpdated: () => void
+  onEdit: (group: IProxyGroupItem) => void
+  onDuplicate: (group: IProxyGroupItem) => void
+  onDelete: (group: IProxyGroupItem) => void
 }
+
+const ROW_HEIGHT = 40
+const MAX_LIST_HEIGHT = 400
 
 const focusSibling = (current: HTMLElement, direction: 1 | -1) => {
   const root = current.closest('[data-policy-node-list]')
@@ -47,19 +54,24 @@ const focusSibling = (current: HTMLElement, direction: 1 | -1) => {
   next?.focus()
 }
 
+/**
+ * Surge 风格的策略组菜单式浮层：顶部管理操作 + Benchmark，
+ * 分隔线下是节点列表（当前节点打勾，点选即切换并关闭）。
+ */
 export const PolicyGroupPopover = ({
   anchorEl,
   group,
   readonly,
+  canEdit,
   onClose,
   onSelect,
   onUpdated,
+  onEdit,
+  onDuplicate,
+  onDelete,
 }: Props) => {
   const { t } = useTranslation()
   const { verge } = useVerge()
-  const [filter, setFilter] = useState(() => (_: string) => true)
-  const [sortType, setSortType] = useState<ProxySortType>(0)
-  const [showDetails, setShowDetails] = useState(true)
   const [testing, setTesting] = useState(false)
 
   useEffect(() => {
@@ -70,19 +82,7 @@ export const PolicyGroupPopover = ({
     delayManager.setUrl(group.name, group.testUrl?.trim() || defaultUrl)
   }, [group, verge?.default_latency_test])
 
-  const proxies = useMemo(() => {
-    if (!group) return []
-    const filtered = group.all.filter((proxy) => filter(proxy.name))
-    return filterSort(
-      filtered,
-      group.name,
-      '',
-      sortType,
-      verge?.default_latency_timeout,
-    )
-  }, [filter, group, sortType, verge?.default_latency_timeout])
-
-  const handleTestAll = useCallback(async () => {
+  const handleBenchmark = useCallback(async () => {
     if (!group || testing) return
     setTesting(true)
     const timeout = verge?.default_latency_timeout || 10000
@@ -98,9 +98,11 @@ export const PolicyGroupPopover = ({
     }
   }, [group, onUpdated, testing, verge?.default_latency_timeout])
 
-  const cycleSort = () => {
-    setSortType((current) => ((current + 1) % 3) as ProxySortType)
-  }
+  const proxies = group?.all ?? []
+  const listHeight = Math.min(
+    Math.max(proxies.length, 1) * ROW_HEIGHT,
+    MAX_LIST_HEIGHT,
+  )
 
   return (
     <Popover
@@ -114,8 +116,8 @@ export const PolicyGroupPopover = ({
           sx: ({ palette }) => ({
             ...getShellThemeVars(palette),
             display: 'flex',
-            width: 'min(420px, calc(100vw - 24px))',
-            height: 'min(520px, calc(100vh - 40px))',
+            width: 'min(320px, calc(100vw - 24px))',
+            maxHeight: 'min(560px, calc(100vh - 40px))',
             mt: 0.75,
             flexDirection: 'column',
             overflow: 'hidden',
@@ -129,142 +131,60 @@ export const PolicyGroupPopover = ({
         },
       }}
     >
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          px: 2,
-          pt: 1.75,
-          pb: 1.25,
-        }}
-      >
-        <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography
-            noWrap
-            title={group?.name}
-            sx={{ fontSize: 16, fontWeight: 650, letterSpacing: '-0.015em' }}
-          >
-            {group?.name}
-          </Typography>
-          <Typography color="text.secondary" sx={{ mt: 0.25, fontSize: 11.5 }}>
-            {group?.type} · {group?.all.length ?? 0}
-          </Typography>
-        </Box>
-        <IconButton
-          size="small"
-          onClick={onClose}
-          aria-label={t('shared.actions.close')}
-          title={t('shared.actions.close')}
-        >
-          <CloseRounded fontSize="small" />
-        </IconButton>
-      </Box>
-
-      <Box sx={{ px: 2, pb: 1.25 }}>
-        <BaseSearchBox
-          placeholder={t('proxies.page.placeholders.searchNodes')}
-          startAdornment={<SearchRounded aria-hidden sx={{ fontSize: 18 }} />}
-          onSearch={(nextFilter) => setFilter(() => nextFilter)}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              height: 36,
-              borderRadius: 'var(--radius-pill)',
-              bgcolor: 'var(--shell-panel-muted)',
-              '& fieldset': { borderColor: 'var(--shell-border)' },
-            },
-            '& .MuiInputBase-input': { fontSize: 13 },
-          }}
-        />
-      </Box>
-
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 0.5,
-          borderBlock: '1px solid var(--shell-border)',
-          px: 1.5,
-          py: 0.75,
-          bgcolor: 'var(--shell-panel-muted)',
-        }}
-      >
-        <IconButton
-          size="small"
-          disabled={testing}
-          onClick={() => void handleTestAll()}
-          aria-label={t('proxies.page.actions.testAll')}
-          title={t('proxies.page.actions.testAll')}
-        >
-          <NetworkCheckRounded
-            fontSize="small"
-            sx={{
-              animation: testing ? 'policy-spin 1s linear infinite' : 'none',
-            }}
-          />
-        </IconButton>
-        <IconButton
-          size="small"
-          onClick={cycleSort}
-          aria-label={
-            [
-              t('proxies.page.tooltips.sortDefault'),
-              t('proxies.page.tooltips.sortDelay'),
-              t('proxies.page.tooltips.sortName'),
-            ][sortType]
-          }
-          title={
-            [
-              t('proxies.page.tooltips.sortDefault'),
-              t('proxies.page.tooltips.sortDelay'),
-              t('proxies.page.tooltips.sortName'),
-            ][sortType]
-          }
-        >
-          {sortType === 0 && <SortRounded fontSize="small" />}
-          {sortType === 1 && <AccessTimeRounded fontSize="small" />}
-          {sortType === 2 && <SortByAlphaRounded fontSize="small" />}
-        </IconButton>
-        <IconButton
-          size="small"
-          onClick={() => setShowDetails((current) => !current)}
-          aria-label={
-            showDetails
-              ? t('proxies.page.tooltips.showBasic')
-              : t('proxies.page.tooltips.showDetail')
-          }
-          title={
-            showDetails
-              ? t('proxies.page.tooltips.showBasic')
-              : t('proxies.page.tooltips.showDetail')
-          }
-        >
-          {showDetails ? (
-            <VisibilityRounded fontSize="small" />
-          ) : (
-            <VisibilityOffRounded fontSize="small" />
-          )}
-        </IconButton>
-        {readonly && (
-          <Typography
-            color="text.secondary"
-            sx={{ ml: 'auto', fontSize: 11.5 }}
-          >
-            {t('proxies.page.labels.readonlyGroup')}
-          </Typography>
+      <MenuList dense sx={{ py: 0.5, flex: '0 0 auto' }}>
+        {canEdit && group && (
+          <MenuItem onClick={() => onEdit(group)}>
+            <ListItemIcon>
+              <EditRounded fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>{t('proxies.page.menus.editGroup')}</ListItemText>
+          </MenuItem>
         )}
-      </Box>
+        {canEdit && group && (
+          <MenuItem onClick={() => onDuplicate(group)}>
+            <ListItemIcon>
+              <ContentCopyRounded fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>{t('proxies.page.menus.duplicate')}</ListItemText>
+          </MenuItem>
+        )}
+        {canEdit && group && (
+          <MenuItem
+            onClick={() => onDelete(group)}
+            sx={({ palette }) => ({ color: palette.error.main })}
+          >
+            <ListItemIcon>
+              <DeleteOutlineRounded fontSize="small" color="error" />
+            </ListItemIcon>
+            <ListItemText>{t('proxies.page.menus.deleteGroup')}</ListItemText>
+          </MenuItem>
+        )}
+        {canEdit && group && <Divider sx={{ my: 0.5 }} />}
+        <MenuItem disabled={testing} onClick={() => void handleBenchmark()}>
+          <ListItemIcon>
+            <NetworkCheckRounded
+              fontSize="small"
+              sx={{
+                animation: testing ? 'policy-spin 1s linear infinite' : 'none',
+              }}
+            />
+          </ListItemIcon>
+          <ListItemText>{t('proxies.page.menus.benchmark')}</ListItemText>
+        </MenuItem>
+      </MenuList>
+
+      <Divider />
 
       <Box
         data-policy-node-list
-        sx={{ minHeight: 0, flex: 1, overflow: 'hidden' }}
+        sx={{ minHeight: 0, flex: '0 1 auto', height: listHeight }}
       >
         {proxies.length === 0 ? (
           <BaseEmpty text={t('proxies.page.messages.noNodes')} />
         ) : (
           <VirtualList
             count={proxies.length}
-            estimateSize={showDetails ? 58 : 44}
+            estimateSize={ROW_HEIGHT}
             overscan={10}
             getItemKey={(index) => proxies[index]?.name ?? index}
             style={{ height: '100%' }}
@@ -277,10 +197,9 @@ export const PolicyGroupPopover = ({
                   sx={({ palette }) => ({
                     display: 'grid',
                     width: '100%',
-                    minHeight: showDetails ? 58 : 44,
+                    minHeight: ROW_HEIGHT,
                     gridTemplateColumns: 'minmax(0, 1fr) auto',
                     alignItems: 'stretch',
-                    borderBottom: '1px solid var(--shell-border)',
                     bgcolor: selected
                       ? alpha(palette.primary.main, 0.1)
                       : 'transparent',
@@ -289,7 +208,10 @@ export const PolicyGroupPopover = ({
                   <ButtonBase
                     data-policy-node
                     disabled={readonly}
-                    onClick={() => onSelect(group, proxy)}
+                    onClick={() => {
+                      onSelect(group, proxy)
+                      onClose()
+                    }}
                     onKeyDown={(event) => {
                       if (
                         event.key === 'ArrowDown' ||
@@ -308,7 +230,7 @@ export const PolicyGroupPopover = ({
                       gridTemplateColumns: '22px minmax(0, 1fr)',
                       alignItems: 'center',
                       gap: 1,
-                      px: 2,
+                      px: 1.5,
                       textAlign: 'left',
                       '&:hover': { bgcolor: 'var(--shell-nav-hover)' },
                       '&.Mui-disabled': {
@@ -320,29 +242,16 @@ export const PolicyGroupPopover = ({
                     <Box sx={{ color: 'primary.main' }}>
                       {selected && <CheckRounded sx={{ fontSize: 17 }} />}
                     </Box>
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography
-                        noWrap
-                        title={proxy.name}
-                        sx={{
-                          fontSize: 13.5,
-                          fontWeight: selected ? 600 : 450,
-                        }}
-                      >
-                        {proxy.name}
-                      </Typography>
-                      {showDetails && (
-                        <Typography
-                          color="text.secondary"
-                          noWrap
-                          sx={{ mt: 0.25, fontSize: 11 }}
-                        >
-                          {[proxy.type, proxy.provider]
-                            .filter(Boolean)
-                            .join(' · ')}
-                        </Typography>
-                      )}
-                    </Box>
+                    <Typography
+                      noWrap
+                      title={proxy.name}
+                      sx={{
+                        fontSize: 13.5,
+                        fontWeight: selected ? 600 : 450,
+                      }}
+                    >
+                      {proxy.name}
+                    </Typography>
                   </ButtonBase>
                   <Box sx={{ display: 'flex', alignItems: 'center', pr: 1.5 }}>
                     <PolicyDelayLabel
