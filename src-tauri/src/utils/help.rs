@@ -244,6 +244,7 @@ pub fn reveal_file(path: PathBuf) -> Result<()> {
 }
 
 #[cfg(test)]
+#[allow(clippy::items_after_test_module, clippy::unwrap_used, clippy::expect_used)]
 mod reveal_tests {
     use super::*;
 

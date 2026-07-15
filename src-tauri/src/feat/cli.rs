@@ -150,7 +150,7 @@ fn cli_exe_name() -> String {
     format!("vergectl{}", exe_suffix())
 }
 
-fn exe_suffix() -> &'static str {
+const fn exe_suffix() -> &'static str {
     if cfg!(windows) { ".exe" } else { "" }
 }
 

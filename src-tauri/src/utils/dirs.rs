@@ -271,6 +271,7 @@ impl PathBufExec for PathBuf {
 }
 
 #[cfg(all(test, feature = "safe-dev"))]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod safe_dev_tests {
     use super::{APP_ID, BACKUP_DIR, ipc_path};
 

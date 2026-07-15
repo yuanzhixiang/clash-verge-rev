@@ -524,6 +524,9 @@ async fn profiles(
     }
 }
 
+// Each branch performs one Mihomo request and returns immediately; keeping the
+// shared handle for the match avoids duplicating acquisition in every arm.
+#[allow(clippy::significant_drop_tightening)]
 async fn proxies(
     action: &str,
     group: Option<String>,
@@ -572,6 +575,7 @@ async fn proxies(
     }
 }
 
+#[allow(clippy::significant_drop_tightening)]
 async fn connections(action: &str, id: Option<String>) -> Result<JsonValue> {
     let mihomo = handle::Handle::mihomo().await;
     match action {
@@ -589,6 +593,7 @@ async fn connections(action: &str, id: Option<String>) -> Result<JsonValue> {
     }
 }
 
+#[allow(clippy::significant_drop_tightening)]
 async fn rules(action: &str, provider: Option<String>) -> Result<JsonValue> {
     match action {
         "list" => to_json(&handle::Handle::mihomo().await.get_rules().await?),

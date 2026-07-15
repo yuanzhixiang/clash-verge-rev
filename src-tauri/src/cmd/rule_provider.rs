@@ -158,6 +158,7 @@ pub async fn get_rule_provider_content(provider_name: String) -> CmdResult<RuleP
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
     use std::time::{SystemTime, UNIX_EPOCH};

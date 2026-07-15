@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+#![cfg_attr(feature = "clippy", allow(dead_code, unused_imports, clippy::unused_async))]
 #![recursion_limit = "512"]
 
 mod cmd;
@@ -11,8 +12,6 @@ mod module;
 mod process;
 pub mod utils;
 
-#[cfg(not(feature = "safe-dev"))]
-use crate::constants::files;
 use crate::{
     core::handle,
     process::AsyncHandler,
@@ -22,17 +21,19 @@ use anyhow::Result;
 use clash_verge_logging::{Type, logging};
 use once_cell::sync::OnceCell;
 use tauri::{AppHandle, Manager as _};
-#[cfg(all(target_os = "macos", not(feature = "safe-dev")))]
-use tauri_plugin_autostart::MacosLauncher;
-#[cfg(not(feature = "safe-dev"))]
-use tauri_plugin_deep_link::DeepLinkExt as _;
-#[cfg(not(feature = "safe-dev"))]
-use tauri_plugin_mihomo::RejectPolicy;
 
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
 /// Application initialization helper functions
 mod app_init {
-    use super::*;
+    use super::{AsyncHandler, Result, Type, cmd, logging, resolve, server};
+    #[cfg(not(feature = "safe-dev"))]
+    use crate::constants::files;
+    #[cfg(all(target_os = "macos", not(feature = "safe-dev")))]
+    use tauri_plugin_autostart::MacosLauncher;
+    #[cfg(not(feature = "safe-dev"))]
+    use tauri_plugin_deep_link::DeepLinkExt as _;
+    #[cfg(not(feature = "safe-dev"))]
+    use tauri_plugin_mihomo::RejectPolicy;
 
     /// Initialize singleton monitoring for other instances
     pub fn init_singleton_check() -> Result<()> {
@@ -45,7 +46,7 @@ mod app_init {
 
     /// Safe development only needs Tauri's built-in window/event support.
     #[cfg(feature = "safe-dev")]
-    pub fn setup_plugins(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
+    pub const fn setup_plugins(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
         builder
     }
 

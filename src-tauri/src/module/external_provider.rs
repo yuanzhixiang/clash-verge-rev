@@ -364,14 +364,13 @@ async fn cleanup_orphan_files() {
             && file_name.ends_with(".yaml")
             && !keep.contains(&file_name)
             && !runtime_refs.contains(&file_name)
+            && let Err(error) = fs::remove_file(entry.path()).await
         {
-            if let Err(error) = fs::remove_file(entry.path()).await {
-                logging!(
-                    warn,
-                    Type::Config,
-                    "failed to remove orphan provider file {file_name}: {error:#}"
-                );
-            }
+            logging!(
+                warn,
+                Type::Config,
+                "failed to remove orphan provider file {file_name}: {error:#}"
+            );
         }
     }
 }

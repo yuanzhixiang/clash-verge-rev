@@ -189,14 +189,13 @@ fn parse_named_mapping(input: &str, line: usize, kind: &str, native_fields: bool
                 apply_proxy_aliases(&mut mapping)?;
             }
         }
-        "proxy group" => {
-            if !positional.is_empty() {
-                mapping.insert(
-                    key("proxies"),
-                    Value::Sequence(positional.into_iter().map(Value::String).collect()),
-                );
-            }
+        "proxy group" if !positional.is_empty() => {
+            mapping.insert(
+                key("proxies"),
+                Value::Sequence(positional.into_iter().map(Value::String).collect()),
+            );
         }
+        "proxy group" => {}
         _ if !positional.is_empty() => bail!("unexpected {kind} positional value at line {line}"),
         _ => {}
     }
@@ -298,9 +297,13 @@ fn apply_proxy_aliases(mapping: &mut Mapping) -> Result<()> {
     Ok(())
 }
 
-fn push_sequence(root: &mut Mapping, name: &str, value: Value) {
+fn push_sequence(root: &mut Mapping, name: &str, value: Value) -> Result<()> {
     let entry = root.entry(key(name)).or_insert_with(|| Value::Sequence(Vec::new()));
-    entry.as_sequence_mut().expect("sequence initialized above").push(value);
+    let sequence = entry
+        .as_sequence_mut()
+        .ok_or_else(|| anyhow!("{name} must be an array"))?;
+    sequence.push(value);
+    Ok(())
 }
 
 fn provider_name(group: &str) -> String {
@@ -362,13 +365,13 @@ pub fn parse_profile(content: &str) -> Result<Mapping> {
                 &mut root,
                 "proxies",
                 Value::Mapping(parse_named_mapping(line, line_no, "proxy", native_fields)?),
-            ),
+            )?,
             Section::ProxyGroup => {
                 let mut group = parse_named_mapping(line, line_no, "proxy group", native_fields)?;
                 if !native_fields {
                     handle_policy_path(&mut group, &mut proxy_providers, line_no)?;
                 }
-                push_sequence(&mut root, "proxy-groups", Value::Mapping(group));
+                push_sequence(&mut root, "proxy-groups", Value::Mapping(group))?;
             }
             Section::ProxyProvider => {
                 let provider = parse_named_mapping(line, line_no, "proxy provider", native_fields)?;
@@ -398,7 +401,7 @@ pub fn parse_profile(content: &str) -> Result<Mapping> {
                 } else {
                     line.to_owned()
                 };
-                push_sequence(&mut root, "rules", string(&rule));
+                push_sequence(&mut root, "rules", string(&rule))?;
             }
         }
     }
@@ -464,23 +467,23 @@ fn serialize_entity(mapping: &Mapping, kind: &str, path: &str) -> Result<String>
             tokens.push(encode_value(port, &format!("{path}.port"))?);
             skipped.push("port");
         }
-    } else if kind == "proxy group" {
-        if let Some(proxies) = mapping_field(mapping, "proxies") {
-            let proxies = proxies
-                .as_sequence()
-                .ok_or_else(|| anyhow!("proxies must be an array at {path}"))?;
-            if proxies.is_empty() {
-                tokens.push("proxies=[]".to_owned());
-            } else {
-                for (index, proxy) in proxies.iter().enumerate() {
-                    let proxy = proxy
-                        .as_str()
-                        .ok_or_else(|| anyhow!("proxy member must be a string at {path}.proxies[{index}]"))?;
-                    tokens.push(encode_string(proxy)?);
-                }
+    } else if kind == "proxy group"
+        && let Some(proxies) = mapping_field(mapping, "proxies")
+    {
+        let proxies = proxies
+            .as_sequence()
+            .ok_or_else(|| anyhow!("proxies must be an array at {path}"))?;
+        if proxies.is_empty() {
+            tokens.push("proxies=[]".to_owned());
+        } else {
+            for (index, proxy) in proxies.iter().enumerate() {
+                let proxy = proxy
+                    .as_str()
+                    .ok_or_else(|| anyhow!("proxy member must be a string at {path}.proxies[{index}]"))?;
+                tokens.push(encode_string(proxy)?);
             }
-            skipped.push("proxies");
         }
+        skipped.push("proxies");
     }
     for (raw_key, value) in mapping {
         let field = raw_key.as_str().ok_or_else(|| anyhow!("non-string key at {path}"))?;
@@ -649,6 +652,7 @@ pub fn serialize_profile(root: &Mapping) -> Result<String> {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 

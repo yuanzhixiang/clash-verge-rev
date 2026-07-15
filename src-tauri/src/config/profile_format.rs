@@ -196,13 +196,14 @@ pub async fn convert_declared_yaml_to_conf(
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
     fn converts_complete_profile_without_losing_nulls() {
-        let yaml = r#"
+        let yaml = r"
 proxies:
   - name: entry
     type: vless
@@ -217,7 +218,7 @@ proxy-groups:
     type: select
     proxies: [entry]
 rules: [MATCH,PROXY]
-"#;
+";
         let conf = yaml_to_conf_string(yaml).expect("conversion should succeed");
         let mapping = parse_mapping(&conf, ProfileFormat::Conf).expect("CONF should parse");
         assert!(mapping.contains_key("proxies"));
