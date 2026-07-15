@@ -412,15 +412,8 @@ export const PolicyDashboard = () => {
                   group={group}
                   open={open}
                   readonly={!MANUAL_GROUP_TYPES.has(group.type)}
-                  onClick={(event) => {
-                    setActive((current) =>
-                      current?.groupName === group.name
-                        ? null
-                        : {
-                            anchorEl: event.currentTarget,
-                            groupName: group.name,
-                          },
-                    )
+                  onOpenMenu={(anchorEl) => {
+                    setActive({ anchorEl, groupName: group.name })
                   }}
                 />
               )

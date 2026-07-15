@@ -549,8 +549,29 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
     Ok(())
 }
 
+/// dev 构建（verge-dev / safe-dev）下系统服务视为永久不可用：
+/// service IPC 路径是全局共享的硬编码常量，dev 实例若经 service 启动内核，
+/// 会顶掉正式版正在使用的内核导致断网。dev 固定走 Sidecar 模式。
+fn service_disabled_in_dev() -> bool {
+    if cfg!(feature = "verge-dev") {
+        static LOGGED: std::sync::Once = std::sync::Once::new();
+        LOGGED.call_once(|| {
+            logging!(
+                info,
+                Type::Service,
+                "dev build: system service disabled, sidecar mode only"
+            );
+        });
+        return true;
+    }
+    false
+}
+
 /// 检查服务是否正在运行
 pub async fn is_service_available() -> Result<()> {
+    if service_disabled_in_dev() {
+        bail!("system service is disabled in dev builds");
+    }
     if let Err(e) = Path::metadata(clash_verge_service_ipc::IPC_PATH.as_ref()) {
         let verge = Config::verge().await;
         let verge_last = verge.latest_arc();
@@ -590,6 +611,9 @@ async fn wait_for_service_ipc(manager: &ServiceManager) -> Result<()> {
 }
 
 pub fn is_service_ipc_path_exists() -> bool {
+    if service_disabled_in_dev() {
+        return false;
+    }
     Path::new(clash_verge_service_ipc::IPC_PATH).exists()
 }
 

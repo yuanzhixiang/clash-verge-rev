@@ -14,6 +14,7 @@
 | 内核端口 | 订阅决定（7890 等） | mixed 7900 / socks 7901 / http 7902 | 播种时 patch verge.yaml + clash-verge.yaml（app 权威字段覆盖 profile 值） |
 | 系统代理 | 正常管理 | **全部 no-op + 日志**（含启动时的强制清理） | sysopt.rs `skip_in_dev`（cfg verge-dev） |
 | 系统 DNS | set/unset_dns.sh | **全部 no-op + 日志** | resolve/dns.rs `skip_in_dev` |
+| 系统服务 (clash-verge-service) | 正常使用 | **恒不可用，固定 Sidecar 模式**（service IPC 是全局共享常量，经 service 启动会顶掉正式版内核导致断网） | service.rs `service_disabled_in_dev` |
 
 ## 播种行为
 
@@ -33,4 +34,5 @@
 ## 已知限制
 
 - verge-dev 构建下无法测试"系统代理开关 / 系统 DNS 设置"功能本身（被全局 no-op）；需要测这些时用正式打包版。
-- TUN 模式在 dev 中同样不可用（开关被播种为 false，系统层操作被跳过）。
+- verge-dev 构建下服务模式（clash-verge-service）恒不可用，dev 只跑 Sidecar；服务安装/卸载/交接流程无法在 dev 中测试。
+- TUN 模式在 dev 中同样不可用（依赖服务模式或管理员权限，开关被播种为 false，用户手动开启会被自动关闭并提示一次）。

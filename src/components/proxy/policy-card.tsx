@@ -240,17 +240,30 @@ interface GroupCardProps {
   group: IProxyGroupItem
   open: boolean
   readonly: boolean
-  onClick: (event: React.MouseEvent<HTMLElement>) => void
+  onOpenMenu: (anchorEl: HTMLElement) => void
 }
 
 export const PolicyGroupCard = ({
   group,
   open,
   readonly,
-  onClick,
+  onOpenMenu,
 }: GroupCardProps) => (
   <ButtonBase
-    onClick={onClick}
+    onContextMenu={(event) => {
+      event.preventDefault()
+      onOpenMenu(event.currentTarget)
+    }}
+    onKeyDown={(event) => {
+      const opensContextMenu =
+        event.key === 'ContextMenu' ||
+        (event.shiftKey && event.key === 'F10') ||
+        event.key === 'Enter' ||
+        event.key === ' '
+      if (!opensContextMenu) return
+      event.preventDefault()
+      onOpenMenu(event.currentTarget)
+    }}
     aria-haspopup="dialog"
     aria-expanded={open}
     sx={[groupCardSx, open && { bgcolor: 'var(--shell-nav-selected)' }]}
