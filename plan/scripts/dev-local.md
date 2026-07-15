@@ -11,15 +11,15 @@
 | 配置目录 | `.../io.github.clash-verge-rev.clash-verge-rev` | 同路径 `.dev` 后缀 | dirs.rs APP_ID（verge-dev feature） |
 | mihomo IPC | `/tmp/verge/verge-mihomo.sock` | `/tmp/verge-dev/verge-mihomo.sock` | dirs.rs ipc_path verge-dev 分支 |
 | embed/CLI 端口 | 33331 | 11233 | constants.rs |
-| 内核端口 | 订阅决定（7890 等） | mixed 7900 / socks 7901 / http 7902 | 播种时 patch verge.yaml + clash-verge.yaml（app 权威字段覆盖 profile 值） |
+| 内核端口 | 订阅决定（7890 等） | mixed 7900 / socks 7901 / http 7902 | 播种时 patch verge.yaml + config.yaml（IClashTemp 存储层；app 权威字段覆盖 profile 值。注意 clash-verge.yaml 是 enhance 生成的运行时输出，改它无效） |
 | 系统代理 | 正常管理 | **全部 no-op + 日志**（含启动时的强制清理） | sysopt.rs `skip_in_dev`（cfg verge-dev） |
 | 系统 DNS | set/unset_dns.sh | **全部 no-op + 日志** | resolve/dns.rs `skip_in_dev` |
 | 系统服务 (clash-verge-service) | 正常使用 | **恒不可用，固定 Sidecar 模式**（service IPC 是全局共享常量，经 service 启动会顶掉正式版内核导致断网） | service.rs `service_disabled_in_dev` |
 
 ## 播种行为
 
-- dev 配置目录不存在时，从正式版目录拷贝：profiles.yaml、profiles/、verge.yaml、clash-verge.yaml、dns_config.yaml、geodata（Country.mmdb、geoip.dat、geosite.dat）；不拷 cache.db、日志、备份。
-- 拷贝后强制 patch dev 配置：`enable_system_proxy/tun/auto_launch/proxy_guard/external_controller/silent_start = false`，端口改写为 dev 端口，`allow-lan: false`。
+- dev 配置目录不存在时，从正式版目录拷贝：profiles.yaml、profiles/、verge.yaml、config.yaml、dns_config.yaml、geodata（Country.mmdb、geoip.dat、geosite.dat）；不拷 cache.db、clash-verge.yaml（运行时生成物）、日志、备份。
+- 拷贝后强制 patch dev 配置：verge.yaml 的 `enable_system_proxy/tun/auto_launch/proxy_guard/external_controller/silent_start = false` 与 verge_* 端口；config.yaml 的 mixed/socks/http 端口、`allow-lan: false`、`tun.enable: false`（保留 tun 其余子字段）。
 - `pnpm dev --reset`：把现有 dev 目录改名备份为 `.bak-<时间戳>` 后重新播种。
 - 目录已存在则跳过播种直接启动（dev 内的改动会保留）。
 - `VERGE_DEV_MIXED_PORT` 可覆盖起始端口（socks/http 依次 +1/+2）。

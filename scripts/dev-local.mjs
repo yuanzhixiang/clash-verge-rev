@@ -40,10 +40,12 @@ const SOCKS_PORT = MIXED_PORT + 1
 const HTTP_PORT = MIXED_PORT + 2
 const EXTERNAL_CONTROLLER = `127.0.0.1:${MIXED_PORT + 298}` // 7900 -> 8198
 
+// 注意：clash-verge.yaml 是 enhance 生成的运行时输出文件，不拷贝也不 patch；
+// clash 配置层（IClashTemp）的存储文件是 config.yaml。
 const COPY_FILES = [
   'profiles.yaml',
   'verge.yaml',
-  'clash-verge.yaml',
+  'config.yaml',
   'dns_config.yaml',
   'Country.mmdb',
   'geoip.dat',
@@ -58,6 +60,15 @@ const patchYamlFile = (filePath, patch) => {
     ? (yaml.load(fs.readFileSync(filePath, 'utf8')) ?? {})
     : {}
   Object.assign(doc, patch)
+  fs.writeFileSync(filePath, yaml.dump(doc))
+}
+
+// 只改 tun.enable，保留 stack/auto-route 等其余子字段
+const patchTunEnable = (filePath, enable) => {
+  const doc = fs.existsSync(filePath)
+    ? (yaml.load(fs.readFileSync(filePath, 'utf8')) ?? {})
+    : {}
+  doc.tun = { ...(doc.tun ?? {}), enable }
   fs.writeFileSync(filePath, yaml.dump(doc))
 }
 
@@ -96,14 +107,15 @@ const seedDevDir = () => {
     verge_socks_port: SOCKS_PORT,
     verge_port: HTTP_PORT,
   })
-  patchYamlFile(path.join(DEV_DIR, 'clash-verge.yaml'), {
+  const clashConfigPath = path.join(DEV_DIR, 'config.yaml')
+  patchYamlFile(clashConfigPath, {
     'mixed-port': MIXED_PORT,
     'socks-port': SOCKS_PORT,
     port: HTTP_PORT,
     'external-controller': EXTERNAL_CONTROLLER,
     'allow-lan': false,
-    tun: { enable: false },
   })
+  patchTunEnable(clashConfigPath, false)
 
   log(`已从正式版播种配置：${RELEASE_DIR} -> ${DEV_DIR}`)
   log(`端口：mixed ${MIXED_PORT} / socks ${SOCKS_PORT} / http ${HTTP_PORT}`)
