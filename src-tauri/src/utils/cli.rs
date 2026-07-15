@@ -65,6 +65,7 @@ pub enum CliRequest {
         profile: Option<JsonValue>,
         file_data: Option<String>,
         data: Option<String>,
+        force: Option<bool>,
     },
     Proxies {
         action: String,
@@ -156,7 +157,13 @@ async fn execute(request: CliRequest) -> Result<JsonValue> {
             profile,
             file_data,
             data,
-        } => profiles(&action, index, over_id, url, option, item, profile, file_data, data).await,
+            force,
+        } => {
+            profiles(
+                &action, index, over_id, url, option, item, profile, file_data, data, force,
+            )
+            .await
+        }
         CliRequest::Proxies {
             action,
             group,
@@ -449,9 +456,10 @@ async fn profiles(
     profile: Option<JsonValue>,
     file_data: Option<String>,
     data: Option<String>,
+    force: Option<bool>,
 ) -> Result<JsonValue> {
     match action {
-        "list" => to_json(&*Config::profiles().await.data_arc()),
+        "list" => to_json(&cmd(crate::cmd::get_profiles().await)?),
         "import" => {
             let url = required(url, "url")?;
             cmd(crate::cmd::import_profile(url, parse_option(option)?).await)?;
@@ -498,6 +506,14 @@ async fn profiles(
             to_json(&cmd(
                 crate::cmd::save_profile_file(index.into(), Some(data.into())).await
             )?)
+        }
+        "convert" => {
+            let index = required(index, "index")?;
+            to_json(&cmd(crate::cmd::convert_profile_to_conf(
+                index.into(),
+                force.unwrap_or(false),
+            )
+            .await)?)
         }
         "enhance" => to_json(&cmd(crate::cmd::enhance_profiles().await)?),
         "next_update" | "next-update" => {

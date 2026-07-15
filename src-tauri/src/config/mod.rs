@@ -3,6 +3,7 @@ mod clash;
 mod config;
 mod encrypt;
 mod prfitem;
+pub mod profile_format;
 pub mod profiles;
 pub mod runtime;
 mod verge;

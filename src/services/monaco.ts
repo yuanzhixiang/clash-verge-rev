@@ -83,6 +83,20 @@ export const loadMonacoEditor = () => {
             ],
           })
 
+          monaco.languages.register({ id: 'surge-conf' })
+          monaco.languages.setMonarchTokensProvider('surge-conf', {
+            tokenizer: {
+              root: [
+                [/^\s*\[[^\]]+\]\s*$/, 'type.identifier'],
+                [/^[^=]+(?=\s*=)/, 'key'],
+                [/"([^"\\]|\\.)*"/, 'string'],
+                [/\b(true|false|null)\b/, 'keyword'],
+                [/-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/, 'number'],
+                [/(#|;|\/\/).*$/, 'comment'],
+              ],
+            },
+          })
+
           monacoConfigured = true
         },
       }

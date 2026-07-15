@@ -9,6 +9,7 @@ import {
 } from '@mui/icons-material'
 import {
   Box,
+  Chip,
   CircularProgress,
   IconButton,
   keyframes,
@@ -30,6 +31,7 @@ import { GroupsEditorViewer } from '@/components/profile/groups-editor-viewer'
 import { RulesEditorViewer } from '@/components/profile/rules-editor-viewer'
 import { useEditorDocument } from '@/hooks/use-editor-document'
 import {
+  convertProfileToConf,
   getNextUpdateTime,
   readProfileFile,
   revealProfileFile,
@@ -261,6 +263,11 @@ export const ProfileItem = (props: Props) => {
   const { upload = 0, download = 0, total = 0 } = extra ?? {}
   const from = parseUrl(itemData.url)
   const description = itemData.desc
+  const profileFormat = itemData.profile_format === 'conf' ? 'conf' : 'yaml'
+  const effectiveFile = itemData.effective_file ?? itemData.file ?? ''
+  const secondaryInfo = [effectiveFile, description || (hasUrl ? from : '')]
+    .filter(Boolean)
+    .join(' · ')
   const expire = parseExpire(extra?.expire)
   const progress = Math.min(
     Math.round(((download + upload) * 100) / (total + 0.01)) + 1,
@@ -307,6 +314,8 @@ export const ProfileItem = (props: Props) => {
   const [mergeOpen, setMergeOpen] = useState(false)
   const [scriptOpen, setScriptOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confOverwriteConfirmOpen, setConfOverwriteConfirmOpen] =
+    useState(false)
   const [qrOpen, setQrOpen] = useState(false)
 
   const loadProfileDocument = useCallback(() => readProfileFile(uid), [uid])
@@ -400,6 +409,43 @@ export const ProfileItem = (props: Props) => {
     }
   })
 
+  const runConfConversion = useLockFn(async (force: boolean) => {
+    setAnchorEl(null)
+    setConfOverwriteConfirmOpen(false)
+    setLoading(true)
+    try {
+      const result = await convertProfileToConf(itemData.uid, force)
+      await mutateProfiles()
+      showNotice.success(
+        result.overwritten
+          ? selected
+            ? 'profiles.page.feedback.notifications.confRegeneratedAndApplied'
+            : 'profiles.page.feedback.notifications.confRegenerated'
+          : selected
+            ? 'profiles.page.feedback.notifications.confConvertedAndApplied'
+            : 'profiles.page.feedback.notifications.confConverted',
+        {
+          targetFile: result.target_file,
+        },
+      )
+    } catch (err) {
+      showNotice.error('profiles.page.feedback.errors.confConversionFailed', {
+        message: err instanceof Error ? err.message : String(err),
+      })
+    } finally {
+      setLoading(false)
+    }
+  })
+
+  const onConvertToConf = () => {
+    setAnchorEl(null)
+    if (itemData.conf_override) {
+      setConfOverwriteConfirmOpen(true)
+      return
+    }
+    void runConfConversion(false)
+  }
+
   /// 0 不使用任何代理
   /// 1 使用订阅好的代理
   /// 2 至少使用一个代理，根据订阅，如果没订阅，默认使用系统代理
@@ -449,6 +495,8 @@ export const ProfileItem = (props: Props) => {
     shareQrCode: 'profiles.components.menu.shareQrCode',
     editInfo: 'profiles.components.menu.editInfo',
     editFile: 'profiles.components.menu.editFile',
+    convertToConf: 'profiles.components.menu.convertToConf',
+    reconvertToConf: 'profiles.components.menu.reconvertToConf',
     editRules: 'profiles.components.menu.editRules',
     editProxies: 'profiles.components.menu.editProxies',
     editGroups: 'profiles.components.menu.editGroups',
@@ -490,6 +538,13 @@ export const ProfileItem = (props: Props) => {
       label: menuLabels.editFile,
       handler: onEditFile,
       disabled: false,
+    },
+    {
+      label: itemData.conf_override
+        ? menuLabels.reconvertToConf
+        : menuLabels.convertToConf,
+      handler: onConvertToConf,
+      disabled: loading,
     },
     {
       label: menuLabels.editRules,
@@ -567,6 +622,13 @@ export const ProfileItem = (props: Props) => {
       label: menuLabels.editFile,
       handler: onEditFile,
       disabled: false,
+    },
+    {
+      label: itemData.conf_override
+        ? menuLabels.reconvertToConf
+        : menuLabels.convertToConf,
+      handler: onConvertToConf,
+      disabled: loading,
     },
     {
       label: menuLabels.editRules,
@@ -784,21 +846,50 @@ export const ProfileItem = (props: Props) => {
           </Box>
 
           <Box sx={{ minWidth: 0 }}>
-            <Typography
-              component="h2"
-              noWrap
-              title={name}
-              sx={{ fontSize: 14, fontWeight: 550, lineHeight: 1.35 }}
+            <Box
+              sx={{
+                display: 'flex',
+                minWidth: 0,
+                alignItems: 'center',
+                gap: 0.75,
+              }}
             >
-              {name}
-            </Typography>
+              <Typography
+                component="h2"
+                noWrap
+                title={`${name}${effectiveFile ? `\n${effectiveFile}` : ''}`}
+                sx={{
+                  minWidth: 0,
+                  fontSize: 14,
+                  fontWeight: 550,
+                  lineHeight: 1.35,
+                }}
+              >
+                {name}
+              </Typography>
+              {itemData.conf_override && (
+                <Chip
+                  label="CONF Override"
+                  size="small"
+                  variant="outlined"
+                  sx={{ height: 20, flex: '0 0 auto', fontSize: 10 }}
+                />
+              )}
+            </Box>
             <Typography
               color="text.secondary"
               noWrap
-              title={description || (hasUrl ? from : undefined)}
-              sx={{ mt: 0.25, fontSize: 11.5, lineHeight: 1.4 }}
+              title={secondaryInfo || undefined}
+              sx={{
+                mt: 0.25,
+                fontFamily: effectiveFile
+                  ? 'ui-monospace, SFMono-Regular, Menlo, monospace'
+                  : undefined,
+                fontSize: 11.5,
+                lineHeight: 1.4,
+              }}
             >
-              {description || (hasUrl ? from : '')}
+              {secondaryInfo}
             </Typography>
           </Box>
 
@@ -870,6 +961,7 @@ export const ProfileItem = (props: Props) => {
             <IconButton
               title={t('shared.actions.showDetails')}
               size="small"
+              disabled={loading}
               sx={{ color: 'text.secondary' }}
               onClick={(event) => {
                 event.stopPropagation()
@@ -878,7 +970,11 @@ export const ProfileItem = (props: Props) => {
                 setAnchorEl(event.currentTarget)
               }}
             >
-              <MoreHorizRounded fontSize="small" />
+              {loading && !hasUrl ? (
+                <CircularProgress color="inherit" size={16} />
+              ) : (
+                <MoreHorizRounded fontSize="small" />
+              )}
             </IconButton>
           </Box>
         </Box>
@@ -937,8 +1033,8 @@ export const ProfileItem = (props: Props) => {
         <EditorViewer
           open={true}
           value={profileDocument.value}
-          language="yaml"
-          path={`profile:${uid}.yaml`}
+          language={profileFormat === 'conf' ? 'surge-conf' : 'yaml'}
+          path={`profile:${effectiveFile || uid}`}
           loading={profileDocument.loading}
           dirty={profileDocument.dirty}
           onChange={profileDocument.setValue}
@@ -951,6 +1047,7 @@ export const ProfileItem = (props: Props) => {
           groupsUid={option?.groups ?? ''}
           mergeUid={option?.merge ?? ''}
           profileUid={uid}
+          profileFormat={profileFormat}
           property={option?.rules ?? ''}
           open={true}
           onSave={onSave}
@@ -960,6 +1057,7 @@ export const ProfileItem = (props: Props) => {
       {proxiesOpen && (
         <ProxiesEditorViewer
           profileUid={uid}
+          profileFormat={profileFormat}
           property={option?.proxies ?? ''}
           open={true}
           onSave={onSave}
@@ -971,6 +1069,7 @@ export const ProfileItem = (props: Props) => {
           mergeUid={option?.merge ?? ''}
           proxiesUid={option?.proxies ?? ''}
           profileUid={uid}
+          profileFormat={profileFormat}
           property={option?.groups ?? ''}
           open={true}
           onSave={onSave}
@@ -1005,6 +1104,23 @@ export const ProfileItem = (props: Props) => {
           onClose={() => setScriptOpen(false)}
         />
       )}
+
+      <BaseDialog
+        title={t('profiles.modals.confirmConfOverwrite.title')}
+        open={confOverwriteConfirmOpen}
+        okBtn={t('profiles.modals.confirmConfOverwrite.confirm')}
+        cancelBtn={t('shared.actions.cancel')}
+        contentSx={{ width: { xs: 320, sm: 440 }, userSelect: 'text' }}
+        onCancel={() => setConfOverwriteConfirmOpen(false)}
+        onClose={() => setConfOverwriteConfirmOpen(false)}
+        onOk={() => void runConfConversion(true)}
+      >
+        <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+          {t('profiles.modals.confirmConfOverwrite.message', {
+            file: effectiveFile,
+          })}
+        </Typography>
+      </BaseDialog>
 
       <BaseDialog
         title={t('profiles.modals.confirmDelete.title')}

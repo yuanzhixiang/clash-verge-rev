@@ -1,6 +1,11 @@
-import yaml from 'js-yaml'
-
 import { readProfileFile, saveProfileFileWithOutcome } from '@/services/cmds'
+import {
+  type ProfileFormat,
+  parseConfEntry,
+  parseProfileContent,
+  stringifyConfEntry,
+  stringifyProfileContent,
+} from '@/services/profile-format'
 
 /**
  * 直接读写当前激活 Local profile 主文件的 proxies / proxy-groups 编辑层。
@@ -54,10 +59,17 @@ function entryName(entry: unknown): string | null {
 }
 
 /** 解析编辑弹窗里的单个节点/组 YAML 片段，要求是带非空 name 的映射。 */
-export function parseYamlEntry(text: string): YamlEntry {
+export function parseProfileEntry(
+  text: string,
+  format: ProfileFormat,
+  kind: EntryKind,
+): YamlEntry {
   let value: unknown
   try {
-    value = yaml.load(text)
+    value =
+      format === 'conf'
+        ? parseConfEntry(text, kind)
+        : parseProfileContent(text, format)
   } catch (err) {
     throw new ProfileEditError(
       'invalidYaml',
@@ -73,11 +85,14 @@ export function parseYamlEntry(text: string): YamlEntry {
   return value
 }
 
-async function loadDoc(uid: string): Promise<ProfileDoc> {
+async function loadDoc(
+  uid: string,
+  format: ProfileFormat,
+): Promise<ProfileDoc> {
   const text = await readProfileFile(uid)
   let raw: unknown
   try {
-    raw = yaml.load(text)
+    raw = parseProfileContent(text, format)
   } catch (err) {
     throw new ProfileEditError(
       'invalidYaml',
@@ -96,12 +111,16 @@ async function loadDoc(uid: string): Promise<ProfileDoc> {
   return { raw, proxies, groups }
 }
 
-async function saveDoc(uid: string, doc: ProfileDoc): Promise<void> {
+async function saveDoc(
+  uid: string,
+  doc: ProfileDoc,
+  format: ProfileFormat,
+): Promise<void> {
   doc.raw[PROXIES_KEY] = doc.proxies
   doc.raw[GROUPS_KEY] = doc.groups
   const outcome = await saveProfileFileWithOutcome(
     uid,
-    yaml.dump(doc.raw, { forceQuotes: true }),
+    stringifyProfileContent(doc.raw, format),
   )
   if (outcome.status === 'valid') return
   throw new ProfileEditError(
@@ -171,23 +190,28 @@ function assertGroupsStillValid(groups: YamlEntry[]): void {
 }
 
 /** 读取单个节点/组在 profile 文件中的 YAML 文本，用于编辑弹窗回显。 */
-export async function getEntryYaml(
+export async function getEntryText(
   uid: string,
   kind: EntryKind,
   name: string,
+  format: ProfileFormat,
 ): Promise<string> {
-  const doc = await loadDoc(uid)
+  const doc = await loadDoc(uid, format)
   const index = findIndexByName(listOf(doc, kind), name)
   if (index < 0) throw new ProfileEditError('notFound', name)
-  return yaml.dump(listOf(doc, kind)[index])
+  const entry = listOf(doc, kind)[index]
+  return format === 'conf'
+    ? stringifyConfEntry(entry, kind)
+    : stringifyProfileContent(entry, format)
 }
 
 export async function addEntry(
   uid: string,
   kind: EntryKind,
   entry: YamlEntry,
+  format: ProfileFormat,
 ): Promise<void> {
-  const doc = await loadDoc(uid)
+  const doc = await loadDoc(uid, format)
   const name = entryName(entry)
   if (!name) throw new ProfileEditError('missingName')
   if (collectNames(doc).has(name)) {
@@ -197,7 +221,7 @@ export async function addEntry(
     throw new ProfileEditError('emptyGroup', name)
   }
   listOf(doc, kind).push(entry)
-  await saveDoc(uid, doc)
+  await saveDoc(uid, doc, format)
 }
 
 export async function editEntry(
@@ -205,8 +229,9 @@ export async function editEntry(
   kind: EntryKind,
   oldName: string,
   entry: YamlEntry,
+  format: ProfileFormat,
 ): Promise<void> {
-  const doc = await loadDoc(uid)
+  const doc = await loadDoc(uid, format)
   const list = listOf(doc, kind)
   const index = findIndexByName(list, oldName)
   if (index < 0) throw new ProfileEditError('notFound', oldName)
@@ -222,15 +247,16 @@ export async function editEntry(
   if (newName !== oldName) {
     rewriteReferences(doc.groups, oldName, newName)
   }
-  await saveDoc(uid, doc)
+  await saveDoc(uid, doc, format)
 }
 
 export async function duplicateEntry(
   uid: string,
   kind: EntryKind,
   name: string,
+  format: ProfileFormat,
 ): Promise<void> {
-  const doc = await loadDoc(uid)
+  const doc = await loadDoc(uid, format)
   const list = listOf(doc, kind)
   const index = findIndexByName(list, name)
   if (index < 0) throw new ProfileEditError('notFound', name)
@@ -244,20 +270,21 @@ export async function duplicateEntry(
   const clone = structuredClone(list[index])
   clone.name = candidate
   list.push(clone)
-  await saveDoc(uid, doc)
+  await saveDoc(uid, doc, format)
 }
 
 export async function deleteEntry(
   uid: string,
   kind: EntryKind,
   name: string,
+  format: ProfileFormat,
 ): Promise<void> {
-  const doc = await loadDoc(uid)
+  const doc = await loadDoc(uid, format)
   const list = listOf(doc, kind)
   const index = findIndexByName(list, name)
   if (index < 0) throw new ProfileEditError('notFound', name)
   list.splice(index, 1)
   rewriteReferences(doc.groups, name, null)
   assertGroupsStillValid(doc.groups)
-  await saveDoc(uid, doc)
+  await saveDoc(uid, doc, format)
 }

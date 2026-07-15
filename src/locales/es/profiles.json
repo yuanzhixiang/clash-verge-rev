@@ -31,7 +31,8 @@
     "feedback": {
       "errors": {
         "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-        "onlyYaml": "Solo se admiten archivos YAML"
+        "onlyYaml": "Solo se admiten archivos YAML",
+        "confConversionFailed": "CONF conversion failed: {{message}}"
       },
       "notifications": {
         "importRetry": "Error al importar la suscripción. Intentando con el proxy de Clash...",
@@ -41,7 +42,12 @@
         "profileSwitched": "Suscripción cambiada",
         "profileReactivated": "Suscripción reactivada",
         "switchInterrupted": "Profile switch interrupted by new selection",
-        "batchDeleted": "Selected profiles deleted successfully"
+        "batchDeleted": "Selected profiles deleted successfully",
+        "confOverrideUpdated": "The subscription YAML was updated, but the CONF override ({{uid}}) is still active; reconvert or remove the CONF file to apply it",
+        "confConverted": "Created {{targetFile}}; it will apply on the next activation",
+        "confConvertedAndApplied": "Created and applied {{targetFile}}",
+        "confRegenerated": "Overwrote and regenerated {{targetFile}}; it will apply on the next activation",
+        "confRegeneratedAndApplied": "Overwrote, regenerated, and applied {{targetFile}}"
       },
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
@@ -65,6 +71,8 @@
       "shareQrCode": "Share QR Code",
       "editInfo": "Editar información",
       "editFile": "Editar archivo",
+      "convertToConf": "Convert to CONF",
+      "reconvertToConf": "Regenerate CONF from YAML",
       "editRules": "Editar reglas",
       "editProxies": "Editar nodos",
       "editGroups": "Editar grupos de proxy",
@@ -179,6 +187,11 @@
     "confirmDelete": {
       "title": "Confirmar eliminación",
       "message": "Esta operación no se puede deshacer"
+    },
+    "confirmConfOverwrite": {
+      "title": "Regenerate CONF?",
+      "message": "This regenerates {{file}} from the declared YAML and overwrites the existing CONF. Manual CONF edits and comments will be lost.",
+      "confirm": "Overwrite and Regenerate"
     },
     "logViewer": {
       "title": "Salida de la consola del script"

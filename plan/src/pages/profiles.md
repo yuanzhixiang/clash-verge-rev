@@ -15,14 +15,18 @@ Profiles 用于导入、创建、激活、更新、排序和维护 Clash 配置�
 
 - 页头：标题以及批量、全部更新、运行时配置和重新增强等既有工具。
 - 导入工具栏：URL 输入框、Import、New。
-- Profiles 列表：名称、来源或描述、更新时间、用量与到期信息、行级刷新和更多菜单。
+- Profiles 列表：名称、实际加载文件名、来源或描述、更新时间、用量与到期信息、行级刷新和更多菜单。主 Profile 存在同 stem `.conf` 时显示 CONF Override 标签。
 - Extensions 次级列表：Global Merge 与 Global Script，行结构和操作入口与普通 Profile 保持一致。
 
 ## 主要交互
 
 - 当前 Profile 使用柔和中性背景和细微结构提示，不改变名称字重或使用高饱和蓝色。
 - 更多按钮与右键菜单提供相同操作；Open File 使用默认应用打开文件，Reveal in Finder 在文件管理器中定位文件，两者语义独立。
+- local/remote 主 Profile 的更多/右键菜单在“编辑文件”后提供 CONF 转换。首次转换直接从声明 YAML 生成 sibling CONF；已有 CONF Override 时改为“从 YAML 重新生成 CONF”，确认后才允许覆盖。
+- 当前 Profile 转换成功后立即强制增强并刷新 Mihomo；若校验或应用失败，首次转换删除新 CONF，覆盖转换恢复旧 CONF，并恢复原运行配置。非当前 Profile 仅生成文件并刷新列表。
 - 拖拽、激活、更新队列、编辑器、增强配置、脚本日志与批量逻辑保持原有行为。
+- local/remote 主 Profile 的声明文件保持 YAML；同目录存在同 stem CONF 时，读取、编辑、打开和定位均以 CONF 为准。CONF 解析失败必须阻止加载，不得静默回退 YAML。遗留 TOML 完全忽略。
+- 远程 Profile 刷新仍只更新声明 YAML。存在 CONF Override 时刷新成功后提示 YAML 已更新但尚未生效，当前继续使用 CONF。
 - 页面不新增筛选、分页或服务端排序；普通 Profile 顺序来自既有配置并可拖拽调整。
 
 ## 状态与反馈
@@ -31,6 +35,8 @@ Profiles 用于导入、创建、激活、更新、排序和维护 Clash 配置�
 - 列表读取沿用 Profiles 数据查询的加载、过期和错误恢复机制；数据异常时保留页头紧急刷新入口。
 - 没有普通 Profile 时列表容器允许为空，Extensions 仍可访问。
 - 操作错误继续通过全局通知反馈，不在列表中复制错误面板。
+- CONF 转换期间使用对应 Profile 行的 loading 状态防止重复操作；成功通知包含目标文件、是否覆盖，以及当前配置是否已应用。
+- CONF 语法、未知段落、嵌套值或结构错误必须指出文件、行号及原因。
 
 ## 权限与安全
 
@@ -47,6 +53,7 @@ Profiles 用于导入、创建、激活、更新、排序和维护 Clash 配置�
 
 - 普通配置区使用页面标题 `Profiles`，扩展区标题使用本地化 `Extensions`。
 - macOS 显示 `Reveal in Finder`；其他平台使用对应的文件管理器定位语义。
+- Profile 名称是用户可读名称，不等同于磁盘文件名；列表必须同时展示当前实际加载文件。CONF Override 表示同 stem CONF 正在覆盖声明 YAML，删除 CONF 后自动恢复 YAML。
 
 ## 可访问性与 UI 约束
 

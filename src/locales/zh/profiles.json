@@ -31,7 +31,8 @@
     "feedback": {
       "errors": {
         "invalidUrl": "无效的订阅链接，请输入以 http:// 或 https:// 开头的地址",
-        "onlyYaml": "仅支持 YAML 文件"
+        "onlyYaml": "仅支持 YAML 文件",
+        "confConversionFailed": "CONF 转换失败：{{message}}"
       },
       "notifications": {
         "importRetry": "订阅导入失败，尝试使用 Clash 代理导入",
@@ -41,7 +42,12 @@
         "profileSwitched": "订阅已切换",
         "profileReactivated": "订阅已激活",
         "switchInterrupted": "订阅切换被新选择中断",
-        "batchDeleted": "选中的订阅已成功删除"
+        "batchDeleted": "选中的订阅已成功删除",
+        "confOverrideUpdated": "订阅 YAML 已更新，但当前仍使用 CONF 覆盖（{{uid}}）；重新转换或删除 CONF 后才会生效",
+        "confConverted": "已生成 {{targetFile}}；将在下次激活时生效",
+        "confConvertedAndApplied": "已生成并应用 {{targetFile}}",
+        "confRegenerated": "已覆盖并重新生成 {{targetFile}}；将在下次激活时生效",
+        "confRegeneratedAndApplied": "已覆盖、重新生成并应用 {{targetFile}}"
       },
       "notices": {
         "forceRefreshCompleted": "数据已强制刷新",
@@ -65,6 +71,8 @@
       "shareQrCode": "分享二维码",
       "editInfo": "编辑信息",
       "editFile": "编辑文件",
+      "convertToConf": "转换为 CONF",
+      "reconvertToConf": "从 YAML 重新生成 CONF",
       "editRules": "编辑规则",
       "editProxies": "编辑节点",
       "editGroups": "编辑代理组",
@@ -179,6 +187,11 @@
     "confirmDelete": {
       "title": "确认删除",
       "message": "此操作不可逆"
+    },
+    "confirmConfOverwrite": {
+      "title": "重新生成 CONF？",
+      "message": "将从声明的 YAML 重新生成 {{file}}，覆盖现有 CONF。CONF 中的手工修改和注释会丢失。",
+      "confirm": "覆盖并重新生成"
     },
     "logViewer": {
       "title": "脚本控制台输出"

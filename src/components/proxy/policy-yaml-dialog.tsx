@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, MonacoEditor } from '@/components/base'
+import type { ProfileFormat } from '@/services/profile-format'
 import { useThemeMode } from '@/services/states'
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
   title: string
   initialText: string
   saving: boolean
+  format: ProfileFormat
   onCancel: () => void
   onSave: (text: string) => void
 }
@@ -23,6 +25,7 @@ export const PolicyYamlDialog = ({
   title,
   initialText,
   saving,
+  format,
   onCancel,
   onSave,
 }: Props) => {
@@ -49,7 +52,7 @@ export const PolicyYamlDialog = ({
     >
       <MonacoEditor
         height="100%"
-        language="yaml"
+        language={format === 'conf' ? 'surge-conf' : 'yaml'}
         value={text}
         theme={themeMode === 'light' ? 'light' : 'vs-dark'}
         onChange={(value) => setText(value ?? '')}

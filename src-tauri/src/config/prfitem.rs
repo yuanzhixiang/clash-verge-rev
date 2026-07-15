@@ -31,6 +31,18 @@ pub struct PrfItem {
     /// profile file
     pub file: Option<String>,
 
+    /// resolved file used by the UI; never persisted to profiles.yaml
+    #[serde(default, skip_deserializing, skip_serializing_if = "Option::is_none")]
+    pub effective_file: Option<String>,
+
+    /// resolved source format used by the UI; never persisted to profiles.yaml
+    #[serde(default, skip_deserializing, skip_serializing_if = "Option::is_none")]
+    pub profile_format: Option<crate::config::profile_format::ProfileFormat>,
+
+    /// whether a sibling CONF currently overrides the declared YAML
+    #[serde(default, skip_deserializing, skip_serializing_if = "Option::is_none")]
+    pub conf_override: Option<bool>,
+
     /// profile description
     #[serde(skip_serializing_if = "Option::is_none")]
     pub desc: Option<String>,
@@ -233,6 +245,9 @@ impl PrfItem {
             name: Some(name),
             desc: Some(desc),
             file: Some(file),
+            effective_file: None,
+            profile_format: None,
+            conf_override: None,
             url: None,
             selected: None,
             extra: None,
@@ -423,6 +438,9 @@ impl PrfItem {
             name: Some(name),
             desc: desc.cloned(),
             file: Some(file),
+            effective_file: None,
+            profile_format: None,
+            conf_override: None,
             url: Some(url.as_str().into()),
             selected: None,
             extra,
@@ -528,23 +546,19 @@ impl PrfItem {
 
     /// get the file data
     pub async fn read_file(&self) -> Result<String> {
-        let file = self
-            .file
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("could not find the file"))?;
-        let path = dirs::app_profiles_dir()?.join(file.as_str());
-        let content = fs::read_to_string(path).await.context("failed to read the file")?;
+        let profiles_dir = dirs::app_profiles_dir()?;
+        let resolved = crate::config::profile_format::resolve(self, &profiles_dir).await?;
+        let content = fs::read_to_string(resolved.path)
+            .await
+            .context("failed to read the file")?;
         Ok(content.into())
     }
 
     /// save the file data
     pub async fn save_file(&self, data: String) -> Result<()> {
-        let file = self
-            .file
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("could not find the file"))?;
-        let path = dirs::app_profiles_dir()?.join(file.as_str());
-        fs::write(path, data.as_bytes())
+        let profiles_dir = dirs::app_profiles_dir()?;
+        let resolved = crate::config::profile_format::resolve(self, &profiles_dir).await?;
+        fs::write(resolved.path, data.as_bytes())
             .await
             .context("failed to save the file")
     }

@@ -1,7 +1,7 @@
 import i18n from 'i18next'
 import { ReactNode, isValidElement } from 'react'
 
-type NoticeType = 'success' | 'error' | 'info'
+type NoticeType = 'success' | 'error' | 'info' | 'warning'
 
 export interface NoticeTranslationDescriptor {
   key: string
@@ -34,6 +34,7 @@ type ShowNotice = ((
   success: NoticeShortcut
   error: NoticeShortcut
   info: NoticeShortcut
+  warning: NoticeShortcut
 }
 
 type NoticeSubscriber = () => void
@@ -41,6 +42,7 @@ type NoticeSubscriber = () => void
 const DEFAULT_DURATIONS: Readonly<Record<NoticeType, number>> = {
   success: 3000,
   info: 5000,
+  warning: 6000,
   error: 8000,
 }
 
@@ -330,6 +332,8 @@ export const showNotice: ShowNotice = Object.assign(baseShowNotice, {
     baseShowNotice('error', message, ...extras),
   info: (message: NoticeContent, ...extras: NoticeExtra[]) =>
     baseShowNotice('info', message, ...extras),
+  warning: (message: NoticeContent, ...extras: NoticeExtra[]) =>
+    baseShowNotice('warning', message, ...extras),
 })
 
 export function hideNotice(id: number) {

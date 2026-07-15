@@ -404,6 +404,22 @@ fn profiles(args: &mut Vec<String>) -> CliResult<()> {
                 json_out,
             )
         }
+        Some("convert") => {
+            let target = take_option(args, "--to").ok_or_else(|| err(3, "use --to conf"))?;
+            if target != "conf" {
+                return Err(err(3, "only --to conf is supported"));
+            }
+            let force = take_flag(args, "--force");
+            print(
+                call(json!({
+                    "cmd": "profiles",
+                    "action": "convert",
+                    "index": args.get(1).ok_or_else(|| err(3, "missing profile id"))?,
+                    "force": force,
+                }))?,
+                json_out,
+            )
+        }
         Some("reorder") => print(
             call(json!({
                 "cmd": "profiles",
@@ -430,7 +446,7 @@ fn profiles(args: &mut Vec<String>) -> CliResult<()> {
         Some("enhance") => print(call(json!({ "cmd": "profiles", "action": "enhance" }))?, json_out),
         _ => Err(err(
             3,
-            "usage: vergectl profiles list|import|create|update|delete|reorder|patch|read-file|save-file|enhance|next-update",
+            "usage: vergectl profiles list|import|create|update|delete|reorder|patch|read-file|save-file|convert <uid> --to conf [--force]|enhance|next-update",
         )),
     }
 }
@@ -931,7 +947,7 @@ Usage:
   vergectl config patch verge|clash --json '{{"key":value}}' | --file patch.json|patch.yaml
   vergectl clash info|mode get|mode set <mode>|core get|core set <core>|delay <url>|dns get|save|apply|validate|exists
   vergectl runtime get|yaml|exists|logs|proxy-chain get <node>|proxy-chain set --file <yaml|json>
-  vergectl profiles list|import|create|update|delete|reorder|patch|read-file|save-file|enhance|next-update
+  vergectl profiles list|import|create|update|delete|reorder|patch|read-file|save-file|convert <uid> --to conf [--force]|enhance|next-update
   vergectl proxies list|groups|providers|group <name>|node <name>|provider <name>|select <group> <node>|delay <node>|delay-group <group>
   vergectl connections list|close <id>|close-all
   vergectl rules list|providers|update-provider <name|--all>

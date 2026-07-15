@@ -59,7 +59,7 @@ Do not modify `verge.yaml`, `config.yaml`, or `profiles.yaml` directly unless th
 - `vergectl clash info|mode get|mode set <mode>|core get|core set <core>|delay <url>`: Clash core config and checks.
 - `vergectl clash dns get|save|apply|validate|exists`: DNS config file flow.
 - `vergectl runtime get|yaml|exists|logs|proxy-chain get <node>|proxy-chain set --file <yaml|json>`: runtime helpers.
-- `vergectl profiles list|import|create|update|delete|reorder|patch|read-file|save-file|enhance|next-update`: profile management.
+- `vergectl profiles list|import|create|update|delete|reorder|patch|read-file|save-file|convert <uid> --to conf [--force]|enhance|next-update`: profile management and explicit main-profile YAML-to-CONF override conversion.
 - `vergectl proxies list|groups|providers|group <name>|node <name>|provider <name>|select <group> <node>|delay <node>|delay-group <group>|healthcheck-provider <name>|update-provider <name>`: proxy and provider management.
 - `vergectl connections list|close <id>|close-all`: connection inspection and closure.
 - `vergectl rules list|providers|update-provider <name|--all>`: rules and rule providers.

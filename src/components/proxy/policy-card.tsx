@@ -240,7 +240,11 @@ interface GroupCardProps {
   group: IProxyGroupItem
   open: boolean
   readonly: boolean
-  onOpenMenu: (anchorEl: HTMLElement) => void
+  /** position 仅右键（有鼠标坐标）时提供，键盘打开时缺省。 */
+  onOpenMenu: (
+    anchorEl: HTMLElement,
+    position?: { top: number; left: number },
+  ) => void
 }
 
 export const PolicyGroupCard = ({
@@ -252,7 +256,10 @@ export const PolicyGroupCard = ({
   <ButtonBase
     onContextMenu={(event) => {
       event.preventDefault()
-      onOpenMenu(event.currentTarget)
+      onOpenMenu(event.currentTarget, {
+        top: event.clientY,
+        left: event.clientX,
+      })
     }}
     onKeyDown={(event) => {
       const opensContextMenu =

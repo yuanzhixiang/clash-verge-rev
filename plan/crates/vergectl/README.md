@@ -14,6 +14,7 @@
 - `clash info|mode get|mode set|core get|core set|delay|dns ...` 覆盖 Clash 信息、模式、核心切换、延迟测试和 DNS 配置文件流程。
 - `runtime get|yaml|exists|logs|proxy-chain get|proxy-chain set` 暴露 runtime 配置和链式代理辅助能力。
 - `profiles list|import|create|update|delete|reorder|patch|read-file|save-file|enhance|next-update` 覆盖 profiles 管理。
+- `profiles convert <uid> --to conf [--force]` 将主 Profile 的声明 YAML 转为同 stem Surge-style CONF 覆盖；保留 YAML 原文件，并在写入前验证 CONF 往返语义。
 - `proxies list|groups|providers|group|node|provider|select|delay|delay-group|healthcheck-provider|update-provider` 覆盖代理、代理组和 provider。
 - `connections list|close|close-all` 覆盖连接观察和关闭。
 - `rules list|providers|update-provider` 覆盖规则和 rule provider。
@@ -30,3 +31,4 @@
 - 无 token 鉴权，安全边界是 loopback 绑定和本机用户权限。
 - 退出码：`0` 成功，`2` 应用不可达，`3` 参数错误，`4` 后端或渲染错误。
 - destructive/disruptive 命令交给 agent skill 提醒先备份并确认用户意图。
+- CONF 转换默认拒绝覆盖已有文件；`--force` 明确允许覆盖。转换只支持 local/remote 主 Profile，不处理 Merge、Rules、Proxies、Groups 扩展；旧 `--to toml` 作为无效参数拒绝。

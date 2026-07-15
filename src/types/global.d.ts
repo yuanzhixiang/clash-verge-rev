@@ -234,6 +234,9 @@ interface IProfileItem {
   name?: string
   desc?: string
   file?: string
+  effective_file?: string
+  profile_format?: 'yaml' | 'conf'
+  conf_override?: boolean
   url?: string
   updated?: number
   selected?: {
@@ -268,6 +271,12 @@ interface IProfileOption {
 interface IProfilesConfig {
   current?: string
   items?: IProfileItem[]
+}
+
+interface ProfileConversionResult {
+  source_file: string
+  target_file: string
+  overwritten: boolean
 }
 
 interface IVergeTestItem {

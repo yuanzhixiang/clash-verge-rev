@@ -44,6 +44,10 @@ import { BaseSearchBox, MonacoEditor, VirtualList } from '@/components/base'
 import { ProxyItem } from '@/components/profile/proxy-item'
 import { readProfileFile, saveProfileFile } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import {
+  type ProfileFormat,
+  parseProfileContent,
+} from '@/services/profile-format'
 import { useThemeMode } from '@/services/states'
 import type { MonacoEditorInstance } from '@/types/monaco'
 import getSystem from '@/utils/get-system'
@@ -51,6 +55,7 @@ import parseUri from '@/utils/uri-parser'
 
 interface Props {
   profileUid: string
+  profileFormat: ProfileFormat
   property: string
   open: boolean
   onClose: () => void
@@ -58,7 +63,7 @@ interface Props {
 }
 
 export const ProxiesEditorViewer = (props: Props) => {
-  const { profileUid, property, open, onClose, onSave } = props
+  const { profileUid, profileFormat, property, open, onClose, onSave } = props
   const { t } = useTranslation()
   const themeMode = useThemeMode()
   const editorRef = useRef<MonacoEditorInstance | null>(null)
@@ -266,12 +271,12 @@ export const ProxiesEditorViewer = (props: Props) => {
   const fetchProfile = useCallback(async () => {
     const data = await readProfileFile(profileUid)
 
-    const originProxiesObj = yaml.load(data) as {
+    const originProxiesObj = parseProfileContent(data, profileFormat) as {
       proxies: IProxyConfig[]
     } | null
 
     setProxyList(originProxiesObj?.proxies || [])
-  }, [profileUid])
+  }, [profileFormat, profileUid])
 
   const fetchContent = useCallback(async () => {
     const data = await readProfileFile(property)

@@ -1,4 +1,4 @@
-use super::{PrfOption, prfitem::PrfItem};
+use super::{PrfOption, prfitem::PrfItem, profile_format};
 use crate::{
     core::handle,
     utils::{
@@ -24,8 +24,9 @@ use tokio::{fs, task::JoinHandle};
 /// p12345678.yaml (proxies)
 /// g12345678.yaml (groups)
 #[allow(clippy::unwrap_used)]
-static REGEX_PROFILE_FILE: LazyLock<regex::Regex> =
-    LazyLock::new(|| regex::Regex::new(r"^(?:[RLmrpg][a-zA-Z0-9]+\.yaml|s[a-zA-Z0-9]+\.js)$").unwrap());
+static REGEX_PROFILE_FILE: LazyLock<regex::Regex> = LazyLock::new(|| {
+    regex::Regex::new(r"^(?:[RL][a-zA-Z0-9]+\.(?:yaml|conf)|[mrpg][a-zA-Z0-9]+\.yaml|s[a-zA-Z0-9]+\.js)$").unwrap()
+});
 
 // activate selected nodes task handle
 static ACTIVATE_SELECTED_TASK: LazyLock<Mutex<Option<JoinHandle<()>>>> = LazyLock::new(|| Mutex::new(None));
@@ -282,10 +283,10 @@ impl IProfiles {
     pub async fn delete_item(&mut self, uid: &String) -> Result<bool> {
         let current = self.current.as_ref().unwrap_or(uid);
         let current = current.clone();
-        let delete_uids = {
+        let (delete_uids, sibling_files) = {
             let item = self.get_item(uid)?;
             let option = item.option.as_ref();
-            option.map_or(Vec::new(), |op| {
+            let delete_uids = option.map_or(Vec::new(), |op| {
                 [
                     op.merge.clone(),
                     op.script.clone(),
@@ -295,12 +296,32 @@ impl IProfiles {
                 ]
                 .into_iter()
                 .collect::<Vec<_>>()
-            })
+            });
+            let sibling_files = if profile_format::is_main_profile(item) {
+                item.file
+                    .as_deref()
+                    .map(|file| {
+                        [
+                            profile_format::conf_sibling(file),
+                            profile_format::legacy_toml_sibling(file),
+                        ]
+                        .into_iter()
+                        .flatten()
+                        .collect::<Vec<_>>()
+                    })
+                    .unwrap_or_default()
+            } else {
+                Vec::new()
+            };
+            (delete_uids, sibling_files)
         };
         let mut items = self.items.take().unwrap_or_default();
 
         // remove the main item (if exists) and delete its file
         if let Some(file) = Self::take_item_file_by_uid(&mut items, Some(uid.as_str())) {
+            let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
+        }
+        for file in sibling_files {
             let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
         }
 
@@ -331,11 +352,8 @@ impl IProfiles {
         match (self.current.as_ref(), self.items.as_ref()) {
             (Some(current), Some(items)) => {
                 if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
-                    let file_path = match item.file.as_ref() {
-                        Some(file) => dirs::app_profiles_dir()?.join(file.as_str()),
-                        None => bail!("failed to get the file field"),
-                    };
-                    return help::read_mapping(&file_path).await;
+                    let resolved = profile_format::resolve(item, &dirs::app_profiles_dir()?).await?;
+                    return profile_format::read_mapping(&resolved.path).await;
                 }
                 bail!("failed to find the current profile \"uid:{current}\"");
             }
@@ -461,14 +479,19 @@ impl IProfiles {
     }
 
     /// 获取所有 active profile 关联的文件名
-    fn get_all_active_files(&self) -> HashSet<&str> {
-        let mut active_files: HashSet<&str> = HashSet::new();
+    fn get_all_active_files(&self) -> HashSet<String> {
+        let mut active_files: HashSet<String> = HashSet::new();
 
         if let Some(items) = &self.items {
             for item in items {
                 // 收集所有类型 profile 的文件
                 if let Some(file) = &item.file {
-                    active_files.insert(file);
+                    active_files.insert(file.clone());
+                    if profile_format::is_main_profile(item)
+                        && let Some(conf_file) = profile_format::conf_sibling(file)
+                    {
+                        active_files.insert(conf_file);
+                    }
                 }
 
                 // 对于主 profile 类型（remote/local），还需要收集其关联的扩展文件
@@ -481,35 +504,35 @@ impl IProfiles {
                         && let Ok(merge_item) = self.get_item(merge_uid)
                         && let Some(file) = &merge_item.file
                     {
-                        active_files.insert(file);
+                        active_files.insert(file.clone());
                     }
 
                     if let Some(script_uid) = &option.script
                         && let Ok(script_item) = self.get_item(script_uid)
                         && let Some(file) = &script_item.file
                     {
-                        active_files.insert(file);
+                        active_files.insert(file.clone());
                     }
 
                     if let Some(rules_uid) = &option.rules
                         && let Ok(rules_item) = self.get_item(rules_uid)
                         && let Some(file) = &rules_item.file
                     {
-                        active_files.insert(file);
+                        active_files.insert(file.clone());
                     }
 
                     if let Some(proxies_uid) = &option.proxies
                         && let Ok(proxies_item) = self.get_item(proxies_uid)
                         && let Some(file) = &proxies_item.file
                     {
-                        active_files.insert(file);
+                        active_files.insert(file.clone());
                     }
 
                     if let Some(groups_uid) = &option.groups
                         && let Ok(groups_item) = self.get_item(groups_uid)
                         && let Some(file) = &groups_item.file
                     {
-                        active_files.insert(file);
+                        active_files.insert(file.clone());
                     }
                 }
             }

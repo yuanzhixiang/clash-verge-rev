@@ -31,7 +31,8 @@
     "feedback": {
       "errors": {
         "invalidUrl": "Недопустимый URL профиля. Укажите адрес, начинающийся с http:// или https://",
-        "onlyYaml": "Поддерживаются только файлы YAML"
+        "onlyYaml": "Поддерживаются только файлы YAML",
+        "confConversionFailed": "CONF conversion failed: {{message}}"
       },
       "notifications": {
         "importRetry": "Не удалось импортировать, повторная попытка через Clash proxy...",
@@ -41,7 +42,12 @@
         "profileSwitched": "Профиль переключён",
         "profileReactivated": "Профиль перезапущен",
         "switchInterrupted": "Переключение профиля прервано новым выбором",
-        "batchDeleted": "Выбранные профили удалены"
+        "batchDeleted": "Выбранные профили удалены",
+        "confOverrideUpdated": "The subscription YAML was updated, but the CONF override ({{uid}}) is still active; reconvert or remove the CONF file to apply it",
+        "confConverted": "Created {{targetFile}}; it will apply on the next activation",
+        "confConvertedAndApplied": "Created and applied {{targetFile}}",
+        "confRegenerated": "Overwrote and regenerated {{targetFile}}; it will apply on the next activation",
+        "confRegeneratedAndApplied": "Overwrote, regenerated, and applied {{targetFile}}"
       },
       "notices": {
         "forceRefreshCompleted": "Принудительное обновление завершено",
@@ -65,6 +71,8 @@
       "shareQrCode": "Share QR Code",
       "editInfo": "Изменить информацию",
       "editFile": "Изменить файл",
+      "convertToConf": "Convert to CONF",
+      "reconvertToConf": "Regenerate CONF from YAML",
       "editRules": "Редактировать правила",
       "editProxies": "Редактировать прокси",
       "editGroups": "Редактировать группы прокси",
@@ -179,6 +187,11 @@
     "confirmDelete": {
       "title": "Подтвердите удаление",
       "message": "Это действие необратимо"
+    },
+    "confirmConfOverwrite": {
+      "title": "Regenerate CONF?",
+      "message": "This regenerates {{file}} from the declared YAML and overwrites the existing CONF. Manual CONF edits and comments will be lost.",
+      "confirm": "Overwrite and Regenerate"
     },
     "logViewer": {
       "title": "Консоль скрипта"

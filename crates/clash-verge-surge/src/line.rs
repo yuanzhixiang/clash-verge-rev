@@ -63,17 +63,36 @@ pub(crate) fn parse_surge_line(line: &str) -> anyhow::Result<Option<SurgeLine<'_
 }
 
 /// 按逗号切分，双引号内的逗号不算分隔符。
-fn split_tokens(input: &str) -> Vec<String> {
+pub(crate) fn split_tokens(input: &str) -> Vec<String> {
     let mut tokens = Vec::new();
     let mut current = String::new();
     let mut in_quotes = false;
+    let mut escaped = false;
+    let mut depth = 0_u32;
     for ch in input.chars() {
+        if escaped {
+            current.push(ch);
+            escaped = false;
+            continue;
+        }
         match ch {
+            '\\' if in_quotes => {
+                current.push(ch);
+                escaped = true;
+            }
             '"' => {
                 in_quotes = !in_quotes;
                 current.push(ch);
             }
-            ',' if !in_quotes => {
+            '[' | '{' if !in_quotes => {
+                depth += 1;
+                current.push(ch);
+            }
+            ']' | '}' if !in_quotes => {
+                depth = depth.saturating_sub(1);
+                current.push(ch);
+            }
+            ',' if !in_quotes && depth == 0 => {
                 let token = current.trim();
                 if !token.is_empty() {
                     tokens.push(token.to_string());

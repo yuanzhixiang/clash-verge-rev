@@ -55,6 +55,10 @@ import {
 } from '@/components/rule/rule-config'
 import { readProfileFile, saveProfileFile } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import {
+  type ProfileFormat,
+  parseProfileContent,
+} from '@/services/profile-format'
 import { useThemeMode } from '@/services/states'
 import type { MonacoEditorInstance } from '@/types/monaco'
 import getSystem from '@/utils/get-system'
@@ -63,6 +67,7 @@ interface Props {
   groupsUid: string
   mergeUid: string
   profileUid: string
+  profileFormat: ProfileFormat
   property: string
   open: boolean
   onClose: () => void
@@ -73,8 +78,16 @@ const rules = RULE_DEFINITIONS
 const builtinProxyPolicies: string[] = [...BUILTIN_PROXY_POLICIES]
 
 export const RulesEditorViewer = (props: Props) => {
-  const { groupsUid, mergeUid, profileUid, property, open, onClose, onSave } =
-    props
+  const {
+    groupsUid,
+    mergeUid,
+    profileUid,
+    profileFormat,
+    property,
+    open,
+    onClose,
+    onSave,
+  } = props
   const { t } = useTranslation()
   const themeMode = useThemeMode()
 
@@ -313,9 +326,11 @@ export const RulesEditorViewer = (props: Props) => {
     const mergeData = await readProfileFile(mergeUid) // merge配置文件
     const globalMergeData = await readProfileFile('Merge') // global merge配置文件
 
-    const rulesObj = yaml.load(data) as { rules: [] } | null
+    const rulesObj = parseProfileContent(data, profileFormat) as {
+      rules: []
+    } | null
 
-    const originGroupsObj = yaml.load(data) as {
+    const originGroupsObj = parseProfileContent(data, profileFormat) as {
       'proxy-groups': IProxyGroupConfig[]
     } | null
     const originGroups = originGroupsObj?.['proxy-groups'] || []
@@ -345,7 +360,7 @@ export const RulesEditorViewer = (props: Props) => {
       moreAppendGroups,
     )
 
-    const originRuleSetObj = yaml.load(data) as {
+    const originRuleSetObj = parseProfileContent(data, profileFormat) as {
       'rule-providers': Record<string, unknown>
     } | null
     const originRuleSet = originRuleSetObj?.['rule-providers'] || {}
@@ -359,7 +374,7 @@ export const RulesEditorViewer = (props: Props) => {
     const globalRuleSet = globalRuleSetObj?.['rule-providers'] || {}
     const ruleSet = Object.assign({}, originRuleSet, moreRuleSet, globalRuleSet)
 
-    const originSubRuleObj = yaml.load(data) as {
+    const originSubRuleObj = parseProfileContent(data, profileFormat) as {
       'sub-rules': Record<string, unknown>
     } | null
     const originSubRule = originSubRuleObj?.['sub-rules'] || {}
@@ -378,7 +393,7 @@ export const RulesEditorViewer = (props: Props) => {
     setRuleSetList(Object.keys(ruleSet))
     setSubRuleList(Object.keys(subRule))
     setRuleList(rulesObj?.rules || [])
-  }, [groupsUid, mergeUid, profileUid])
+  }, [groupsUid, mergeUid, profileFormat, profileUid])
 
   useEffect(() => {
     if (!open) return

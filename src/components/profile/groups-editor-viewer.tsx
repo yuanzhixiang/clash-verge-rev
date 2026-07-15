@@ -61,6 +61,10 @@ import {
   saveProfileFile,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import {
+  type ProfileFormat,
+  parseProfileContent,
+} from '@/services/profile-format'
 import { useThemeMode } from '@/services/states'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
 import type { MonacoEditorInstance } from '@/types/monaco'
@@ -70,6 +74,7 @@ interface Props {
   proxiesUid: string
   mergeUid: string
   profileUid: string
+  profileFormat: ProfileFormat
   property: string
   open: boolean
   onClose: () => void
@@ -141,8 +146,16 @@ const buildGroupsYaml = (
 }
 
 export const GroupsEditorViewer = (props: Props) => {
-  const { mergeUid, proxiesUid, profileUid, property, open, onClose, onSave } =
-    props
+  const {
+    mergeUid,
+    proxiesUid,
+    profileUid,
+    profileFormat,
+    property,
+    open,
+    onClose,
+    onSave,
+  } = props
   const { t } = useTranslation()
   const translateStrategy = useCallback(
     (value: string) =>
@@ -391,11 +404,13 @@ export const GroupsEditorViewer = (props: Props) => {
   const fetchProxyPolicy = useCallback(async () => {
     const data = await readProfileFile(profileUid)
     const proxiesData = await readProfileFile(proxiesUid)
-    const originGroupsObj = yaml.load(data) as {
+    const originGroupsObj = parseProfileContent(data, profileFormat) as {
       'proxy-groups': IProxyGroupConfig[]
     } | null
 
-    const originProxiesObj = yaml.load(data) as { proxies: [] } | null
+    const originProxiesObj = parseProfileContent(data, profileFormat) as {
+      proxies: []
+    } | null
     const originProxies = originProxiesObj?.proxies || []
     const moreProxiesObj = yaml.load(proxiesData) as ISeqProfileConfig | null
     const morePrependProxies = moreProxiesObj?.prepend || []
@@ -431,17 +446,17 @@ export const GroupsEditorViewer = (props: Props) => {
     )
 
     setProxyPolicyList(Array.from(new Set(computedPolicyList)))
-  }, [appendSeq, deleteSeq, prependSeq, profileUid, proxiesUid])
+  }, [appendSeq, deleteSeq, prependSeq, profileFormat, profileUid, proxiesUid])
   const fetchProfile = useCallback(async () => {
     const data = await readProfileFile(profileUid)
     const mergeData = await readProfileFile(mergeUid)
     const globalMergeData = await readProfileFile('Merge')
 
-    const originGroupsObj = yaml.load(data) as {
+    const originGroupsObj = parseProfileContent(data, profileFormat) as {
       'proxy-groups': IProxyGroupConfig[]
     } | null
 
-    const originProviderObj = yaml.load(data) as {
+    const originProviderObj = parseProfileContent(data, profileFormat) as {
       'proxy-providers': Record<string, unknown>
     } | null
     const originProvider = originProviderObj?.['proxy-providers'] || {}
@@ -465,7 +480,7 @@ export const GroupsEditorViewer = (props: Props) => {
 
     setProxyProviderList(Object.keys(provider))
     setGroupList(originGroupsObj?.['proxy-groups'] || [])
-  }, [mergeUid, profileUid])
+  }, [mergeUid, profileFormat, profileUid])
   const getInterfaceNameList = useCallback(async () => {
     const list = await getNetworkInterfaces()
     setInterfaceNameList(list)

@@ -33,7 +33,7 @@ import type { MonacoEditorInstance, MonacoMarker } from '@/types/monaco'
 import debounce from '@/utils/debounce'
 import getSystem from '@/utils/get-system'
 
-export type EditorLanguage = 'yaml' | 'javascript' | 'css'
+export type EditorLanguage = 'yaml' | 'surge-conf' | 'javascript' | 'css'
 
 export interface EditorViewerProps {
   open: boolean

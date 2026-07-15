@@ -36,6 +36,11 @@ export const handleNoticeMessage = (
       ),
     'reactivate_profiles::error': () => showNotice.error(msg),
     update_failed: () => showNotice.error(msg),
+    profile_conf_override_updated: () =>
+      showNotice.warning(
+        'profiles.page.feedback.notifications.confOverrideUpdated',
+        { uid: msg },
+      ),
     'config_validate::boot_error': () =>
       showNotice.error('shared.feedback.validation.config.bootFailed', msg),
     'config_validate::core_change': () =>

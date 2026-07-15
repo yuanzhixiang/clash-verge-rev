@@ -10,6 +10,9 @@
 
 mod convert;
 mod line;
+mod profile;
+
+pub use profile::{parse_profile, serialize_profile};
 
 use serde_yaml_ng::{Mapping, Value};
 

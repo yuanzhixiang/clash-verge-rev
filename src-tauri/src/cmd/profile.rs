@@ -5,7 +5,7 @@ use crate::config::profiles;
 use crate::utils::window_manager::WindowManager;
 use crate::{
     config::{
-        Config, IProfiles, PrfItem, PrfOption,
+        Config, IProfiles, PrfItem, PrfOption, profile_format,
         profiles::{
             profiles_append_item_with_filedata_safe, profiles_delete_item_safe, profiles_patch_item_safe,
             profiles_reorder_safe, profiles_save_file_safe,
@@ -16,12 +16,12 @@ use crate::{
     feat,
     utils::{dirs, help},
 };
-use clash_verge_draft::SharedDraft;
 use clash_verge_logging::{Type, logging};
 use scopeguard::defer;
 use smartstring::alias::String;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
+use tokio::fs;
 
 static CURRENT_SWITCHING_PROFILE: AtomicBool = AtomicBool::new(false);
 
@@ -34,10 +34,19 @@ fn profile_import_error(err: &anyhow::Error) -> std::string::String {
 }
 
 #[tauri::command]
-pub async fn get_profiles() -> CmdResult<SharedDraft<IProfiles>> {
+pub async fn get_profiles() -> CmdResult<IProfiles> {
     logging!(debug, Type::Cmd, "获取配置文件列表");
     let draft = Config::profiles().await;
-    let data = draft.data_arc();
+    let mut data = (**draft.data_arc()).clone();
+    let profiles_dir = dirs::app_profiles_dir().stringify_err()?;
+    if let Some(items) = data.items.as_mut() {
+        for item in items.iter_mut().filter(|item| profile_format::is_main_profile(item)) {
+            let resolved = profile_format::resolve(item, &profiles_dir).await.stringify_err()?;
+            item.effective_file = Some(resolved.file_name);
+            item.profile_format = Some(resolved.format);
+            item.conf_override = Some(resolved.conf_override);
+        }
+    }
     Ok(data)
 }
 
@@ -147,10 +156,110 @@ pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResu
 #[tauri::command]
 pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResult {
     match feat::update_profile(&index, option.as_ref(), true, true, true).await {
-        Ok(_) => Ok(()),
+        Ok(_) => {
+            let item = {
+                let profiles = Config::profiles().await;
+                profiles.latest_arc().get_item(&index).ok().cloned()
+            };
+            if let Some(item) = item {
+                let profiles_dir = dirs::app_profiles_dir().stringify_err()?;
+                if profile_format::resolve(&item, &profiles_dir)
+                    .await
+                    .is_ok_and(|resolved| resolved.conf_override)
+                {
+                    handle::Handle::notice_message("profile_conf_override_updated", index.clone());
+                }
+            }
+            Ok(())
+        }
         Err(e) => {
             logging!(error, Type::Cmd, "{}", e);
             Err(e.to_string().into())
+        }
+    }
+}
+
+pub async fn convert_profile_to_conf(index: String, force: bool) -> CmdResult<profile_format::ProfileConversionResult> {
+    let item = {
+        let profiles = Config::profiles().await;
+        profiles.latest_arc().get_item(&index).stringify_err()?.clone()
+    };
+    let profiles_dir = dirs::app_profiles_dir().stringify_err()?;
+    profile_format::convert_declared_yaml_to_conf(&item, &profiles_dir, force)
+        .await
+        .stringify_err()
+}
+
+async fn rollback_conf_conversion(
+    target_path: &std::path::Path,
+    previous_content: Option<&[u8]>,
+    apply_error: &str,
+) -> CmdResult {
+    if let Err(rollback_error) = profile_format::restore_conf_override(target_path, previous_content).await {
+        return Err(format!(
+            "failed to apply CONF profile: {apply_error}; failed to restore previous CONF override: {rollback_error}"
+        )
+        .into());
+    }
+
+    match feat::enhance_profiles().await {
+        Ok(outcome) if outcome.is_valid() => {
+            handle::Handle::refresh_clash();
+            Err(format!("failed to apply CONF profile and restored the previous configuration: {apply_error}").into())
+        }
+        Ok(outcome) => Err(format!(
+            "failed to apply CONF profile: {apply_error}; the file was restored but runtime recovery failed: {outcome}"
+        )
+        .into()),
+        Err(error) => Err(format!(
+            "failed to apply CONF profile: {apply_error}; the file was restored but runtime recovery failed: {error}"
+        )
+        .into()),
+    }
+}
+
+#[tauri::command]
+pub async fn convert_profile_to_conf_and_apply(
+    index: String,
+    force: bool,
+) -> CmdResult<profile_format::ProfileConversionResult> {
+    let (item, is_current) = {
+        let profiles = Config::profiles().await;
+        let profiles = profiles.latest_arc();
+        (
+            profiles.get_item(&index).stringify_err()?.clone(),
+            profiles.is_current_profile_index(&index),
+        )
+    };
+    let profiles_dir = dirs::app_profiles_dir().stringify_err()?;
+    let declared_file = item.file.as_deref().ok_or("profile file field is null")?;
+    let target_file = profile_format::conf_sibling(declared_file).ok_or("declared profile file must be YAML")?;
+    let target_path = profiles_dir.join(target_file.as_str());
+    let previous_content = match fs::read(&target_path).await {
+        Ok(content) => Some(content),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+        Err(error) => return Err(format!("failed to read existing CONF override: {error}").into()),
+    };
+
+    let result = profile_format::convert_declared_yaml_to_conf(&item, &profiles_dir, force)
+        .await
+        .stringify_err()?;
+    if !is_current {
+        return Ok(result);
+    }
+
+    match feat::enhance_profiles().await {
+        Ok(outcome) if outcome.is_valid() => {
+            handle::Handle::refresh_clash();
+            Ok(result)
+        }
+        Ok(outcome) => {
+            rollback_conf_conversion(&target_path, previous_content.as_deref(), &outcome.to_string()).await?;
+            Ok(result)
+        }
+        Err(error) => {
+            rollback_conf_conversion(&target_path, previous_content.as_deref(), &error.to_string()).await?;
+            Ok(result)
         }
     }
 }
@@ -369,14 +478,13 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
 pub async fn view_profile(index: String) -> CmdResult {
     let profiles = Config::profiles().await;
     let profiles_ref = profiles.latest_arc();
-    let file = profiles_ref
-        .get_item(&index)
+    let item = profiles_ref.get_item(&index).stringify_err()?.clone();
+    drop(profiles_ref);
+    let profiles_dir = dirs::app_profiles_dir().stringify_err()?;
+    let path = profile_format::resolve(&item, &profiles_dir)
+        .await
         .stringify_err()?
-        .file
-        .as_ref()
-        .ok_or("the file field is null")?;
-
-    let path = dirs::app_profiles_dir().stringify_err()?.join(file.as_str());
+        .path;
     if !path.exists() {
         return CmdResult::Err(format!("file not found \"{}\"", path.display()).into());
     }
@@ -389,14 +497,13 @@ pub async fn view_profile(index: String) -> CmdResult {
 pub async fn reveal_profile_file(index: String) -> CmdResult {
     let profiles = Config::profiles().await;
     let profiles_ref = profiles.latest_arc();
-    let file = profiles_ref
-        .get_item(&index)
+    let item = profiles_ref.get_item(&index).stringify_err()?.clone();
+    drop(profiles_ref);
+    let profiles_dir = dirs::app_profiles_dir().stringify_err()?;
+    let path = profile_format::resolve(&item, &profiles_dir)
+        .await
         .stringify_err()?
-        .file
-        .as_ref()
-        .ok_or("the file field is null")?;
-
-    let path = dirs::app_profiles_dir().stringify_err()?.join(file.as_str());
+        .path;
     if !path.exists() {
         return CmdResult::Err(format!("file not found \"{}\"", path.display()).into());
     }
@@ -410,10 +517,7 @@ pub async fn read_profile_file(index: String) -> CmdResult<String> {
     let item = {
         let profiles = Config::profiles().await;
         let profiles_ref = profiles.latest_arc();
-        PrfItem {
-            file: profiles_ref.get_item(&index).stringify_err()?.file.to_owned(),
-            ..Default::default()
-        }
+        profiles_ref.get_item(&index).stringify_err()?.clone()
     };
     let data = item.read_file().await.stringify_err()?;
     Ok(data)

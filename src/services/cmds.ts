@@ -63,6 +63,13 @@ export async function saveProfileFileWithOutcome(
   return invoke<ValidationOutcome>('save_profile_file', { index, fileData })
 }
 
+export async function convertProfileToConf(index: string, force: boolean) {
+  return invoke<ProfileConversionResult>('convert_profile_to_conf_and_apply', {
+    index,
+    force,
+  })
+}
+
 export async function updateProxyProviderEx(name: string) {
   return invoke<void>('update_proxy_provider_ex', { name })
 }

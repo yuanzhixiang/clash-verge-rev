@@ -33,8 +33,8 @@ import {
   deleteEntry,
   duplicateEntry,
   editEntry,
-  getEntryYaml,
-  parseYamlEntry,
+  getEntryText,
+  parseProfileEntry,
 } from '@/services/profile-editor'
 
 import { PolicyAddCard, PolicyGroupCard, PolicyProxyCard } from './policy-card'
@@ -64,6 +64,10 @@ type: select
 proxies:
   - DIRECT
 `
+
+const PROXY_CONF_TEMPLATE = `new-proxy = ss, example.com, 443, cipher=aes-128-gcm, password=password`
+
+const GROUP_CONF_TEMPLATE = `new-group = select, DIRECT`
 
 interface EditorState {
   kind: EntryKind
@@ -129,6 +133,8 @@ export const PolicyDashboard = () => {
   const [testingAll, setTestingAll] = useState(false)
   const [active, setActive] = useState<{
     anchorEl: HTMLElement
+    /** 右键时的鼠标坐标；键盘打开时缺省，浮层退回锚定卡片。 */
+    position?: { top: number; left: number }
     groupName: string
   } | null>(null)
   const [proxyMenu, setProxyMenu] = useState<ProxyMenuState | null>(null)
@@ -138,6 +144,8 @@ export const PolicyDashboard = () => {
 
   const profileUid = profiles?.current
   const canEdit = Boolean(profileUid) && currentProfile?.type === 'local'
+  const profileFormat =
+    currentProfile?.profile_format === 'conf' ? 'conf' : 'yaml'
 
   const groups = useMemo(
     () =>
@@ -242,14 +250,26 @@ export const PolicyDashboard = () => {
           ? 'proxies.page.dialogs.newProxy'
           : 'proxies.page.dialogs.newGroup',
       ),
-      initialText: kind === 'proxy' ? PROXY_TEMPLATE : GROUP_TEMPLATE,
+      initialText:
+        profileFormat === 'conf'
+          ? kind === 'proxy'
+            ? PROXY_CONF_TEMPLATE
+            : GROUP_CONF_TEMPLATE
+          : kind === 'proxy'
+            ? PROXY_TEMPLATE
+            : GROUP_TEMPLATE,
     })
   }
 
   const openEditEditor = async (kind: EntryKind, name: string) => {
     if (!profileUid) return
     try {
-      const initialText = await getEntryYaml(profileUid, kind, name)
+      const initialText = await getEntryText(
+        profileUid,
+        kind,
+        name,
+        profileFormat,
+      )
       setEditor({
         kind,
         oldName: name,
@@ -269,11 +289,17 @@ export const PolicyDashboard = () => {
     if (!editor || !profileUid) return
     setSaving(true)
     try {
-      const entry = parseYamlEntry(text)
+      const entry = parseProfileEntry(text, profileFormat, editor.kind)
       if (editor.oldName === null) {
-        await addEntry(profileUid, editor.kind, entry)
+        await addEntry(profileUid, editor.kind, entry, profileFormat)
       } else {
-        await editEntry(profileUid, editor.kind, editor.oldName, entry)
+        await editEntry(
+          profileUid,
+          editor.kind,
+          editor.oldName,
+          entry,
+          profileFormat,
+        )
       }
       setEditor(null)
       await afterProfileMutation()
@@ -287,7 +313,7 @@ export const PolicyDashboard = () => {
   const handleDuplicate = useLockFn(async (kind: EntryKind, name: string) => {
     if (!profileUid) return
     try {
-      await duplicateEntry(profileUid, kind, name)
+      await duplicateEntry(profileUid, kind, name, profileFormat)
       await afterProfileMutation()
     } catch (err) {
       notifyEditError(err)
@@ -297,7 +323,7 @@ export const PolicyDashboard = () => {
   const handleConfirmDelete = useLockFn(async () => {
     if (!confirm || !profileUid) return
     try {
-      await deleteEntry(profileUid, confirm.kind, confirm.name)
+      await deleteEntry(profileUid, confirm.kind, confirm.name, profileFormat)
       setConfirm(null)
       await afterProfileMutation()
     } catch (err) {
@@ -409,8 +435,8 @@ export const PolicyDashboard = () => {
                   group={group}
                   open={open}
                   readonly={!MANUAL_GROUP_TYPES.has(group.type)}
-                  onOpenMenu={(anchorEl) => {
-                    setActive({ anchorEl, groupName: group.name })
+                  onOpenMenu={(anchorEl, position) => {
+                    setActive({ anchorEl, position, groupName: group.name })
                   }}
                 />
               )
@@ -428,6 +454,7 @@ export const PolicyDashboard = () => {
       <PolicyGroupPopover
         key={active?.groupName ?? 'closed'}
         anchorEl={active?.anchorEl ?? null}
+        position={active?.position}
         group={activeGroup}
         readonly={
           activeGroup ? !MANUAL_GROUP_TYPES.has(activeGroup.type) : false
@@ -529,6 +556,7 @@ export const PolicyDashboard = () => {
         title={editor?.title ?? ''}
         initialText={editor?.initialText ?? ''}
         saving={saving}
+        format={profileFormat}
         onCancel={() => setEditor(null)}
         onSave={(text) => void handleEditorSave(text)}
       />

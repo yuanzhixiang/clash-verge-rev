@@ -4,16 +4,19 @@ import {
   KeyboardArrowUpRounded,
 } from '@mui/icons-material'
 import { Box, ButtonBase, Popover, Typography } from '@mui/material'
-import { useCallback, useEffect, useState } from 'react'
+import { ReactNode, useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { delayGroup } from 'tauri-plugin-mihomo-api'
 
-import { BaseEmpty, VirtualList } from '@/components/base'
+import { BaseEmpty, BaseLoading, VirtualList } from '@/components/base'
+import { useProxyDelayState } from '@/hooks/use-proxy-delay-state'
 import { useVerge } from '@/hooks/use-verge'
 import delayManager from '@/services/delay'
 
 interface Props {
   anchorEl: HTMLElement | null
+  /** 右键时的鼠标坐标；提供时菜单左上角对齐光标，缺省（键盘打开）锚定卡片。 */
+  position?: { top: number; left: number }
   group: IProxyGroupItem | null
   readonly: boolean
   /** 当前 profile 是否允许编辑（Local 类型）。 */
@@ -67,6 +70,8 @@ interface MenuRowProps {
   checked?: boolean
   disabled?: boolean
   title?: string
+  /** 行右侧的附加内容（如测速结果），只读展示。 */
+  trailing?: ReactNode
   onClick?: () => void
 }
 
@@ -76,6 +81,7 @@ const MenuRow = ({
   checked,
   disabled,
   title,
+  trailing,
   onClick,
 }: MenuRowProps) => (
   <ButtonBase
@@ -93,7 +99,7 @@ const MenuRow = ({
       const mode = palette.mode === 'dark' ? 'dark' : 'light'
       return {
         display: 'grid',
-        gridTemplateColumns: `${MENU.checkCol}px minmax(0, 1fr)`,
+        gridTemplateColumns: `${MENU.checkCol}px minmax(0, 1fr) auto`,
         alignItems: 'center',
         width: `calc(100% - ${MENU.inset * 2}px)`,
         height: ROW_HEIGHT,
@@ -106,6 +112,7 @@ const MenuRow = ({
         '&:hover, &.Mui-focusVisible': {
           bgcolor: MENU.highlight[mode],
           color: '#fff',
+          '& .policy-delay-hint': { color: '#fff' },
         },
         '&.Mui-disabled': { opacity: 0.45 },
       }
@@ -128,8 +135,42 @@ const MenuRow = ({
     >
       {label}
     </Typography>
+    {trailing != null && (
+      <Box sx={{ display: 'flex', alignItems: 'center', pl: 1 }}>
+        {trailing}
+      </Box>
+    )}
   </ButtonBase>
 )
+
+/** 节点行右侧的只读测速结果：测速中 loading、已测出彩色毫秒值、未测过留空。 */
+const NodeDelayHint = ({
+  proxy,
+  groupName,
+}: {
+  proxy: IProxyItem
+  groupName: string
+}) => {
+  const { delayValue, isPreset, timeout } = useProxyDelayState(proxy, groupName)
+
+  if (isPreset) return null
+  if (delayValue === -2) return <BaseLoading />
+  if (delayValue < 0) return null
+
+  return (
+    <Typography
+      className="policy-delay-hint"
+      sx={{
+        fontSize: 11.5,
+        lineHeight: 1,
+        fontFamily: MENU_FONT,
+        color: delayManager.formatDelayColor(delayValue, timeout),
+      }}
+    >
+      {delayManager.formatDelay(delayValue, timeout)}
+    </Typography>
+  )
+}
 
 /** macOS 菜单分隔线（hairline）。 */
 const MenuSeparator = () => (
@@ -180,6 +221,7 @@ const ScrollHint = ({ direction }: { direction: 'up' | 'down' }) => (
  */
 export const PolicyGroupPopover = ({
   anchorEl,
+  position,
   group,
   readonly,
   canEdit,
@@ -247,6 +289,8 @@ export const PolicyGroupPopover = ({
     <Popover
       open={Boolean(anchorEl && group)}
       anchorEl={anchorEl}
+      anchorReference={position ? 'anchorPosition' : 'anchorEl'}
+      anchorPosition={position}
       onClose={onClose}
       anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
       transformOrigin={{ vertical: 'top', horizontal: 'left' }}
@@ -259,7 +303,8 @@ export const PolicyGroupPopover = ({
               flexDirection: 'column',
               width: `min(${MENU.width}px, calc(100vw - 24px))`,
               maxHeight: 'min(560px, calc(100vh - 40px))',
-              mt: 0.75,
+              // 光标定位时菜单左上角即光标，不加间距；键盘锚定卡片时留出间距。
+              mt: position ? 0 : 0.75,
               py: `${MENU.padY}px`,
               overflow: 'hidden',
               borderRadius: `${MENU.radius}px`,
@@ -342,6 +387,9 @@ export const PolicyGroupPopover = ({
                         title={proxy.name}
                         checked={proxy.name === group.now}
                         disabled={readonly}
+                        trailing={
+                          <NodeDelayHint proxy={proxy} groupName={group.name} />
+                        }
                         onClick={() => {
                           onSelect(group, proxy)
                           onClose()

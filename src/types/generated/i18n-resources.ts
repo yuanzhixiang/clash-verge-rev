@@ -229,6 +229,7 @@ export interface TranslationResources {
           chooseFile: string
         }
         menu: {
+          convertToConf: string
           editFile: string
           editGroups: string
           editInfo: string
@@ -238,6 +239,7 @@ export interface TranslationResources {
           extendScript: string
           home: string
           openFile: string
+          reconvertToConf: string
           revealInFinder: string
           select: string
           shareQrCode: string
@@ -269,6 +271,11 @@ export interface TranslationResources {
         }
       }
       modals: {
+        confirmConfOverwrite: {
+          confirm: string
+          message: string
+          title: string
+        }
         confirmDelete: {
           message: string
           title: string
@@ -378,6 +385,7 @@ export interface TranslationResources {
         }
         feedback: {
           errors: {
+            confConversionFailed: string
             invalidUrl: string
             onlyYaml: string
           }
@@ -387,6 +395,11 @@ export interface TranslationResources {
           }
           notifications: {
             batchDeleted: string
+            confConverted: string
+            confConvertedAndApplied: string
+            confOverrideUpdated: string
+            confRegenerated: string
+            confRegeneratedAndApplied: string
             importFail: string
             importNeedsRefresh: string
             importRetry: string
