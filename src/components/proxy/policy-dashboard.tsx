@@ -326,11 +326,8 @@ export const PolicyDashboard = () => {
   return (
     <Box
       sx={{
-        height: '100%',
-        overflowY: 'auto',
         px: { xs: 2, sm: 3 },
         pb: 3,
-        scrollbarGutter: 'stable',
       }}
     >
       <Box component="section" sx={{ mt: 2.5 }}>

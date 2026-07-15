@@ -79,7 +79,8 @@ interface ProxyGroupsChainProps {
   showScrollTop: boolean
 
   // Virtual list data (from parent's virtualizer)
-  parentRef: RefObject<HTMLDivElement | null>
+  listRef: RefObject<HTMLDivElement | null>
+  scrollMargin: number
   totalSize: number
   virtualItems: VirtualListItem[]
   renderList: IRenderItem[]
@@ -219,8 +220,8 @@ function GroupSelectMenu({
 }
 
 function ProxyVirtualList({
-  parentRef,
-  height,
+  listRef,
+  scrollMargin,
   totalSize,
   virtualItems,
   renderList,
@@ -232,8 +233,8 @@ function ProxyVirtualList({
   onHeadState,
   onChangeProxy,
 }: {
-  parentRef: RefObject<HTMLDivElement | null>
-  height: string
+  listRef: RefObject<HTMLDivElement | null>
+  scrollMargin: number
   totalSize: number
   virtualItems: VirtualListItem[]
   renderList: IRenderItem[]
@@ -248,48 +249,44 @@ function ProxyVirtualList({
   const theme = useTheme()
   const stickyBackground =
     theme.palette.mode === 'dark' ? '#1e1f27' : 'var(--background-color)'
+  const listHeight = Math.max(totalSize, 240)
 
   return (
-    <div ref={parentRef} style={{ height, overflow: 'auto' }}>
-      <div style={{ height: totalSize, position: 'relative' }}>
-        {virtualItems.map((virtualItem) => (
-          <div
-            key={virtualItem.key}
-            data-index={virtualItem.index}
-            ref={measureElement}
-            style={{
-              position:
-                virtualItem.index === activeStickyIndex ? 'sticky' : 'absolute',
-              top: 0,
-              left: 0,
-              zIndex: virtualItem.index === activeStickyIndex ? 5 : undefined,
-              display:
-                virtualItem.index === activeStickyIndex
-                  ? 'flow-root'
-                  : undefined,
-              backgroundColor:
-                virtualItem.index === activeStickyIndex
-                  ? stickyBackground
-                  : undefined,
-              width: '100%',
-              transform:
-                virtualItem.index === activeStickyIndex
-                  ? undefined
-                  : `translateY(${virtualItem.start}px)`,
-            }}
-          >
-            <ProxyRender
-              item={renderList[virtualItem.index]}
-              onLocation={onLocation}
-              onCheckAll={onCheckAll}
-              onHeadState={onHeadState}
-              onChangeProxy={onChangeProxy}
-              isChainMode={isChainMode}
-            />
-          </div>
-        ))}
-        <div style={{ height: 8 }} />
-      </div>
+    <div ref={listRef} style={{ height: listHeight, position: 'relative' }}>
+      {virtualItems.map((virtualItem) => (
+        <div
+          key={virtualItem.key}
+          data-index={virtualItem.index}
+          ref={measureElement}
+          style={{
+            position:
+              virtualItem.index === activeStickyIndex ? 'sticky' : 'absolute',
+            top: 0,
+            left: 0,
+            zIndex: virtualItem.index === activeStickyIndex ? 5 : undefined,
+            display:
+              virtualItem.index === activeStickyIndex ? 'flow-root' : undefined,
+            backgroundColor:
+              virtualItem.index === activeStickyIndex
+                ? stickyBackground
+                : undefined,
+            width: '100%',
+            transform:
+              virtualItem.index === activeStickyIndex
+                ? undefined
+                : `translateY(${virtualItem.start - scrollMargin}px)`,
+          }}
+        >
+          <ProxyRender
+            item={renderList[virtualItem.index]}
+            onLocation={onLocation}
+            onCheckAll={onCheckAll}
+            onHeadState={onHeadState}
+            onChangeProxy={onChangeProxy}
+            isChainMode={isChainMode}
+          />
+        </div>
+      ))}
     </div>
   )
 }
@@ -304,7 +301,8 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
     availableGroups,
     activeSelectedGroup,
     showScrollTop,
-    parentRef,
+    listRef,
+    scrollMargin,
     totalSize,
     virtualItems,
     renderList,
@@ -414,10 +412,10 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
   )
 
   // Render virtual list for chain mode
-  const renderProxyList = (height: string) => (
+  const renderProxyList = () => (
     <ProxyVirtualList
-      parentRef={parentRef}
-      height={height}
+      listRef={listRef}
+      scrollMargin={scrollMargin}
       totalSize={totalSize}
       virtualItems={virtualItems}
       renderList={renderList}
@@ -435,8 +433,8 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
 
   return (
     <>
-      <Box sx={{ display: 'flex', height: '100%', gap: 2 }}>
-        <Box sx={{ flex: 1, position: 'relative' }}>
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+        <Box sx={{ minWidth: 0, flex: 1, position: 'relative' }}>
           {showRuleHeader && (
             <ChainRuleHeader
               title={t('proxies.page.rules.title')}
@@ -447,13 +445,27 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
             />
           )}
 
-          {renderProxyList(
-            showRuleHeader ? 'calc(100% - 80px)' : 'calc(100% - 14px)',
-          )}
-          <ScrollTopButton show={showScrollTop} onClick={onScrollToTop} />
+          {renderProxyList()}
+          <ScrollTopButton
+            show={showScrollTop}
+            onClick={onScrollToTop}
+            sx={{
+              position: 'fixed',
+              right: { xs: 24, md: 440 },
+              bottom: 24,
+              zIndex: 10,
+            }}
+          />
         </Box>
 
-        <Box sx={{ width: '400px', minWidth: '300px' }}>
+        <Box
+          sx={{
+            width: '400px',
+            minWidth: '300px',
+            flex: '0 0 auto',
+            alignSelf: 'flex-start',
+          }}
+        >
           <ProxyChain
             proxyChain={proxyChain}
             onUpdateChain={setProxyChain}

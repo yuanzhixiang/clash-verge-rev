@@ -488,7 +488,7 @@ export const ProxyChain = ({
     <Paper
       elevation={1}
       sx={{
-        height: '100%',
+        minHeight: 360,
         p: 2,
         display: 'flex',
         flexDirection: 'column',
@@ -576,7 +576,7 @@ export const ProxyChain = ({
             '按顺序点击节点添加到代理链中'}
       </Alert>
 
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
+      <Box sx={{ minHeight: 160, flex: 1 }}>
         {proxyChain.length === 0 ? (
           <Box
             sx={{

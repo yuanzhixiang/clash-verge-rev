@@ -4,6 +4,7 @@ import { throttle } from 'lodash-es'
 import {
   lazy,
   Suspense,
+  type RefObject,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -50,6 +51,7 @@ interface Props {
   mode: string
   isChainMode?: boolean
   chainConfigData?: string | null
+  scrollElementRef?: RefObject<HTMLDivElement | null>
 }
 
 function useProxyRenderState(
@@ -168,8 +170,9 @@ function useProxyRenderState(
 function ChainProxyGroups(props: {
   mode: string
   chainConfigData?: string | null
+  scrollElementRef: RefObject<HTMLDivElement | null>
 }) {
-  const { mode, chainConfigData } = props
+  const { mode, chainConfigData, scrollElementRef } = props
   const { proxies: proxiesData } = useProxiesData()
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null)
 
@@ -197,10 +200,11 @@ function ChainProxyGroups(props: {
     saveScrollPosition,
   } = useProxyRenderState(mode, true, activeSelectedGroup)
 
-  const parentRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
   const scrollTopRef = useRef(0)
   const showScrollTopRef = useRef(false)
   const activeStickyIndexRef = useRef<number | null>(null)
+  const [scrollMargin, setScrollMargin] = useState(0)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const stickyGroupIndexes = useMemo(
     () =>
@@ -225,13 +229,38 @@ function ChainProxyGroups(props: {
     [stickyGroupIndexes],
   )
 
+  useLayoutEffect(() => {
+    const scrollElement = scrollElementRef.current
+    const listElement = listRef.current
+    if (!scrollElement || !listElement) return
+
+    const updateScrollMargin = () => {
+      const scrollRect = scrollElement.getBoundingClientRect()
+      const listRect = listElement.getBoundingClientRect()
+      setScrollMargin(listRect.top - scrollRect.top + scrollElement.scrollTop)
+    }
+
+    const frame = requestAnimationFrame(updateScrollMargin)
+    const observer = new ResizeObserver(updateScrollMargin)
+    observer.observe(scrollElement)
+    observer.observe(listElement)
+    window.addEventListener('resize', updateScrollMargin)
+
+    return () => {
+      cancelAnimationFrame(frame)
+      observer.disconnect()
+      window.removeEventListener('resize', updateScrollMargin)
+    }
+  }, [scrollElementRef])
+
   const virtualizer = useVirtualizer({
     count: renderList.length,
-    getScrollElement: () => parentRef.current,
+    getScrollElement: () => scrollElementRef.current,
     estimateSize: () => 56,
     overscan: 15,
     getItemKey: (index) => renderList[index]?.key ?? index,
     rangeExtractor,
+    scrollMargin,
   })
   const virtualItems = virtualizer.getVirtualItems()
   const activeStickyIndex = activeStickyIndexRef.current
@@ -239,18 +268,22 @@ function ChainProxyGroups(props: {
   // 从 localStorage 恢复滚动位置
   useLayoutEffect(() => {
     if (renderList.length === 0) return
-    const node = parentRef.current
+    if (scrollMargin <= 0) return
+    const node = scrollElementRef.current
     if (!node) return
 
     const savedPosition = getScrollPosition()
     if (savedPosition !== undefined) {
-      node.scrollTop = savedPosition
+      node.scrollTo({
+        top: savedPosition > 0 ? scrollMargin + savedPosition : 0,
+        behavior: 'auto',
+      })
       scrollTopRef.current = savedPosition
-      const nextShowScrollTop = savedPosition > 100
+      const nextShowScrollTop = node.scrollTop > 100
       showScrollTopRef.current = nextShowScrollTop
       queueMicrotask(() => setShowScrollTop(nextShowScrollTop))
     }
-  }, [renderList.length, getScrollPosition])
+  }, [renderList.length, getScrollPosition, scrollElementRef, scrollMargin])
 
   const saveScrollPositionThrottled = useMemo(
     () => throttle(saveScrollPosition, 500),
@@ -260,22 +293,23 @@ function ChainProxyGroups(props: {
   const handleScroll = useCallback(
     (event: Event) => {
       const target = event.target as HTMLElement | null
-      const nextScrollTop = target?.scrollTop ?? 0
-      const nextShowScrollTop = nextScrollTop > 100
-      scrollTopRef.current = nextScrollTop
+      const pageScrollTop = target?.scrollTop ?? 0
+      const listScrollTop = Math.max(0, pageScrollTop - scrollMargin)
+      const nextShowScrollTop = pageScrollTop > 100
+      scrollTopRef.current = listScrollTop
 
       if (showScrollTopRef.current !== nextShowScrollTop) {
         showScrollTopRef.current = nextShowScrollTop
         setShowScrollTop(nextShowScrollTop)
       }
 
-      saveScrollPositionThrottled(nextScrollTop)
+      saveScrollPositionThrottled(listScrollTop)
     },
-    [saveScrollPositionThrottled],
+    [saveScrollPositionThrottled, scrollMargin],
   )
 
   useEffect(() => {
-    const node = parentRef.current
+    const node = scrollElementRef.current
     if (!node) return
 
     const listener = handleScroll as EventListener
@@ -287,15 +321,15 @@ function ChainProxyGroups(props: {
       saveScrollPosition(scrollTopRef.current)
       node.removeEventListener('scroll', listener, options)
     }
-  }, [handleScroll, saveScrollPosition])
+  }, [handleScroll, saveScrollPosition, scrollElementRef])
 
   const scrollToTop = useCallback(() => {
-    parentRef.current?.scrollTo?.({
+    scrollElementRef.current?.scrollTo?.({
       top: 0,
       behavior: 'smooth',
     })
     scrollTopRef.current = 0
-  }, [])
+  }, [scrollElementRef])
 
   const handleLocation = useStableCallback((group: IProxyGroupItem) => {
     if (!group) return
@@ -325,7 +359,8 @@ function ChainProxyGroups(props: {
         availableGroups={availableGroups}
         activeSelectedGroup={activeSelectedGroup}
         showScrollTop={showScrollTop}
-        parentRef={parentRef}
+        listRef={listRef}
+        scrollMargin={scrollMargin}
         totalSize={virtualizer.getTotalSize()}
         virtualItems={virtualItems}
         renderList={renderList}
@@ -592,7 +627,7 @@ function NormalProxyGroups(props: { mode: string }) {
 }
 
 export const ProxyGroups = (props: Props) => {
-  const { mode, isChainMode = false, chainConfigData } = props
+  const { mode, isChainMode = false, chainConfigData, scrollElementRef } = props
 
   // Drive 3s polling on the shared TQ cache; data is read via granular context below
   useQuery({
@@ -610,7 +645,14 @@ export const ProxyGroups = (props: Props) => {
   }
 
   if (isChainMode) {
-    return <ChainProxyGroups mode={mode} chainConfigData={chainConfigData} />
+    if (!scrollElementRef) return null
+    return (
+      <ChainProxyGroups
+        mode={mode}
+        chainConfigData={chainConfigData}
+        scrollElementRef={scrollElementRef}
+      />
+    )
   }
 
   return <NormalProxyGroups mode={mode} />

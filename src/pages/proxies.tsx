@@ -8,7 +8,7 @@ import {
 } from '@mui/icons-material'
 import { Box, Button, Typography } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import { useCallback, useEffect, useReducer, useState } from 'react'
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { closeAllConnections } from 'tauri-plugin-mihomo-api'
 
@@ -41,6 +41,7 @@ const isMode = (value: unknown): value is Mode =>
 
 const ProxyPage = () => {
   const { t } = useTranslation()
+  const pageScrollRef = useRef<HTMLDivElement>(null)
 
   // 从 localStorage 恢复链式代理按钮状态
   const [isChainMode, setIsChainMode] = useState(() => {
@@ -181,10 +182,16 @@ const ProxyPage = () => {
         </Box>
       }
     >
-      <Box sx={{ display: 'flex', height: '100%', flexDirection: 'column' }}>
+      <Box
+        ref={pageScrollRef}
+        sx={{
+          height: '100%',
+          overflowY: 'auto',
+          scrollbarGutter: 'stable',
+        }}
+      >
         <Box
           sx={{
-            flex: '0 0 auto',
             px: { xs: 2, sm: 3 },
             pt: 2,
             pb: 1,
@@ -280,14 +287,12 @@ const ProxyPage = () => {
           </Typography>
         </Box>
 
-        <Box sx={{ minHeight: 0, flex: 1 }}>
+        <Box>
           {isChainMode ? (
             <Box
               sx={{
-                height: '100%',
                 mx: { xs: 1, sm: 2 },
                 mt: 1,
-                overflow: 'hidden',
                 border: '1px solid var(--shell-border)',
                 borderRadius: 'var(--radius-control)',
                 bgcolor: 'var(--shell-panel-muted)',
@@ -297,6 +302,7 @@ const ProxyPage = () => {
                 mode={activeMode}
                 isChainMode
                 chainConfigData={chainConfigData}
+                scrollElementRef={pageScrollRef}
               />
             </Box>
           ) : (
