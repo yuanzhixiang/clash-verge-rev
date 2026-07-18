@@ -1228,9 +1228,7 @@ proxy-groups:
 
     #[test]
     fn quic_fallback_reject_inserts_before_match() {
-        let config = mapping(
-            r"{rules: ['DOMAIN-SUFFIX,cloudflare.com,manual', 'GEOIP,cn,DIRECT', 'MATCH,DIRECT']}",
-        );
+        let config = mapping(r"{rules: ['DOMAIN-SUFFIX,cloudflare.com,manual', 'GEOIP,cn,DIRECT', 'MATCH,DIRECT']}");
         let config = use_quic_fallback_reject(config, true);
         assert_eq!(
             rules_of(&config),
