@@ -406,6 +406,7 @@ export interface TranslationResources {
             importSuccess: string
             profileReactivated: string
             profileSwitched: string
+            switchBusy: string
             switchInterrupted: string
           }
         }
@@ -1181,7 +1182,6 @@ export interface TranslationResources {
           }
           messages: {
             breakChangeError: string
-            portableError: string
           }
           title: string
         }

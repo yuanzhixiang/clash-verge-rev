@@ -47,7 +47,8 @@
         "confConverted": "Created {{targetFile}}; it will apply on the next activation",
         "confConvertedAndApplied": "Created and applied {{targetFile}}",
         "confRegenerated": "Overwrote and regenerated {{targetFile}}; it will apply on the next activation",
-        "confRegeneratedAndApplied": "Overwrote, regenerated, and applied {{targetFile}}"
+        "confRegeneratedAndApplied": "Overwrote, regenerated, and applied {{targetFile}}",
+        "switchBusy": "Profil değiştirme işlemi zaten devam ediyor"
       },
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",

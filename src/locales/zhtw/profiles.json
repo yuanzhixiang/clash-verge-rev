@@ -47,7 +47,8 @@
         "confConverted": "Created {{targetFile}}; it will apply on the next activation",
         "confConvertedAndApplied": "Created and applied {{targetFile}}",
         "confRegenerated": "Overwrote and regenerated {{targetFile}}; it will apply on the next activation",
-        "confRegeneratedAndApplied": "Overwrote, regenerated, and applied {{targetFile}}"
+        "confRegeneratedAndApplied": "Overwrote, regenerated, and applied {{targetFile}}",
+        "switchBusy": "正在切換配置，請稍後重試"
       },
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",

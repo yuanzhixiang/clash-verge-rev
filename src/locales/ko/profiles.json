@@ -47,7 +47,8 @@
         "confConverted": "Created {{targetFile}}; it will apply on the next activation",
         "confConvertedAndApplied": "Created and applied {{targetFile}}",
         "confRegenerated": "Overwrote and regenerated {{targetFile}}; it will apply on the next activation",
-        "confRegeneratedAndApplied": "Overwrote, regenerated, and applied {{targetFile}}"
+        "confRegeneratedAndApplied": "Overwrote, regenerated, and applied {{targetFile}}",
+        "switchBusy": "프로필 전환이 이미 진행 중입니다"
       },
       "notices": {
         "forceRefreshCompleted": "강제 새로고침 완료",

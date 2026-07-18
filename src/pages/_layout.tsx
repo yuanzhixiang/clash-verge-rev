@@ -35,12 +35,14 @@ import {
   useLoadingOverlay,
 } from './_layout/hooks'
 import { handleNoticeMessage } from './_layout/utils'
-import { navItems, preloadLogsPage, preloadNavigationRoutes } from './_routers'
+import {
+  navItems,
+  preloadLogsPage,
+  preloadNavigationRoutes,
+} from './_navigation'
 
 import 'dayjs/locale/ru'
 import 'dayjs/locale/zh-cn'
-
-export const portableFlag = false
 
 const LogsPage = lazy(() => preloadLogsPage())
 

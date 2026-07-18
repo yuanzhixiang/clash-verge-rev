@@ -437,17 +437,12 @@ const ProfilePage = () => {
           return
         }
 
-        // 执行切换请求
-        const requestPromise = patchProfiles(
-          { current: profile },
-          currentAbortController.signal,
-          {
-            deferRefreshOnSuccess: true,
-          },
-        )
+        // 执行切换请求(成功时钩子内部直接更新缓存,无需额外 refetch)
+        const requestPromise = patchProfiles({ current: profile })
         pendingRequestRef.current = requestPromise
 
-        const success = await requestPromise
+        const outcome = await requestPromise
+        const success = outcome.status === 'valid'
 
         if (pendingRequestRef.current === requestPromise) {
           pendingRequestRef.current = null

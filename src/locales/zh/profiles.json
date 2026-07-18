@@ -47,7 +47,8 @@
         "confConverted": "已生成 {{targetFile}}；将在下次激活时生效",
         "confConvertedAndApplied": "已生成并应用 {{targetFile}}",
         "confRegenerated": "已覆盖并重新生成 {{targetFile}}；将在下次激活时生效",
-        "confRegeneratedAndApplied": "已覆盖、重新生成并应用 {{targetFile}}"
+        "confRegeneratedAndApplied": "已覆盖、重新生成并应用 {{targetFile}}",
+        "switchBusy": "正在切换订阅，请稍后重试"
       },
       "notices": {
         "forceRefreshCompleted": "数据已强制刷新",
