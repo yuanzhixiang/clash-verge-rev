@@ -95,6 +95,7 @@
         "fields": {
           "allowLan": "LAN'a İzin Ver",
           "dnsOverwrite": "DNS Üzerine Yazma",
+          "quicFallbackReject": "Reject Unproxied QUIC",
           "ipv6": "IPv6",
           "unifiedDelay": "Birleşik Gecikme",
           "logLevel": "Günlük Seviyesi",
@@ -133,7 +134,8 @@
           "networkInterface": "Ağ Arayüzü",
           "unifiedDelay": "Birleşik gecikme açıldığında, bağlantı el sıkışmaları vb. nedeniyle farklı tür düğümler arasındaki gecikme farklarını ortadan kaldırmak için iki gecikme testi gerçekleştirilir",
           "logLevel": "Bu parametre yalnızca günlük dizini Hizmet klasöründeki çekirdek günlük dosyaları için geçerlidir",
-          "openUwpTool": "Windows 8'den beri, UWP uygulamaları (Microsoft Store gibi) yerel ana bilgisayar ağ hizmetlerine doğrudan erişmekten kısıtlanmıştır ve bu araç bu kısıtlamayı atlatmak için kullanılabilir"
+          "openUwpTool": "Windows 8'den beri, UWP uygulamaları (Microsoft Store gibi) yerel ana bilgisayar ağ hizmetlerine doğrudan erişmekten kısıtlanmıştır ve bu araç bu kısıtlamayı atlatmak için kullanılabilir",
+          "quicFallbackReject": "Reject UDP 443 (QUIC) traffic that falls through to the final MATCH rule because the node lacks UDP support, so browsers instantly retry over TCP and hit your proxy rules; earlier DIRECT rules (e.g. domestic traffic) and other UDP traffic are unaffected"
         },
         "options": {
           "logLevel": {

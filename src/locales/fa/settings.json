@@ -95,6 +95,7 @@
         "fields": {
           "allowLan": "اجازه LAN",
           "dnsOverwrite": "بازنویسی DNS",
+          "quicFallbackReject": "Reject Unproxied QUIC",
           "ipv6": "IPv6",
           "unifiedDelay": "معادلDELAY",
           "logLevel": "سطح لاگ",
@@ -133,7 +134,8 @@
           "networkInterface": "رابط شبکه",
           "unifiedDelay": "معادلDELAY را فعال کنید تا ترافیک شبکه به سرعت رسید",
           "logLevel": "این فقط روی فایل‌های لاگ هسته تحت فایل سرویس در فهرست ورود اثر می‌گذارد.",
-          "openUwpTool": "از ویندوز 8 به بعد، برنامه‌های UWP (مانند Microsoft Store) از دسترسی مستقیم به خدمات شبکه محلی محدود شده‌اند و این ابزار می‌تواند برای دور زدن این محدودیت استفاده شود"
+          "openUwpTool": "از ویندوز 8 به بعد، برنامه‌های UWP (مانند Microsoft Store) از دسترسی مستقیم به خدمات شبکه محلی محدود شده‌اند و این ابزار می‌تواند برای دور زدن این محدودیت استفاده شود",
+          "quicFallbackReject": "Reject UDP 443 (QUIC) traffic that falls through to the final MATCH rule because the node lacks UDP support, so browsers instantly retry over TCP and hit your proxy rules; earlier DIRECT rules (e.g. domestic traffic) and other UDP traffic are unaffected"
         },
         "options": {
           "logLevel": {

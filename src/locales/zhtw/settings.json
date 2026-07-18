@@ -95,6 +95,7 @@
         "fields": {
           "allowLan": "區域網路連線",
           "dnsOverwrite": "DNS 覆寫",
+          "quicFallbackReject": "Reject Unproxied QUIC",
           "ipv6": "IPv6",
           "unifiedDelay": "統一延遲",
           "logLevel": "日誌等級",
@@ -133,7 +134,8 @@
           "networkInterface": "網路介面",
           "unifiedDelay": "開啟統一延遲時，會進行兩次延遲測試，以消除連線握手等帶來的不同類型節點的延遲差異",
           "logLevel": "僅對日誌目錄 Service 資料夾下的內核日誌檔案生效",
-          "openUwpTool": "Windows 8 開始限制 UWP 應用程式（如Microsoft Store）直接存取本機主機的網路服務，使用此工具可繞過該限制"
+          "openUwpTool": "Windows 8 開始限制 UWP 應用程式（如Microsoft Store）直接存取本機主機的網路服務，使用此工具可繞過該限制",
+          "quicFallbackReject": "Reject UDP 443 (QUIC) traffic that falls through to the final MATCH rule because the node lacks UDP support, so browsers instantly retry over TCP and hit your proxy rules; earlier DIRECT rules (e.g. domestic traffic) and other UDP traffic are unaffected"
         },
         "options": {
           "logLevel": {

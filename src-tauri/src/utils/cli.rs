@@ -130,11 +130,11 @@ pub async fn handle(request: CliRequest) -> Result<impl warp::Reply, warp::Rejec
 async fn execute(request: CliRequest) -> Result<JsonValue> {
     match request {
         CliRequest::Status => status().await,
-        CliRequest::Paths => paths().await,
+        CliRequest::Paths => paths(),
         CliRequest::ConfigGet { target, format } => config_get(&target, format.as_deref()).await,
         CliRequest::ConfigPatch { target, patch } => config_patch(&target, patch).await,
         CliRequest::Logs { target, lines } => logs(&target, lines.unwrap_or(200)).await,
-        CliRequest::LogsPath => logs_path().await,
+        CliRequest::LogsPath => logs_path(),
         CliRequest::Core { action } => core(&action).await,
         CliRequest::BackupCreate => backup_create().await,
         CliRequest::App { action, arg } => app(&action, arg).await,
@@ -208,7 +208,7 @@ async fn status() -> Result<JsonValue> {
     }))
 }
 
-async fn paths() -> Result<JsonValue> {
+fn paths() -> Result<JsonValue> {
     let app_dir = dirs::app_home_dir()?;
     Ok(json!({
         "app_dir": path_string(app_dir.clone()),
@@ -285,7 +285,7 @@ async fn logs(target: &str, lines: usize) -> Result<JsonValue> {
     Ok(json!({ "target": target, "lines": logs }))
 }
 
-async fn logs_path() -> Result<JsonValue> {
+fn logs_path() -> Result<JsonValue> {
     Ok(json!({
         "app": path_string(dirs::app_latest_log()?),
         "core": path_string(dirs::clash_latest_log()?),
@@ -307,7 +307,7 @@ async fn core(action: &str) -> Result<JsonValue> {
 async fn app(action: &str, arg: Option<String>) -> Result<JsonValue> {
     match action {
         "info" => status().await,
-        "paths" => paths().await,
+        "paths" => paths(),
         "restart" => {
             cmd(crate::cmd::restart_app().await)?;
             Ok(json!({ "restarted": true }))

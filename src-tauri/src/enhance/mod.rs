@@ -36,6 +36,7 @@ struct ConfigValues {
     socks_enabled: bool,
     http_enabled: bool,
     enable_dns_settings: bool,
+    enable_quic_fallback_reject: bool,
     #[cfg(not(target_os = "windows"))]
     redir_enabled: bool,
     #[cfg(target_os = "linux")]
@@ -116,6 +117,7 @@ async fn get_config_values() -> ConfigValues {
         ref verge_socks_enabled,
         ref verge_http_enabled,
         ref enable_dns_settings,
+        ref enable_quic_fallback_reject,
         ..
     } = **verge_arc;
 
@@ -127,6 +129,7 @@ async fn get_config_values() -> ConfigValues {
         verge_http_enabled.unwrap_or(false),
         enable_dns_settings.unwrap_or(false),
     );
+    let enable_quic_fallback_reject = enable_quic_fallback_reject.unwrap_or(false);
 
     #[cfg(not(target_os = "windows"))]
     let redir_enabled = verge_arc.verge_redir_enabled.unwrap_or(false);
@@ -145,6 +148,7 @@ async fn get_config_values() -> ConfigValues {
         socks_enabled,
         http_enabled,
         enable_dns_settings,
+        enable_quic_fallback_reject,
         #[cfg(not(target_os = "windows"))]
         redir_enabled,
         #[cfg(target_os = "linux")]
@@ -680,6 +684,40 @@ async fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> M
     config
 }
 
+/// mihomo 对「命中规则但节点不支持 UDP」的 UDP 流量会跳过该规则继续向下匹配,
+/// 最终常落到 `MATCH` 兜底直连。开启后在最终 MATCH 前插入 QUIC(UDP 443) REJECT,
+/// 让浏览器立即回退 TCP 走正常代理规则;更前面的域名/GEOIP 直连规则不受影响。
+const QUIC_FALLBACK_REJECT_RULE: &str = "AND,((NETWORK,udp),(DST-PORT,443)),REJECT";
+
+fn use_quic_fallback_reject(mut config: Mapping, enabled: bool) -> Mapping {
+    if !enabled {
+        return config;
+    }
+
+    let Some(rules) = config.get_mut("rules").and_then(|v| v.as_sequence_mut()) else {
+        return config;
+    };
+
+    let already_present = rules
+        .iter()
+        .any(|r| r.as_str().is_some_and(|s| s.trim() == QUIC_FALLBACK_REJECT_RULE));
+    if already_present {
+        return config;
+    }
+
+    let insert_at = rules
+        .iter()
+        .rposition(|r| {
+            r.as_str()
+                .is_some_and(|s| s.trim().to_ascii_uppercase().starts_with("MATCH,"))
+        })
+        .unwrap_or(rules.len());
+    rules.insert(insert_at, Value::from(QUIC_FALLBACK_REJECT_RULE));
+    logging!(info, Type::Core, "apply QUIC fallback reject rule");
+
+    config
+}
+
 /// Enhance mode
 /// 返回最终订阅、该订阅包含的键、和script执行的结果
 pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, ResultLog>)> {
@@ -693,6 +731,7 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
         socks_enabled,
         http_enabled,
         enable_dns_settings,
+        enable_quic_fallback_reject,
         #[cfg(not(target_os = "windows"))]
         redir_enabled,
         #[cfg(target_os = "linux")]
@@ -763,6 +802,7 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     let config = enforce_control_plane(config, control_plane);
     let config = enforce_dns_ipv6(config, dns_ipv6);
     let config = ensure_lan_bind_address(config);
+    let config = use_quic_fallback_reject(config, enable_quic_fallback_reject);
 
     // fork: Surge 外部节点列表 provider 适配（拦截 verge-format 并重写为 file provider）
     let config = crate::module::external_provider::use_external_providers(config).await;
@@ -780,8 +820,8 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
 #[cfg(test)]
 mod tests {
     use super::{
-        ChainItem, ChainType, cleanup_proxy_groups, ensure_lan_bind_address, process_global_items,
-        process_profile_items, use_keys,
+        ChainItem, ChainType, QUIC_FALLBACK_REJECT_RULE, cleanup_proxy_groups, ensure_lan_bind_address,
+        process_global_items, process_profile_items, use_keys, use_quic_fallback_reject,
     };
     use std::collections::HashMap;
 
@@ -1174,5 +1214,56 @@ proxy-groups:
             .expect("proxies should be a sequence");
         assert_eq!(proxies.len(), 1);
         assert_eq!(proxies[0].as_str(), Some("DIRECT"));
+    }
+
+    fn rules_of(config: &serde_yaml_ng::Mapping) -> Vec<String> {
+        config
+            .get("rules")
+            .and_then(|v| v.as_sequence())
+            .expect("rules should be a sequence")
+            .iter()
+            .map(|r| r.as_str().expect("rule should be a string").to_string())
+            .collect()
+    }
+
+    #[test]
+    fn quic_fallback_reject_inserts_before_match() {
+        let config = mapping(
+            r"{rules: ['DOMAIN-SUFFIX,cloudflare.com,manual', 'GEOIP,cn,DIRECT', 'MATCH,DIRECT']}",
+        );
+        let config = use_quic_fallback_reject(config, true);
+        assert_eq!(
+            rules_of(&config),
+            vec![
+                "DOMAIN-SUFFIX,cloudflare.com,manual",
+                "GEOIP,cn,DIRECT",
+                QUIC_FALLBACK_REJECT_RULE,
+                "MATCH,DIRECT",
+            ]
+        );
+    }
+
+    #[test]
+    fn quic_fallback_reject_appends_without_match() {
+        let config = mapping(r"{rules: ['GEOIP,cn,DIRECT']}");
+        let config = use_quic_fallback_reject(config, true);
+        assert_eq!(rules_of(&config), vec!["GEOIP,cn,DIRECT", QUIC_FALLBACK_REJECT_RULE]);
+    }
+
+    #[test]
+    fn quic_fallback_reject_is_idempotent_and_gated() {
+        let config = mapping(r"{rules: ['MATCH,DIRECT']}");
+        let config = use_quic_fallback_reject(config, true);
+        let config = use_quic_fallback_reject(config, true);
+        assert_eq!(rules_of(&config), vec![QUIC_FALLBACK_REJECT_RULE, "MATCH,DIRECT"]);
+
+        let disabled = mapping(r"{rules: ['MATCH,DIRECT']}");
+        let disabled = use_quic_fallback_reject(disabled, false);
+        assert_eq!(rules_of(&disabled), vec!["MATCH,DIRECT"]);
+
+        // 没有 rules 键时不 panic、不添加
+        let no_rules = mapping(r"{mode: rule}");
+        let no_rules = use_quic_fallback_reject(no_rules, true);
+        assert!(no_rules.get("rules").is_none());
     }
 }

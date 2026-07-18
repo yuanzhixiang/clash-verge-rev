@@ -1221,6 +1221,7 @@ export interface TranslationResources {
               logLevel: string
               openUwpTool: string
               portConfig: string
+              quicFallbackReject: string
               tunnels: {
                 actions: {
                   add: string
@@ -1262,6 +1263,7 @@ export interface TranslationResources {
               logLevel: string
               networkInterface: string
               openUwpTool: string
+              quicFallbackReject: string
               unifiedDelay: string
             }
           }

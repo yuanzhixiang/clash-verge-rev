@@ -95,6 +95,7 @@
         "fields": {
           "allowLan": "LAN接続を許可",
           "dnsOverwrite": "DNS上書き",
+          "quicFallbackReject": "Reject Unproxied QUIC",
           "ipv6": "IPv6",
           "unifiedDelay": "統一遅延",
           "logLevel": "ログレベル",
@@ -133,7 +134,8 @@
           "networkInterface": "ネットワークインターフェース",
           "unifiedDelay": "統一遅延を有効にすると、2回の遅延テストが行われ、接続ハンドシェイクなどによる異なるタイプのノードの遅延差を解消します。",
           "logLevel": "ログディレクトリのServiceフォルダ内のコアログファイルにのみ適用されます。",
-          "openUwpTool": "Windows 8以降では、UWPアプリケーション（Microsoft Storeなど）がローカルホストのネットワークサービスに直接アクセスすることが制限されています。このツールを使用すると、この制限を回避できます。"
+          "openUwpTool": "Windows 8以降では、UWPアプリケーション（Microsoft Storeなど）がローカルホストのネットワークサービスに直接アクセスすることが制限されています。このツールを使用すると、この制限を回避できます。",
+          "quicFallbackReject": "Reject UDP 443 (QUIC) traffic that falls through to the final MATCH rule because the node lacks UDP support, so browsers instantly retry over TCP and hit your proxy rules; earlier DIRECT rules (e.g. domestic traffic) and other UDP traffic are unaffected"
         },
         "options": {
           "logLevel": {

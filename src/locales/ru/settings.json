@@ -95,6 +95,7 @@
         "fields": {
           "allowLan": "Разрешить доступ из локальной сети",
           "dnsOverwrite": "Переопределение настроек DNS",
+          "quicFallbackReject": "Reject Unproxied QUIC",
           "ipv6": "IPv6",
           "unifiedDelay": "Точная задержка",
           "logLevel": "Уровень логов",
@@ -133,7 +134,8 @@
           "networkInterface": "Сетевой интерфейс",
           "unifiedDelay": "Когда точная задержка включена, выполняются два теста задержки, чтобы устранить различия между разными типами узлов, вызванные подтверждением соединения и другими факторами",
           "logLevel": "Это влияет только на файлы журнала ядра в служебном файле в каталоге логов.",
-          "openUwpTool": "С Windows 8 приложения UWP (такие как Microsoft Store) ограничены в прямом доступе к сетевым службам локального хоста, и этот инструмент позволяет обойти это ограничение"
+          "openUwpTool": "С Windows 8 приложения UWP (такие как Microsoft Store) ограничены в прямом доступе к сетевым службам локального хоста, и этот инструмент позволяет обойти это ограничение",
+          "quicFallbackReject": "Reject UDP 443 (QUIC) traffic that falls through to the final MATCH rule because the node lacks UDP support, so browsers instantly retry over TCP and hit your proxy rules; earlier DIRECT rules (e.g. domestic traffic) and other UDP traffic are unaffected"
         },
         "options": {
           "logLevel": {

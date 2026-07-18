@@ -35,7 +35,7 @@ const SettingClash = ({ onError }: Props) => {
   const { t } = useTranslation()
 
   const { clash, version, mutateClash, patchClash } = useClash()
-  const { verge, patchVerge } = useVerge()
+  const { verge, mutateVerge, patchVerge } = useVerge()
   const [, setClashLog] = useClashLog()
 
   const {
@@ -45,7 +45,7 @@ const SettingClash = ({ onError }: Props) => {
     'unified-delay': unifiedDelay,
   } = clash ?? {}
 
-  const { verge_mixed_port } = verge ?? {}
+  const { verge_mixed_port, enable_quic_fallback_reject } = verge ?? {}
 
   // 独立跟踪DNS设置开关状态
   const [dnsSettingsEnabled, setDnsSettingsEnabled] = useState(() => {
@@ -64,6 +64,9 @@ const SettingClash = ({ onError }: Props) => {
   const onSwitchFormat = (_e: any, value: boolean) => value
   const onChangeData = (patch: Partial<IConfigData>) => {
     mutateClash((old) => ({ ...old!, ...patch }), false)
+  }
+  const onChangeVerge = (patch: Partial<IVergeConfig>) => {
+    mutateVerge({ ...verge, ...patch }, false)
   }
   const onUpdateGeo = async () => {
     try {
@@ -140,6 +143,29 @@ const SettingClash = ({ onError }: Props) => {
           checked={dnsSettingsEnabled}
           onChange={(_, checked) => handleDnsToggle(checked)}
         />
+      </SettingItem>
+
+      <SettingItem
+        label={t('settings.sections.clash.form.fields.quicFallbackReject')}
+        extra={
+          <TooltipIcon
+            title={t(
+              'settings.sections.clash.form.tooltips.quicFallbackReject',
+            )}
+            sx={{ opacity: '0.7' }}
+          />
+        }
+      >
+        <GuardState
+          value={enable_quic_fallback_reject ?? false}
+          valueProps="checked"
+          onCatch={onError}
+          onFormat={onSwitchFormat}
+          onChange={(e) => onChangeVerge({ enable_quic_fallback_reject: e })}
+          onGuard={(e) => patchVerge({ enable_quic_fallback_reject: e })}
+        >
+          <Switch edge="end" />
+        </GuardState>
       </SettingItem>
 
       <SettingItem label={t('settings.sections.clash.form.fields.ipv6')}>
