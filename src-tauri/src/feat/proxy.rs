@@ -31,10 +31,7 @@ pub async fn toggle_system_proxy() -> bool {
     .await;
 
     match patch_result {
-        Ok(_) => {
-            handle::Handle::refresh_verge();
-            requested
-        }
+        Ok(_) => requested,
         Err(err) => {
             logging!(error, Type::ProxyMode, "{err}");
             current
@@ -57,10 +54,7 @@ pub async fn toggle_tun_mode(not_save_file: Option<bool>) -> bool {
     )
     .await
     {
-        Ok(_) => {
-            handle::Handle::refresh_verge();
-            enable
-        }
+        Ok(_) => enable,
         Err(err) => {
             logging!(error, Type::ProxyMode, "{err}");
             current

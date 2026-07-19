@@ -51,7 +51,6 @@ bitflags! {
      struct UpdateFlags: u16 {
         const RESTART_CORE = 1 << 0;
         const CLASH_CONFIG = 1 << 1;
-        const VERGE_CONFIG = 1 << 2;
         const LAUNCH = 1 << 3;
         const SYS_PROXY = 1 << 4;
         const SYSTRAY_ICON = 1 << 5;
@@ -103,9 +102,7 @@ fn determine_update_flags(patch: &IVerge) -> UpdateFlags {
     #[cfg(not(target_os = "macos"))]
     let enable_tray_speed: Option<bool> = None;
     // let enable_tray_icon = patch.enable_tray_icon;
-    let enable_global_hotkey = patch.enable_global_hotkey;
     let tray_event = &patch.tray_event;
-    let home_cards = patch.home_cards.as_ref();
     let enable_auto_light_weight = patch.enable_auto_light_weight_mode;
     let enable_external_controller = patch.enable_external_controller;
     let tray_proxy_groups_display_mode = &patch.tray_proxy_groups_display_mode;
@@ -149,9 +146,6 @@ fn determine_update_flags(patch: &IVerge) -> UpdateFlags {
     }
     if patch.enable_quic_fallback_reject.is_some() {
         update_flags.insert(UpdateFlags::CLASH_CONFIG);
-    }
-    if enable_global_hotkey.is_some() || home_cards.is_some() {
-        update_flags.insert(UpdateFlags::VERGE_CONFIG);
     }
     if auto_launch.is_some() {
         update_flags.insert(UpdateFlags::LAUNCH);
@@ -213,9 +207,6 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
     if update_flags.contains(UpdateFlags::CLASH_CONFIG) {
         CoreManager::global().update_config_checked().await?;
         handle::Handle::refresh_clash();
-    }
-    if update_flags.contains(UpdateFlags::VERGE_CONFIG) {
-        handle::Handle::refresh_verge();
     }
     if update_flags.contains(UpdateFlags::LAUNCH) {
         autostart::update_launch().await?;
@@ -292,6 +283,8 @@ pub async fn patch_verge(patch: &IVerge, not_save_file: bool) -> Result<()> {
         logging!(debug, Type::Setup, "Saving Verge configuration to file...");
         verge_data.save_file().await?;
     }
+    // 无条件通知前端刷新(与 patch_clash 对齐),外部修改(CLI 等)才能实时同步 UI
+    handle::Handle::refresh_verge();
     Ok(())
 }
 
