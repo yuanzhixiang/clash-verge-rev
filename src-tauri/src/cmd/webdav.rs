@@ -1,9 +1,5 @@
 use super::CmdResult;
-use crate::{
-    cmd::StringifyErr as _,
-    config::IVerge,
-    core, feat,
-};
+use crate::{cmd::StringifyErr as _, config::IVerge, core, feat};
 use reqwest_dav::list_cmd::ListFile;
 use smartstring::alias::String;
 
