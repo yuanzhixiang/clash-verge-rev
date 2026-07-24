@@ -371,12 +371,7 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
         <ScrollTopButton
           show={showScrollTop}
           onClick={onScrollToTop}
-          sx={{
-            position: 'fixed',
-            right: { xs: 24, md: 440 },
-            bottom: 24,
-            zIndex: 10,
-          }}
+          className="fixed bottom-inset z-10 md:right-[440px]"
         />
       </div>
 
