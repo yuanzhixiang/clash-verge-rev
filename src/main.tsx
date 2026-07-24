@@ -11,6 +11,7 @@ import { SWRConfig } from 'swr'
 import { MihomoWebSocket } from 'tauri-plugin-mihomo-api'
 
 import { BaseErrorBoundary } from './components/base'
+import { TooltipProvider } from './components/ui/tooltip'
 import { router } from './pages/_routers'
 import { AppDataProvider } from './providers/app-data-provider'
 import { WindowProvider } from './providers/window'
@@ -68,11 +69,13 @@ const initializeApp = (initialThemeMode: 'light' | 'dark') => {
         <ComposeContextProvider contexts={contexts}>
           <BaseErrorBoundary>
             <SWRConfig value={swrConfig}>
-              <WindowProvider>
-                <AppDataProvider>
-                  <RouterProvider router={router} />
-                </AppDataProvider>
-              </WindowProvider>
+              <TooltipProvider delayDuration={200}>
+                <WindowProvider>
+                  <AppDataProvider>
+                    <RouterProvider router={router} />
+                  </AppDataProvider>
+                </WindowProvider>
+              </TooltipProvider>
             </SWRConfig>
           </BaseErrorBoundary>
         </ComposeContextProvider>

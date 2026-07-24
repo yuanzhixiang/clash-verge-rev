@@ -226,6 +226,23 @@
   --color-info-subtle: rgba(76, 141, 255, 0.1);
   --color-secondary: var(--orange-light); /* 少量辅助提示 */
 
+  /* ---- shell 兼容层：把原 shell-theme.ts 的 --shell-* 提升为全局 token ----
+     （原先由 getShellThemeVars 注入到子树，逃逸出子树的 Portal 会丢值；
+     提为全局后 Dialog/Popover/Menu 等浮层不再需要重复 re-scope）*/
+  --shell-canvas: var(--color-bg-canvas);
+  --shell-sidebar: rgba(237, 242, 247, 0.94);
+  --shell-panel: var(--color-bg-page);
+  --shell-panel-muted: var(--color-bg-subtle);
+  --shell-card: var(--color-bg-card);
+  --shell-border: var(--color-border);
+  --shell-border-strong: var(--color-border-strong);
+  --shell-nav-hover: var(--color-bg-hover);
+  --shell-nav-selected: var(--color-bg-active);
+  --shell-focus: var(--color-focus-ring);
+  --shell-shadow: var(--shadow-shell);
+  /* #Gradient2 SVG 渐变原依赖 MUI 派生的 palette.primary.dark，token 无派生机制 */
+  --color-accent-strong: #4c58c0;
+
   /* ---- 圆角职责 ---- */
   --radius-compact: var(--radius-6); /* Meta Tag、Tooltip、小状态块 */
   --radius-control: var(--radius-9); /* 按钮、输入框、图标按钮、导航项 */
@@ -288,6 +305,10 @@
   --color-info: var(--blue-dark);
   --color-info-subtle: rgba(10, 132, 255, 0.14);
   --color-secondary: var(--orange-dark);
+
+  /* shell 兼容层暗色覆写（其余 --shell-* 引用语义 token，自动跟随）*/
+  --shell-sidebar: rgba(21, 22, 25, 0.96);
+  --color-accent-strong: #949df0;
 
   --shadow-card: 0 10px 28px rgba(0, 0, 0, 0.16);
   --shadow-card-hover: 0 14px 32px rgba(0, 0, 0, 0.2);
