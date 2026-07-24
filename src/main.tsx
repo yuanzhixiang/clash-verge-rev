@@ -1,4 +1,4 @@
-import './assets/styles/index.scss'
+import './assets/styles/index.css'
 import './assets/styles/globals.css'
 
 import { ResizeObserver } from '@juggle/resize-observer'
