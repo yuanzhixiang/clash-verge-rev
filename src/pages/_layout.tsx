@@ -1,8 +1,5 @@
-// ThemeProvider 暂时保留至 Phase F（届时移除 MUI 主题引擎）
-import { ThemeProvider } from '@mui/material'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import { useTheme as useNextTheme } from 'next-themes'
 import {
   Fragment,
   lazy,
@@ -57,7 +54,7 @@ const OS = getSystem()
 
 const Layout = () => {
   const { t } = useTranslation()
-  const { theme } = useCustomTheme()
+  const { themeReady } = useCustomTheme()
   const { verge, patchVerge } = useVerge()
   const { language } = verge ?? {}
   const navCollapsed = verge?.collapse_navbar ?? false
@@ -66,14 +63,6 @@ const Layout = () => {
   const { pathname } = useLocation()
   const isLogsPage = pathname === '/logs'
   const pageVisible = useVisibility()
-  const themeReady = useMemo(() => Boolean(theme), [theme])
-
-  // 把 MUI 解析出的明暗（palette.mode）同步给 next-themes，
-  // 由后者在 <html> 上加/去 .dark class，驱动 tokens.css 的暗色语义层。
-  const { setTheme: setNextTheme } = useNextTheme()
-  useEffect(() => {
-    setNextTheme(theme.palette.mode)
-  }, [theme.palette.mode, setNextTheme])
 
   const windowControlsRef = useRef<any>(null)
   const { decorated } = useWindowDecorations()
@@ -139,7 +128,7 @@ const Layout = () => {
   }
 
   return (
-    <ThemeProvider theme={theme}>
+    <>
       {/* 左侧底部窗口控制按钮 */}
       <NoticeManager position={verge?.notice_position} />
       <div
@@ -270,7 +259,7 @@ const Layout = () => {
           </div>
         </div>
       </div>
-    </ThemeProvider>
+    </>
   )
 }
 

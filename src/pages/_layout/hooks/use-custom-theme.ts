@@ -1,16 +1,15 @@
-import { alpha, createTheme, Theme as MuiTheme, Shadows } from '@mui/material'
 import {
   getCurrentWebviewWindow,
   WebviewWindow,
 } from '@tauri-apps/api/webviewWindow'
 import { getCurrentWindow, Theme as TauriOsTheme } from '@tauri-apps/api/window'
+import { useTheme as useNextTheme } from 'next-themes'
 import { useEffect, useMemo } from 'react'
 
 import { useVerge } from '@/hooks/use-verge'
 import { defaultDarkTheme, defaultTheme } from '@/pages/_theme'
 import { useSetThemeMode, useThemeMode } from '@/services/states'
 import getSystem from '@/utils/get-system'
-import { getShellCanvasColor } from '@/utils/shell-theme'
 
 const CSS_INJECTION_SCOPE_ROOT = '[data-css-injection-root]'
 const CSS_INJECTION_SCOPE_LIMIT =
@@ -29,6 +28,49 @@ const TOP_LEVEL_AT_RULES = [
 ]
 let cssScopeSupport: boolean | null = null
 const OS = getSystem()
+
+// 应用主内容画布色（迁移自 shell-theme.ts，与 tokens.css 的 --color-bg-canvas 一致）
+const SHELL_CANVAS_COLOR = { light: '#edf2f7', dark: '#151619' } as const
+const getShellCanvasColor = (mode: 'light' | 'dark') => SHELL_CANVAS_COLOR[mode]
+
+// 替代 MUI alpha()：把颜色叠加透明度。命中 #hex 走精确 rgba，其余交给 color-mix。
+const withAlpha = (color: string, opacity: number): string => {
+  const hex = color.trim()
+  const match = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex)
+  if (match) {
+    let body = match[1]
+    if (body.length === 3) {
+      body = body
+        .split('')
+        .map((c) => c + c)
+        .join('')
+    }
+    const r = parseInt(body.slice(0, 2), 16)
+    const g = parseInt(body.slice(2, 4), 16)
+    const b = parseInt(body.slice(4, 6), 16)
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`
+  }
+  return `color-mix(in srgb, ${color} ${Math.round(opacity * 100)}%, transparent)`
+}
+
+// 替代 MUI palette.primary.dark：向黑色混合（等价 MUI darken(color, coefficient)）。
+const darken = (color: string, coefficient = 0.2): string => {
+  const match = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color.trim())
+  if (!match) return color
+  let body = match[1]
+  if (body.length === 3) {
+    body = body
+      .split('')
+      .map((c) => c + c)
+      .join('')
+  }
+  const scale = (v: number) => Math.round(v * (1 - coefficient))
+  const r = scale(parseInt(body.slice(0, 2), 16))
+  const g = scale(parseInt(body.slice(2, 4), 16))
+  const b = scale(parseInt(body.slice(4, 6), 16))
+  const toHex = (v: number) => v.toString(16).padStart(2, '0')
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
+}
 
 const canUseCssScope = () => {
   if (cssScopeSupport !== null) {
@@ -66,7 +108,8 @@ ${css}
 }
 
 /**
- * custom theme
+ * 主题引擎：解析明暗模式、驱动 next-themes 的 .dark class、注入运行时 CSS 变量与
+ * 用户自定义样式，并与 Tauri 原生窗口主题保持同步。已完全移除 MUI。
  */
 export const useCustomTheme = () => {
   const appWindow: WebviewWindow = useMemo(() => getCurrentWebviewWindow(), [])
@@ -75,6 +118,7 @@ export const useCustomTheme = () => {
   const { theme_mode, theme_setting } = verge ?? {}
   const mode = useThemeMode()
   const setMode = useSetThemeMode()
+  const { setTheme: setNextTheme } = useNextTheme()
   const userBackgroundImage = theme_setting?.background_image || ''
   const hasUserBackground = !!userBackgroundImage
 
@@ -145,11 +189,16 @@ export const useCustomTheme = () => {
     }
   }, [mode, appWindow, theme_mode])
 
+  // 把解析出的明暗同步给 next-themes，由它在 <html> 上加/去 .dark class，
+  // 驱动 tokens.css 的暗色语义层。
+  useEffect(() => {
+    setNextTheme(mode)
+  }, [mode, setNextTheme])
+
   useEffect(() => {
     const shellCanvasColor = getShellCanvasColor(mode)
     const root = document.documentElement
     root.style.setProperty('--bg-color', shellCanvasColor)
-    root.style.setProperty('--shell-canvas', shellCanvasColor)
 
     if (OS !== 'macos') {
       return
@@ -160,250 +209,103 @@ export const useCustomTheme = () => {
     })
   }, [mode, nativeWindow])
 
-  const theme = useMemo(() => {
+  // 解析出的品牌主色（含用户自定义），供渐变与 token 覆写复用
+  const primaryMain = useMemo(() => {
+    const dt = mode === 'light' ? defaultTheme : defaultDarkTheme
+    return theme_setting?.primary_color || dt.primary_color
+  }, [mode, theme_setting])
+  const primaryDark = useMemo(() => darken(primaryMain, 0.2), [primaryMain])
+
+  // 运行时 CSS 变量注入 + 用户自定义主题色覆写 + 自定义 CSS 注入
+  useEffect(() => {
     const setting = theme_setting || {}
     const dt = mode === 'light' ? defaultTheme : defaultDarkTheme
-    let muiTheme: MuiTheme
-
-    try {
-      muiTheme = createTheme({
-        shape: {
-          borderRadius: 9,
-        },
-        components: {
-          MuiButtonBase: {
-            defaultProps: {
-              disableRipple: true,
-            },
-          },
-          MuiButton: {
-            defaultProps: { disableElevation: true },
-            styleOverrides: {
-              root: {
-                minHeight: 36,
-                borderRadius: 'var(--radius-control)',
-                paddingInline: 14,
-                fontSize: 13.5,
-                fontWeight: 550,
-                letterSpacing: 0,
-                textTransform: 'none',
-              },
-              contained: {
-                boxShadow: 'none',
-              },
-              outlined: {
-                borderColor:
-                  mode === 'light'
-                    ? 'rgba(31, 35, 40, 0.14)'
-                    : 'rgba(255, 255, 255, 0.14)',
-              },
-            },
-          },
-          MuiIconButton: {
-            styleOverrides: {
-              root: {
-                borderRadius: 'var(--radius-control)',
-                transition: 'background-color 160ms ease, color 160ms ease',
-              },
-            },
-          },
-          MuiPaper: {
-            styleOverrides: {
-              rounded: { borderRadius: 'var(--radius-container)' },
-            },
-          },
-          MuiCard: {
-            styleOverrides: {
-              root: { borderRadius: 'var(--radius-container)' },
-            },
-          },
-          MuiChip: {
-            styleOverrides: {
-              root: { borderRadius: 'var(--radius-pill)' },
-            },
-          },
-          MuiDialog: {
-            styleOverrides: {
-              paper: {
-                border:
-                  mode === 'light'
-                    ? '1px solid rgba(31, 35, 40, 0.1)'
-                    : '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: 'var(--radius-overlay)',
-                boxShadow:
-                  mode === 'light'
-                    ? '0 28px 80px rgba(25, 35, 48, 0.2)'
-                    : '0 28px 80px rgba(0, 0, 0, 0.45)',
-              },
-            },
-          },
-          MuiDialogTitle: {
-            styleOverrides: {
-              root: {
-                padding: '22px 24px 12px',
-                fontSize: 20,
-                fontWeight: 650,
-                letterSpacing: '-0.025em',
-              },
-            },
-          },
-          MuiDialogContent: {
-            styleOverrides: { root: { paddingInline: 24 } },
-          },
-          MuiDialogActions: {
-            styleOverrides: { root: { padding: '16px 24px 22px', gap: 8 } },
-          },
-          MuiTextField: {
-            defaultProps: { size: 'small' },
-          },
-          MuiOutlinedInput: {
-            styleOverrides: {
-              root: {
-                borderRadius: 'var(--radius-control)',
-                backgroundColor:
-                  mode === 'light'
-                    ? 'rgba(255, 255, 255, 0.76)'
-                    : 'rgba(255, 255, 255, 0.035)',
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor:
-                    mode === 'light'
-                      ? 'rgba(31, 35, 40, 0.13)'
-                      : 'rgba(255, 255, 255, 0.13)',
-                },
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor:
-                    mode === 'light'
-                      ? 'rgba(31, 35, 40, 0.22)'
-                      : 'rgba(255, 255, 255, 0.22)',
-                },
-              },
-            },
-          },
-          MuiSwitch: {
-            styleOverrides: {
-              root: { padding: 8 },
-              switchBase: { padding: 10 },
-              thumb: { width: 16, height: 16, boxShadow: 'none' },
-              track: { borderRadius: 'var(--radius-pill)', opacity: 0.16 },
-            },
-          },
-          MuiMenu: {
-            styleOverrides: {
-              paper: { borderRadius: 'var(--radius-overlay)' },
-            },
-          },
-          MuiPopover: {
-            styleOverrides: {
-              paper: { borderRadius: 'var(--radius-overlay)' },
-            },
-          },
-          MuiTooltip: {
-            styleOverrides: {
-              tooltip: {
-                borderRadius: 'var(--radius-compact)',
-                fontSize: 12,
-                padding: '6px 9px',
-              },
-            },
-          },
-        },
-        breakpoints: {
-          values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
-        },
-        palette: {
-          mode,
-          primary: { main: setting.primary_color || dt.primary_color },
-          secondary: { main: setting.secondary_color || dt.secondary_color },
-          info: { main: setting.info_color || dt.info_color },
-          error: { main: setting.error_color || dt.error_color },
-          warning: { main: setting.warning_color || dt.warning_color },
-          success: { main: setting.success_color || dt.success_color },
-          text: {
-            primary: setting.primary_text || dt.primary_text,
-            secondary: setting.secondary_text || dt.secondary_text,
-          },
-          background: {
-            paper: dt.background_color,
-            default: dt.background_color,
-          },
-        },
-        shadows: Array(25).fill('none') as Shadows,
-        typography: {
-          fontFamily: setting.font_family
-            ? `${setting.font_family}, ${dt.font_family}`
-            : dt.font_family,
-          button: { textTransform: 'none' },
-        },
-      })
-    } catch (e) {
-      console.error('Error creating MUI theme, falling back to defaults:', e)
-      muiTheme = createTheme({
-        components: {
-          MuiButtonBase: {
-            defaultProps: {
-              disableRipple: true,
-            },
-          },
-        },
-        breakpoints: {
-          values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
-        },
-        palette: {
-          mode,
-          primary: { main: dt.primary_color },
-          secondary: { main: dt.secondary_color },
-          info: { main: dt.info_color },
-          error: { main: dt.error_color },
-          warning: { main: dt.warning_color },
-          success: { main: dt.success_color },
-          text: { primary: dt.primary_text, secondary: dt.secondary_text },
-          background: {
-            paper: dt.background_color,
-            default: dt.background_color,
-          },
-        },
-        typography: { fontFamily: dt.font_family },
-      })
-    }
-
     const rootEle = document.documentElement
-    if (rootEle) {
-      const backgroundColor = getShellCanvasColor(mode)
-      const selectColor = mode === 'light' ? '#f5f5f5' : '#3E3E3E'
-      const scrollColor = mode === 'light' ? '#7d87934d' : '#8d929b66'
-      const dividerColor =
-        mode === 'light' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)'
-      rootEle.style.setProperty('--divider-color', dividerColor)
-      rootEle.style.setProperty('--background-color', backgroundColor)
-      rootEle.style.setProperty('--selection-color', selectColor)
-      rootEle.style.setProperty('--scroller-color', scrollColor)
-      rootEle.style.setProperty('--primary-main', muiTheme.palette.primary.main)
+    if (!rootEle) return
+
+    const backgroundColor = getShellCanvasColor(mode)
+    const selectColor = mode === 'light' ? '#f5f5f5' : '#3E3E3E'
+    const scrollColor = mode === 'light' ? '#7d87934d' : '#8d929b66'
+    const dividerColor =
+      mode === 'light' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)'
+
+    rootEle.style.setProperty('--divider-color', dividerColor)
+    rootEle.style.setProperty('--background-color', backgroundColor)
+    rootEle.style.setProperty('--selection-color', selectColor)
+    rootEle.style.setProperty('--scroller-color', scrollColor)
+    rootEle.style.setProperty('--primary-main', primaryMain)
+    rootEle.style.setProperty(
+      '--background-color-alpha',
+      withAlpha(primaryMain, 0.1),
+    )
+    rootEle.style.setProperty(
+      '--window-border-color',
+      mode === 'light' ? 'rgba(31, 35, 40, 0.1)' : 'rgba(255, 255, 255, 0.1)',
+    )
+    rootEle.style.setProperty('--scrollbar-bg', 'transparent')
+    rootEle.style.setProperty('--scrollbar-thumb', scrollColor)
+
+    // 用户自定义主题色 → 覆写语义 token（缺省即回落 tokens.css 默认值）
+    rootEle.style.setProperty('--color-accent', primaryMain)
+    rootEle.style.setProperty('--color-accent-hover', primaryDark)
+    rootEle.style.setProperty('--color-accent-strong', primaryDark)
+    rootEle.style.setProperty('--color-focus-ring', primaryMain)
+    rootEle.style.setProperty(
+      '--color-accent-subtle',
+      withAlpha(primaryMain, mode === 'light' ? 0.1 : 0.14),
+    )
+    rootEle.style.setProperty(
+      '--color-text-primary',
+      setting.primary_text || dt.primary_text,
+    )
+    rootEle.style.setProperty(
+      '--color-text-secondary',
+      setting.secondary_text || dt.secondary_text,
+    )
+    rootEle.style.setProperty(
+      '--color-secondary',
+      setting.secondary_color || dt.secondary_color,
+    )
+    rootEle.style.setProperty(
+      '--color-info',
+      setting.info_color || dt.info_color,
+    )
+    rootEle.style.setProperty(
+      '--color-danger',
+      setting.error_color || dt.error_color,
+    )
+    rootEle.style.setProperty(
+      '--color-warning',
+      setting.warning_color || dt.warning_color,
+    )
+    rootEle.style.setProperty(
+      '--color-success',
+      setting.success_color || dt.success_color,
+    )
+    if (setting.font_family) {
       rootEle.style.setProperty(
-        '--background-color-alpha',
-        alpha(muiTheme.palette.primary.main, 0.1),
+        '--font-sans',
+        `${setting.font_family}, ${dt.font_family}`,
       )
-      rootEle.style.setProperty(
-        '--window-border-color',
-        mode === 'light' ? 'rgba(31, 35, 40, 0.1)' : 'rgba(255, 255, 255, 0.1)',
-      )
-      rootEle.style.setProperty('--scrollbar-bg', 'transparent')
-      rootEle.style.setProperty('--scrollbar-thumb', scrollColor)
-      rootEle.style.setProperty(
-        '--user-background-image',
-        hasUserBackground ? `url('${userBackgroundImage}')` : 'none',
-      )
-      rootEle.style.setProperty(
-        '--background-blend-mode',
-        setting.background_blend_mode || 'normal',
-      )
-      rootEle.style.setProperty(
-        '--background-opacity',
-        setting.background_opacity !== undefined
-          ? String(setting.background_opacity)
-          : '1',
-      )
-      rootEle.setAttribute('data-css-injection-root', 'true')
+    } else {
+      rootEle.style.removeProperty('--font-sans')
     }
+
+    rootEle.style.setProperty(
+      '--user-background-image',
+      hasUserBackground ? `url('${userBackgroundImage}')` : 'none',
+    )
+    rootEle.style.setProperty(
+      '--background-blend-mode',
+      setting.background_blend_mode || 'normal',
+    )
+    rootEle.style.setProperty(
+      '--background-opacity',
+      setting.background_opacity !== undefined
+        ? String(setting.background_opacity)
+        : '1',
+    )
+    rootEle.setAttribute('data-css-injection-root', 'true')
 
     let styleElement = document.querySelector('style#verge-theme')
     if (!styleElement) {
@@ -450,36 +352,38 @@ export const useCustomTheme = () => {
           }
         }
 
-        /* 确保模态框和对话框也使用暗色主题 */
-        .MuiDialog-paper {
-          background-color: ${mode === 'light' ? '#ffffff' : '#232429'} !important;
-        }
-
         :where(button, [role='button'], [tabindex]:not(input):not(textarea):not(select)):focus-visible {
-          outline: 2px solid ${alpha(muiTheme.palette.primary.main, 0.72)} !important;
+          outline: 2px solid ${withAlpha(primaryMain, 0.72)} !important;
           outline-offset: 2px;
         }
       `
 
       styleElement.innerHTML = effectiveInjectedCss + globalStyles
     }
+  }, [
+    mode,
+    theme_setting,
+    userBackgroundImage,
+    hasUserBackground,
+    primaryMain,
+    primaryDark,
+  ])
 
-    return muiTheme
-  }, [mode, theme_setting, userBackgroundImage, hasUserBackground])
-
+  // #Gradient2 SVG 渐变（原依赖 MUI palette.primary.main/dark）
   useEffect(() => {
     const id = setTimeout(() => {
       const dom = document.querySelector('#Gradient2')
       if (dom) {
         dom.innerHTML = `
-        <stop offset="0%" stop-color="${theme.palette.primary.main}" />
-        <stop offset="80%" stop-color="${theme.palette.primary.dark}" />
-        <stop offset="100%" stop-color="${theme.palette.primary.dark}" />
+        <stop offset="0%" stop-color="${primaryMain}" />
+        <stop offset="80%" stop-color="${primaryDark}" />
+        <stop offset="100%" stop-color="${primaryDark}" />
         `
       }
     }, 0)
     return () => clearTimeout(id)
-  }, [theme.palette.primary.main, theme.palette.primary.dark])
+  }, [primaryMain, primaryDark])
 
-  return { theme }
+  // theme 已由 tokens.css + next-themes 接管，主题始终就绪
+  return { themeReady: Boolean(mode) }
 }
