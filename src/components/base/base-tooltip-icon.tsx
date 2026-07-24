@@ -1,24 +1,64 @@
-import { InfoRounded } from '@mui/icons-material'
+import { Info } from 'lucide-react'
+import * as React from 'react'
+
+import { Button } from '@/components/ui/button'
 import {
   Tooltip,
-  IconButton,
-  IconButtonProps,
-  SvgIconProps,
-} from '@mui/material'
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 
-interface Props extends IconButtonProps {
+export interface TooltipIconProps {
   title?: string
-  icon?: React.ElementType<SvgIconProps>
+  /**
+   * 兼容旧用法：既可传 lucide/MUI 图标组件（组件类型），也可传已实例化的元素。
+   */
+  icon?: React.ComponentType<any> | React.ReactElement
+  onClick?: React.MouseEventHandler<HTMLButtonElement>
+  className?: string
+  /** 以下为旧 MUI IconButton 遗留 props，接受但忽略，避免消费方编译报错。 */
+  color?: any
+  size?: any
+  sx?: any
+  [key: string]: any
 }
 
-export const TooltipIcon: React.FC<Props> = (props: Props) => {
-  const { title = '', icon: Icon = InfoRounded, ...restProps } = props
+export const TooltipIcon: React.FC<TooltipIconProps> = (props) => {
+  const {
+    title = '',
+    icon = Info,
+    onClick,
+    className,
+    // 丢弃旧 MUI 专有 props，避免透传到 DOM
+    color: _color,
+    size: _size,
+    sx: _sx,
+    ...restProps
+  } = props
+
+  const iconNode = React.isValidElement(icon)
+    ? icon
+    : React.createElement(icon as React.ComponentType<any>)
 
   return (
-    <Tooltip title={title} placement="top">
-      <IconButton color="inherit" size="small" {...restProps}>
-        <Icon fontSize="inherit" style={{ cursor: 'pointer', opacity: 0.75 }} />
-      </IconButton>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onClick}
+          className={cn(
+            'cursor-pointer text-[var(--color-text-secondary)]',
+            className,
+          )}
+          {...restProps}
+        >
+          {iconNode}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="top">{title}</TooltipContent>
     </Tooltip>
   )
 }

@@ -1,19 +1,55 @@
-import { Select, SelectProps, styled } from '@mui/material'
+import * as React from 'react'
 
-export const BaseStyledSelect = styled((props: SelectProps<string>) => {
+import {
+  Select,
+  SelectContent,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { cn } from '@/lib/utils'
+
+export interface BaseStyledSelectProps {
+  value?: string
+  defaultValue?: string
+  /** Radix-native change handler. */
+  onValueChange?: (value: string) => void
+  /** Back-compat shim: mimics the MUI `onChange` event shape. */
+  onChange?: (event: { target: { value: string } }) => void
+  disabled?: boolean
+  placeholder?: string
+  className?: string
+  children?: React.ReactNode
+}
+
+export const BaseStyledSelect = ({
+  value,
+  defaultValue,
+  onValueChange,
+  onChange,
+  disabled,
+  placeholder,
+  className,
+  children,
+}: BaseStyledSelectProps) => {
   return (
     <Select
-      size="small"
-      autoComplete="new-password"
-      sx={{
-        width: 120,
-        height: 33.375,
-        mr: 1,
-        '[role="button"]': { py: 0.65 },
+      value={value}
+      defaultValue={defaultValue}
+      disabled={disabled}
+      onValueChange={(v) => {
+        onValueChange?.(v)
+        onChange?.({ target: { value: v } })
       }}
-      {...props}
-    />
+    >
+      <SelectTrigger
+        className={cn(
+          'mr-component h-[33px] w-[120px] rounded-[var(--radius-control)] border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-primary)] data-[placeholder]:text-[var(--color-text-muted)] dark:bg-[var(--color-bg-card)]',
+          className,
+        )}
+      >
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>{children}</SelectContent>
+    </Select>
   )
-})(({ theme }) => ({
-  background: theme.palette.mode === 'light' ? '#fff' : undefined,
-}))
+}

@@ -38,11 +38,7 @@ import { useTranslation } from 'react-i18next'
 import { useLocation } from 'react-router'
 import { closeAllConnections } from 'tauri-plugin-mihomo-api'
 
-import {
-  BasePage,
-  BaseStyledTextField,
-  type DialogRef,
-} from '@/components/base'
+import { BasePage, type DialogRef } from '@/components/base'
 import { ProfileItem } from '@/components/profile/profile-item'
 import { ProfileMore } from '@/components/profile/profile-more'
 import {
@@ -50,6 +46,7 @@ import {
   type ProfileViewerRef,
 } from '@/components/profile/profile-viewer'
 import { ConfigViewer } from '@/components/setting/mods/config-viewer'
+import { Input } from '@/components/ui/input'
 import { useListen } from '@/hooks/use-listen'
 import { useProfiles } from '@/hooks/use-profiles'
 import {
@@ -883,47 +880,45 @@ const ProfilePage = () => {
           alignItems: 'center',
         }}
       >
-        <BaseStyledTextField
-          sx={{ flex: '1 1 360px', minWidth: { xs: '100%', sm: 240 } }}
-          value={url}
-          variant="outlined"
-          onChange={(e) => setUrl(e.target.value)}
-          onKeyDown={(event) => {
-            if (event.key !== 'Enter' || event.nativeEvent.isComposing) {
-              return
-            }
-            if (!url || disabled || loading) {
-              return
-            }
-            event.preventDefault()
-            void onImport()
-          }}
-          placeholder={t('profiles.page.importForm.placeholder')}
-          slotProps={{
-            input: {
-              sx: { height: 38, pr: 1, borderRadius: 'var(--radius-control)' },
-              endAdornment: !url ? (
-                <IconButton
-                  size="small"
-                  sx={{ p: 0.5 }}
-                  title={t('profiles.page.importForm.actions.paste')}
-                  onClick={onCopyLink}
-                >
-                  <ContentPasteRounded fontSize="inherit" />
-                </IconButton>
-              ) : (
-                <IconButton
-                  size="small"
-                  sx={{ p: 0.5 }}
-                  title={t('shared.actions.clear')}
-                  onClick={() => setUrl('')}
-                >
-                  <ClearRounded fontSize="inherit" />
-                </IconButton>
-              ),
-            },
-          }}
-        />
+        <div className="relative flex-[1_1_360px] min-w-full sm:min-w-[240px]">
+          <Input
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter' || event.nativeEvent.isComposing) {
+                return
+              }
+              if (!url || disabled || loading) {
+                return
+              }
+              event.preventDefault()
+              void onImport()
+            }}
+            placeholder={t('profiles.page.importForm.placeholder')}
+            className="h-[38px] rounded-[var(--radius-control)] pr-9"
+          />
+          <div className="absolute right-1 top-1/2 -translate-y-1/2">
+            {!url ? (
+              <IconButton
+                size="small"
+                sx={{ p: 0.5 }}
+                title={t('profiles.page.importForm.actions.paste')}
+                onClick={onCopyLink}
+              >
+                <ContentPasteRounded fontSize="inherit" />
+              </IconButton>
+            ) : (
+              <IconButton
+                size="small"
+                sx={{ p: 0.5 }}
+                title={t('shared.actions.clear')}
+                onClick={() => setUrl('')}
+              >
+                <ClearRounded fontSize="inherit" />
+              </IconButton>
+            )}
+          </div>
+        </div>
         <Button
           disabled={!url || disabled}
           loading={loading}

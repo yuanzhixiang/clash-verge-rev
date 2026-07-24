@@ -1,13 +1,12 @@
-import { CloseRounded } from '@mui/icons-material'
-import {
-  Snackbar,
-  Alert,
-  IconButton,
-  Box,
-  type SnackbarOrigin,
-} from '@mui/material'
-import React, { useCallback, useMemo, useSyncExternalStore } from 'react'
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast, type ExternalToast } from 'sonner'
 
 import {
   subscribeNotices,
@@ -19,6 +18,7 @@ import type { TranslationKey } from '@/types/generated/i18n-keys'
 
 type NoticePosition = NonNullable<IVergeConfig['notice_position']>
 type NoticeItem = ReturnType<typeof getSnapshotNotices>[number]
+type NoticeType = NoticeItem['type']
 type TranslationFn = ReturnType<typeof useTranslation>['t']
 
 const VALID_POSITIONS: NoticePosition[] = [
@@ -35,12 +35,27 @@ const resolvePosition = (position?: NoticePosition | null): NoticePosition => {
   return 'top-right'
 }
 
-const getAnchorOrigin = (position: NoticePosition): SnackbarOrigin => {
-  const [vertical, horizontal] = position.split('-') as [
-    SnackbarOrigin['vertical'],
-    SnackbarOrigin['horizontal'],
-  ]
-  return { vertical, horizontal }
+// Stable, non-numeric sonner ids: numeric `0` is falsy and would make
+// `toast.dismiss(0)` dismiss *every* toast, so we namespace them as strings.
+const toastKey = (id: number): string => `notice-${id}`
+
+// Route a store notice type to its matching sonner toast helper.
+const emitToast = (
+  type: NoticeType,
+  message: React.ReactNode,
+  options: ExternalToast,
+): string | number => {
+  switch (type) {
+    case 'success':
+      return toast.success(message, options)
+    case 'error':
+      return toast.error(message, options)
+    case 'warning':
+      return toast.warning(message, options)
+    case 'info':
+    default:
+      return toast.info(message, options)
+  }
 }
 
 const resolveNoticeMessage = (
@@ -129,21 +144,21 @@ interface NoticeManagerProps {
   position?: NoticePosition | null
 }
 
+/**
+ * Bridges the notice store to sonner. The store remains the single source of
+ * truth (it owns each notice's auto-dismiss timer, or keeps it persistent when
+ * `duration === 0`), so this component only mirrors the store into sonner:
+ * new notices are emitted as toasts, removed notices are dismissed, and toasts
+ * closed by the user are pushed back into the store via `hideNotice`.
+ * The actual `<Toaster />` is mounted once at the app root (see main.tsx).
+ */
 export const NoticeManager: React.FC<NoticeManagerProps> = ({ position }) => {
   const { t } = useTranslation()
   const resolvedPosition = useMemo(() => resolvePosition(position), [position])
-  const anchorOrigin = useMemo(
-    () => getAnchorOrigin(resolvedPosition),
-    [resolvedPosition],
-  )
   const currentNotices = useSyncExternalStore(
     subscribeNotices,
     getSnapshotNotices,
   )
-
-  const handleClose = (id: number) => {
-    hideNotice(id)
-  }
 
   const handleNoticeCopy = useCallback(
     async (notice: NoticeItem) => {
@@ -162,59 +177,49 @@ export const NoticeManager: React.FC<NoticeManagerProps> = ({ position }) => {
     [t],
   )
 
-  return (
-    <Box
-      sx={{
-        position: 'fixed',
-        top: anchorOrigin.vertical === 'top' ? '20px' : 'auto',
-        bottom: anchorOrigin.vertical === 'bottom' ? '20px' : 'auto',
-        left: anchorOrigin.horizontal === 'left' ? '20px' : 'auto',
-        right: anchorOrigin.horizontal === 'right' ? '20px' : 'auto',
-        zIndex: 1500,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '10px',
-        maxWidth: '360px',
-      }}
-    >
-      {currentNotices.map((notice) => (
-        <Snackbar
-          key={notice.id}
-          open={true}
-          anchorOrigin={anchorOrigin}
-          sx={{
-            position: 'relative',
-            transform: 'none',
-            top: 'auto',
-            right: 'auto',
-            bottom: 'auto',
-            left: 'auto',
-            width: '100%',
+  // Ids we have already handed to sonner, so store re-renders stay idempotent.
+  const shownIdsRef = useRef<Set<number>>(new Set())
+
+  useEffect(() => {
+    const activeIds = new Set(currentNotices.map((notice) => notice.id))
+
+    // Emit toasts for notices that just entered the store.
+    for (const notice of currentNotices) {
+      if (shownIdsRef.current.has(notice.id)) continue
+      shownIdsRef.current.add(notice.id)
+
+      const content = (
+        <span
+          className="block w-full"
+          onContextMenu={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            void handleNoticeCopy(notice)
           }}
         >
-          <Alert
-            severity={notice.type}
-            variant="filled"
-            sx={{ width: '100%' }}
-            onContextMenu={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              void handleNoticeCopy(notice)
-            }}
-            action={
-              <IconButton
-                size="small"
-                color="inherit"
-                onClick={() => handleClose(notice.id)}
-              >
-                <CloseRounded fontSize="inherit" />
-              </IconButton>
-            }
-          >
-            {resolveNoticeMessage(notice, t)}
-          </Alert>
-        </Snackbar>
-      ))}
-    </Box>
-  )
+          {resolveNoticeMessage(notice, t)}
+        </span>
+      )
+
+      emitToast(notice.type, content, {
+        id: toastKey(notice.id),
+        position: resolvedPosition,
+        // The store owns lifecycle/timers; never let sonner auto-close on its
+        // own or the two timers would race. Store timers drive dismissal below.
+        duration: Infinity,
+        closeButton: true,
+        // Keep the store in sync when the user closes or swipes the toast.
+        onDismiss: () => hideNotice(notice.id),
+      })
+    }
+
+    // Dismiss toasts whose notices were removed from the store (timer or manual).
+    for (const id of shownIdsRef.current) {
+      if (activeIds.has(id)) continue
+      shownIdsRef.current.delete(id)
+      toast.dismiss(toastKey(id))
+    }
+  }, [currentNotices, resolvedPosition, t, handleNoticeCopy])
+
+  return null
 }

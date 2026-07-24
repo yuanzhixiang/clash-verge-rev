@@ -187,15 +187,6 @@ export const RuleProviderDetailDialog = ({
                 <SearchRounded aria-hidden sx={{ fontSize: 18 }} />
               }
               onSearch={(nextMatch) => setMatch(() => nextMatch)}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  height: 36,
-                  borderRadius: 'var(--radius-pill)',
-                  bgcolor: 'var(--shell-panel-muted)',
-                  '& fieldset': { borderColor: 'var(--shell-border)' },
-                },
-                '& .MuiInputBase-input': { fontSize: 13 },
-              }}
             />
           </Box>
         )}

@@ -1,13 +1,4 @@
-import { ClearRounded } from '@mui/icons-material'
-import {
-  Box,
-  TextField,
-  styled,
-  IconButton,
-  type SxProps,
-  type Theme,
-} from '@mui/material'
-import Tooltip from '@mui/material/Tooltip'
+import { Search, X } from 'lucide-react'
 import {
   type ChangeEvent,
   type MouseEvent,
@@ -23,6 +14,14 @@ import { useTranslation } from 'react-i18next'
 import MatchCaseIcon from '@/assets/image/component/match_case.svg?react'
 import MatchWholeWordIcon from '@/assets/image/component/match_whole_word.svg?react'
 import UseRegularExpressionIcon from '@/assets/image/component/use_regular_expression.svg?react'
+import { buttonVariants } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 import { buildRegex, compileStringMatcher } from '@/utils/search-matcher'
 
 export type SearchState = {
@@ -44,26 +43,10 @@ type SearchProps = {
   useRegularExpression?: boolean
   searchState?: Partial<SearchOptionState>
   startAdornment?: ReactNode
-  sx?: SxProps<Theme>
+  className?: string
   onSearch: (match: (content: string) => boolean, state: SearchState) => void
   onClick?: (e: MouseEvent<HTMLDivElement>) => void
 }
-
-const StyledTextField = styled(TextField)(({ theme }) => ({
-  '& .MuiInputBase-root': {
-    background: theme.palette.mode === 'light' ? '#fff' : undefined,
-    paddingRight: '4px',
-  },
-  '& .MuiInputBase-input': {
-    padding: '5.2px 10px',
-  },
-  "& .MuiInputBase-root svg[aria-label='active'] path": {
-    fill: theme.palette.primary.light,
-  },
-  "& .MuiInputBase-root svg[aria-label='inactive'] path": {
-    fill: '#A7A7A7',
-  },
-}))
 
 const useControllableState = <T,>(options: {
   controlled: T | undefined
@@ -85,6 +68,9 @@ const useControllableState = <T,>(options: {
   return [value, setValue] as const
 }
 
+// 开关按钮的通用样式：ghost 图标按钮
+const toggleButtonClass = buttonVariants({ variant: 'ghost', size: 'icon-xs' })
+
 export const BaseSearchBox = ({
   value,
   defaultValue,
@@ -95,7 +81,7 @@ export const BaseSearchBox = ({
   matchWholeWord: defaultMatchWholeWord = false,
   useRegularExpression: defaultUseRegularExpression = false,
   startAdornment,
-  sx,
+  className,
   onSearch,
   onClick,
 }: SearchProps) => {
@@ -131,12 +117,6 @@ export const BaseSearchBox = ({
       controlled: searchState?.useRegularExpression,
       defaultValue: defaultUseRegularExpression,
     })
-
-  const iconStyle = {
-    height: '24px',
-    width: '24px',
-    cursor: 'pointer',
-  } as React.CSSProperties
 
   useEffect(() => {
     onSearchRef.current = onSearch
@@ -209,78 +189,111 @@ export const BaseSearchBox = ({
     emitSearch({ text, matchCase, matchWholeWord: next, useRegularExpression })
   }
 
+  const toggleIconClass = (active: boolean) =>
+    cn(
+      'size-5',
+      active ? 'fill-[var(--color-accent)]' : 'fill-[var(--color-text-muted)]',
+    )
+
   return (
-    <Tooltip title={effectiveErrorMessage || ''} placement="bottom-start">
-      <StyledTextField
-        autoComplete="new-password"
-        hiddenLabel
-        fullWidth
-        size="small"
-        variant="outlined"
-        autoFocus={autoFocus}
-        spellCheck="false"
-        placeholder={placeholder ?? t('shared.placeholders.filter')}
-        sx={sx}
-        value={text}
-        onClick={onClick}
-        onChange={handleChangeText}
-        error={!!effectiveErrorMessage}
-        slotProps={{
-          input: {
-            sx: { pr: 1 },
-            startAdornment: startAdornment ? (
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  flex: '0 0 auto',
-                  ml: 0.25,
-                  mr: 0.25,
-                  color: 'text.secondary',
-                }}
+    <div className={cn('relative w-full', className)} onClick={onClick}>
+      {/* 左侧图标：优先渲染消费方传入的 startAdornment，否则回退到 Search */}
+      <div className="pointer-events-none absolute top-1/2 left-[var(--spacing-component)] flex -translate-y-1/2 items-center text-[var(--color-text-secondary)]">
+        {startAdornment ?? <Search className="size-4" aria-hidden />}
+      </div>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Input
+            autoComplete="new-password"
+            spellCheck="false"
+            autoFocus={autoFocus}
+            placeholder={placeholder ?? t('shared.placeholders.filter')}
+            value={text}
+            onChange={handleChangeText}
+            aria-invalid={!!effectiveErrorMessage}
+            className={cn(
+              'bg-[var(--color-bg-card)] pl-8 pr-28',
+              effectiveErrorMessage && 'border-[var(--color-danger)]',
+            )}
+          />
+        </TooltipTrigger>
+        {effectiveErrorMessage && (
+          <TooltipContent side="bottom" align="start">
+            {effectiveErrorMessage}
+          </TooltipContent>
+        )}
+      </Tooltip>
+
+      {/* 右侧控制区：Clear + 三个开关 */}
+      <div className="absolute top-1/2 right-[var(--spacing-inline)] flex -translate-y-1/2 items-center gap-inline">
+        {!!text && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className={toggleButtonClass}
+                onClick={handleClearInput}
               >
-                {startAdornment}
-              </Box>
-            ) : undefined,
-            endAdornment: (
-              <Box sx={{ display: 'flex' }}>
-                {!!text && (
-                  <Tooltip title={t('shared.placeholders.resetInput')}>
-                    <IconButton
-                      size="small"
-                      style={iconStyle}
-                      onClick={handleClearInput}
-                    >
-                      <ClearRounded fontSize="inherit" />
-                    </IconButton>
-                  </Tooltip>
-                )}
-                <Tooltip title={t('shared.placeholders.matchCase')}>
-                  <MatchCaseIcon
-                    style={iconStyle}
-                    aria-label={matchCase ? 'active' : 'inactive'}
-                    onClick={handleToggleMatchCase}
-                  />
-                </Tooltip>
-                <Tooltip title={t('shared.placeholders.matchWholeWord')}>
-                  <MatchWholeWordIcon
-                    style={iconStyle}
-                    aria-label={matchWholeWord ? 'active' : 'inactive'}
-                    onClick={handleToggleMatchWholeWord}
-                  />
-                </Tooltip>
-                <Tooltip title={t('shared.placeholders.useRegex')}>
-                  <UseRegularExpressionIcon
-                    aria-label={useRegularExpression ? 'active' : 'inactive'}
-                    style={iconStyle}
-                    onClick={handleToggleUseRegularExpression}
-                  />
-                </Tooltip>
-              </Box>
-            ),
-          },
-        }}
-      />
-    </Tooltip>
+                <X className="size-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {t('shared.placeholders.resetInput')}
+            </TooltipContent>
+          </Tooltip>
+        )}
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className={toggleButtonClass}
+              onClick={handleToggleMatchCase}
+            >
+              <MatchCaseIcon
+                className={toggleIconClass(matchCase)}
+                aria-label={matchCase ? 'active' : 'inactive'}
+              />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>{t('shared.placeholders.matchCase')}</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className={toggleButtonClass}
+              onClick={handleToggleMatchWholeWord}
+            >
+              <MatchWholeWordIcon
+                className={toggleIconClass(matchWholeWord)}
+                aria-label={matchWholeWord ? 'active' : 'inactive'}
+              />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {t('shared.placeholders.matchWholeWord')}
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className={toggleButtonClass}
+              onClick={handleToggleUseRegularExpression}
+            >
+              <UseRegularExpressionIcon
+                className={toggleIconClass(useRegularExpression)}
+                aria-label={useRegularExpression ? 'active' : 'inactive'}
+              />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>{t('shared.placeholders.useRegex')}</TooltipContent>
+        </Tooltip>
+      </div>
+    </div>
   )
 }

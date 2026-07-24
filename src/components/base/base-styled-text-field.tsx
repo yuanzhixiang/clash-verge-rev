@@ -1,24 +1,28 @@
-import { TextField, type TextFieldProps, styled } from '@mui/material'
+import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 
-export const BaseStyledTextField = styled((props: TextFieldProps) => {
+import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
+
+export type BaseStyledTextFieldProps = React.ComponentProps<'input'>
+
+export const BaseStyledTextField = ({
+  className,
+  placeholder,
+  ...props
+}: BaseStyledTextFieldProps) => {
   const { t } = useTranslation()
 
   return (
-    <TextField
+    <Input
       autoComplete="new-password"
-      hiddenLabel
-      fullWidth
-      size="small"
-      variant="outlined"
-      spellCheck="false"
-      placeholder={t('shared.placeholders.filter')}
-      sx={{ input: { py: 0.65, px: 1.25 } }}
+      spellCheck={false}
+      placeholder={placeholder ?? t('shared.placeholders.filter')}
+      className={cn(
+        'rounded-[var(--radius-control)] border-[var(--color-border)] bg-[var(--color-bg-card)] px-component text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] dark:bg-[var(--color-bg-card)]',
+        className,
+      )}
       {...props}
     />
   )
-})(({ theme }) => ({
-  '& .MuiInputBase-root': {
-    background: theme.palette.mode === 'light' ? '#fff' : undefined,
-  },
-}))
+}

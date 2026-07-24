@@ -1,17 +1,18 @@
-import { CodeRounded, ViewModuleRounded } from '@mui/icons-material'
-import {
-  Box,
-  Button,
-  Chip,
-  FormHelperText,
-  IconButton,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material'
+import { Code, LayoutGrid, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 
 type BaseSplitChipEditorMode = 'visual' | 'advanced'
 
@@ -109,24 +110,40 @@ export const BaseSplitChipEditor = ({
   const nextMode = mode === 'visual' ? 'advanced' : 'visual'
   const toggleLabel =
     nextMode === 'visual' ? resolvedLabels.visual : resolvedLabels.advanced
-  const ToggleIcon = nextMode === 'visual' ? ViewModuleRounded : CodeRounded
+  const ToggleIcon = nextMode === 'visual' ? LayoutGrid : Code
   const resolvedAriaLabel =
     ariaLabel ?? (typeof toggleLabel === 'string' ? toggleLabel : undefined)
 
+  const helperNode = helperText ? (
+    <p
+      className={cn(
+        'mt-adjust text-xs',
+        error ? 'text-[var(--color-danger)]' : 'text-[var(--color-text-muted)]',
+      )}
+    >
+      {helperText}
+    </p>
+  ) : null
+
   const modeToggle = showModeToggle ? (
-    <Tooltip title={toggleLabel}>
-      <IconButton
-        size="small"
-        aria-label={resolvedAriaLabel}
-        onClick={() => {
-          setMode(nextMode)
-          if (nextMode === 'visual') {
-            setDraft('')
-          }
-        }}
-      >
-        <ToggleIcon fontSize="small" />
-      </IconButton>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label={resolvedAriaLabel}
+          onClick={() => {
+            setMode(nextMode)
+            if (nextMode === 'visual') {
+              setDraft('')
+            }
+          }}
+        >
+          <ToggleIcon className="size-4" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{toggleLabel}</TooltipContent>
     </Tooltip>
   ) : null
 
@@ -134,46 +151,41 @@ export const BaseSplitChipEditor = ({
     <>
       {renderHeader ? renderHeader(modeToggle) : modeToggle}
       {mode === 'visual' ? (
-        <Box sx={{ padding: '0 2px 5px' }}>
-          <Box
-            sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 1,
-              minHeight: 32,
-            }}
-          >
+        <div className="px-adjust pb-compact">
+          <div className="flex min-h-8 flex-wrap gap-component">
             {items.length ? (
               items.map((item, index) => (
-                <Chip
+                <Badge
                   key={item.key}
-                  label={item.value}
-                  size="small"
-                  onDelete={
-                    disabled ? undefined : () => handleRemoveItem(index)
-                  }
-                />
+                  variant="secondary"
+                  className="max-w-full"
+                >
+                  <span className="truncate">{item.value}</span>
+                  {disabled ? null : (
+                    <button
+                      type="button"
+                      aria-label={`${t('shared.actions.delete')} ${item.value}`}
+                      onClick={() => handleRemoveItem(index)}
+                      className="inline-flex items-center justify-center rounded-[var(--radius-compact)] text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)]"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  )}
+                </Badge>
               ))
             ) : (
-              <Typography variant="body2" color="text.secondary">
+              <p className="text-sm text-[var(--color-text-muted)]">
                 {resolvedLabels.empty}
-              </Typography>
+              </p>
             )}
-          </Box>
-          <Box
-            sx={{ display: 'flex', gap: 1, marginTop: 1, alignItems: 'center' }}
-          >
-            <TextField
+          </div>
+          <div className="mt-component flex items-center gap-component">
+            <Input
               disabled={disabled}
-              size="small"
-              fullWidth
+              className="h-8"
               value={draft}
               placeholder={placeholder}
-              error={error}
-              sx={{
-                '& .MuiInputBase-root': { minHeight: 32 },
-                '& .MuiInputBase-input': { padding: '4px 8px' },
-              }}
+              aria-invalid={error || undefined}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') {
@@ -183,33 +195,31 @@ export const BaseSplitChipEditor = ({
               }}
             />
             <Button
-              variant="outlined"
-              size="small"
+              type="button"
+              variant="outline"
+              size="sm"
               onClick={handleAddDraft}
               disabled={disabled || !draft.trim()}
-              sx={{ minHeight: 32, padding: '2px 8px' }}
             >
               {resolvedLabels.add}
             </Button>
-          </Box>
-          {helperText && (
-            <FormHelperText error={error}>{helperText}</FormHelperText>
-          )}
-        </Box>
+          </div>
+          {helperNode}
+        </div>
       ) : (
-        <TextField
-          error={error}
-          disabled={disabled}
-          size="small"
-          multiline
-          rows={rows}
-          sx={{ width: '100%' }}
-          value={value}
-          helperText={helperText}
-          onChange={(event) => {
-            onChange(event.target.value)
-          }}
-        />
+        <div>
+          <Textarea
+            disabled={disabled}
+            rows={rows}
+            className="w-full"
+            value={value}
+            aria-invalid={error || undefined}
+            onChange={(event) => {
+              onChange(event.target.value)
+            }}
+          />
+          {helperNode}
+        </div>
       )}
     </>
   )

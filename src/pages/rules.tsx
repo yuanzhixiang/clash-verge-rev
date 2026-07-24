@@ -492,31 +492,6 @@ const RulesPage = () => {
                 <SearchRoundedIcon aria-hidden sx={{ fontSize: 19 }} />
               }
               onSearch={handleSearch}
-              sx={({ palette }) => ({
-                '& .MuiOutlinedInput-root': {
-                  height: 38,
-                  borderRadius: 'var(--radius-pill)',
-                  bgcolor:
-                    palette.mode === 'dark'
-                      ? alpha(palette.common.white, 0.045)
-                      : alpha(palette.common.white, 0.82),
-                  transition:
-                    'background-color 160ms ease, border-color 160ms ease',
-                  '& fieldset': {
-                    borderColor: 'var(--shell-border)',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: 'var(--shell-border)',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderWidth: 1,
-                    borderColor: palette.primary.main,
-                  },
-                },
-                '& .MuiInputBase-input': {
-                  fontSize: 13.5,
-                },
-              })}
             />
           </Box>
         </Box>

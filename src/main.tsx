@@ -11,6 +11,7 @@ import { SWRConfig } from 'swr'
 import { MihomoWebSocket } from 'tauri-plugin-mihomo-api'
 
 import { BaseErrorBoundary } from './components/base'
+import { Toaster } from './components/ui/sonner'
 import { TooltipProvider } from './components/ui/tooltip'
 import { router } from './pages/_routers'
 import { AppDataProvider } from './providers/app-data-provider'
@@ -79,6 +80,7 @@ const initializeApp = (initialThemeMode: 'light' | 'dark') => {
             </SWRConfig>
           </BaseErrorBoundary>
         </ComposeContextProvider>
+        <Toaster expand visibleToasts={5} />
       </NextThemesProvider>
     </React.StrictMode>,
   )

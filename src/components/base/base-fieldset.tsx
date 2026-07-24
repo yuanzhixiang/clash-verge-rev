@@ -1,4 +1,3 @@
-import { Box } from '@mui/material'
 import type { ReactNode } from 'react'
 
 type Props = {
@@ -19,32 +18,17 @@ export const BaseFieldset: React.FC<Props> = ({
   const fieldsetPadding = padding ?? '15px'
 
   return (
-    <Box
-      component="fieldset"
-      sx={{
-        position: 'relative',
-        border: '1px solid #bbb',
-        borderRadius: 'var(--radius-compact)',
-        width: width ?? 'auto',
-        padding: fieldsetPadding,
-      }}
+    <fieldset
+      className="relative rounded-[var(--radius-compact)] border border-[var(--color-border-strong)]"
+      style={{ width: width ?? 'auto', padding: fieldsetPadding }}
     >
-      <Box
-        component="legend"
-        sx={{
-          position: 'absolute',
-          top: '-10px',
-          left: fieldsetPadding,
-          backgroundColor: 'background.paper',
-          backgroundImage:
-            'linear-gradient(rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.16))',
-          color: 'text.primary',
-          fontSize: fontSize ?? '1em',
-        }}
+      <legend
+        className="absolute -top-2.5 bg-[var(--color-bg-page)] px-inline text-[var(--color-text-primary)]"
+        style={{ left: fieldsetPadding, fontSize: fontSize ?? '1em' }}
       >
         {label}
-      </Box>
+      </legend>
       {children}
-    </Box>
+    </fieldset>
   )
 }
