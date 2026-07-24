@@ -1,20 +1,5 @@
-import AddRoundedIcon from '@mui/icons-material/AddRounded'
-import RemoveRoundedIcon from '@mui/icons-material/RemoveRounded'
-import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
-import {
-  alpha,
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Tooltip,
-  Typography,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
+import { Loader2, Minus, Plus } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -36,8 +21,22 @@ import {
 } from '@/components/rule/rule-config'
 import { RuleEditDialog } from '@/components/rule/rule-edit-dialog'
 import RuleItem from '@/components/rule/rule-item'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useProfiles } from '@/hooks/use-profiles'
 import { useVisibility } from '@/hooks/use-visibility'
+import { cn } from '@/lib/utils'
 import { useAppRefreshers, useRulesData } from '@/providers/app-data-context'
 import {
   getRuntimeYaml,
@@ -46,10 +45,13 @@ import {
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import type { RuntimeRule } from '@/types/rule'
-import { getShellThemeVars } from '@/utils/shell-theme'
 
 const RULE_GRID_COLUMNS =
   '50px 132px minmax(200px, 1fr) minmax(110px, 150px) 72px'
+
+// 表头行 / 底部工具栏的中性叠加底色（原 alpha(text.primary, 明 0.018 / 暗 0.03)）
+const NEUTRAL_OVERLAY_BG =
+  'bg-[color-mix(in_srgb,var(--color-text-primary)_1.8%,transparent)] dark:bg-[color-mix(in_srgb,var(--color-text-primary)_3%,transparent)]'
 
 interface PendingDelete {
   profileUid: string
@@ -417,156 +419,66 @@ const RulesPage = () => {
   ]
 
   return (
-    <Box
-      sx={{
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        width: '100%',
-        height: '100%',
-        minWidth: 0,
-        minHeight: 0,
-        overflow: 'hidden',
-        bgcolor: 'var(--shell-panel)',
-      }}
-    >
-      <Box
-        component="header"
+    <div className="relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-[var(--color-bg-page)]">
+      <header
         data-tauri-drag-region="true"
-        sx={{
-          display: 'flex',
-          flex: '0 0 auto',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          gap: 2.5,
-          px: { xs: 2, sm: 3 },
-          pt: { xs: 2.25, sm: 2.75 },
-          pb: { xs: 2, sm: 2.5 },
-          userSelect: 'none',
-        }}
+        className="flex flex-none flex-wrap items-center gap-5 px-inset pt-4.5 pb-inset select-none sm:px-block sm:pt-5.5 sm:pb-5"
       >
-        <Box
-          data-tauri-drag-region="true"
-          sx={{ flex: '1 1 170px', minWidth: 0 }}
-        >
-          <Typography
-            component="h1"
+        <div data-tauri-drag-region="true" className="min-w-0 flex-[1_1_170px]">
+          <h1
             data-tauri-drag-region="true"
-            sx={{
-              m: 0,
-              fontSize: { xs: 28, sm: 34 },
-              fontWeight: 720,
-              lineHeight: 1.08,
-              letterSpacing: '-0.045em',
-            }}
+            className="m-0 text-[1.75rem] font-[720] leading-[1.08] tracking-[-0.045em] sm:text-[2.125rem]"
           >
             {t('rules.page.title')}
-          </Typography>
-        </Box>
+          </h1>
+        </div>
 
-        <Box
-          sx={{
-            display: 'flex',
-            flex: '1 1 390px',
-            minWidth: 0,
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            gap: 1.5,
-            '@media (max-width: 620px)': {
-              flexBasis: '100%',
-              flexWrap: 'wrap',
-              justifyContent: 'stretch',
-              '& > .rule-provider-trigger': { flex: '0 0 auto' },
-              '& > .rule-search': { flex: '1 1 100%' },
-            },
-          }}
-        >
+        <div className="flex min-w-0 flex-[1_1_390px] items-center justify-end gap-stack max-sm:basis-full max-sm:flex-wrap max-sm:justify-stretch">
           <ProviderButton />
-          <Box
-            className="rule-search"
-            sx={{ width: { xs: '100%', sm: 340 }, maxWidth: '100%' }}
-          >
+          <div className="rule-search w-full max-w-full sm:w-[340px]">
             <BaseSearchBox
               placeholder={t('rules.page.searchPlaceholder')}
-              startAdornment={
-                <SearchRoundedIcon aria-hidden sx={{ fontSize: 19 }} />
-              }
               onSearch={handleSearch}
             />
-          </Box>
-        </Box>
-      </Box>
+          </div>
+        </div>
+      </header>
 
-      <Box
+      <div
         role="table"
         aria-label={t('rules.page.title')}
         aria-rowcount={filteredRules.length + 1}
-        sx={{
-          '--rules-grid-columns': RULE_GRID_COLUMNS,
-          position: 'relative',
-          flex: '1 1 auto',
-          minWidth: 0,
-          minHeight: 0,
-          mx: { xs: 1.5, sm: 3 },
-          mb: { xs: 1.5, sm: 3 },
-          overflowX: 'auto',
-          overflowY: 'hidden',
-          border: '1px solid var(--shell-border)',
-          borderRadius: 'var(--radius-control)',
-          bgcolor: 'var(--shell-panel)',
-        }}
+        style={
+          { '--rules-grid-columns': RULE_GRID_COLUMNS } as React.CSSProperties
+        }
+        className="relative mx-stack mb-stack min-h-0 min-w-0 flex-[1_1_auto] overflow-x-auto overflow-y-hidden rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-bg-page)] sm:mx-block sm:mb-block"
       >
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            width: '100%',
-            minWidth: 650,
-            height: '100%',
-            minHeight: 0,
-          }}
-        >
-          <Box
+        <div className="flex h-full min-h-0 w-full min-w-[650px] flex-col">
+          <div
             role="row"
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'var(--rules-grid-columns)',
-              flex: '0 0 32px',
-              alignItems: 'center',
-              boxSizing: 'border-box',
-              minHeight: 32,
-              borderBottom: '1px solid var(--shell-border)',
-              bgcolor: ({ palette }) =>
-                alpha(
-                  palette.text.primary,
-                  palette.mode === 'dark' ? 0.03 : 0.018,
-                ),
-            }}
+            className={cn(
+              'grid min-h-8 flex-[0_0_32px] grid-cols-[var(--rules-grid-columns)] items-center border-b border-[var(--color-border)]',
+              NEUTRAL_OVERLAY_BG,
+            )}
           >
             {columnHeaders.map((header, index) => (
-              <Typography
+              <div
                 key={header}
                 role="columnheader"
-                color="text.secondary"
                 title={header}
-                sx={{
-                  minWidth: 0,
-                  px: 1,
-                  overflow: 'hidden',
-                  fontSize: 12,
-                  fontWeight: 650,
-                  lineHeight: '32px',
-                  letterSpacing: '0.01em',
-                  textAlign:
-                    index === 0 ? 'center' : index === 4 ? 'right' : 'left',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
+                className={cn(
+                  'min-w-0 truncate px-component text-[12px] font-[650] leading-8 tracking-[0.01em] text-[var(--color-text-secondary)]',
+                  index === 0
+                    ? 'text-center'
+                    : index === 4
+                      ? 'text-right'
+                      : 'text-left',
+                )}
               >
                 {header}
-              </Typography>
+              </div>
             ))}
-          </Box>
+          </div>
 
           {filteredRules.length > 0 ? (
             <VirtualList
@@ -592,101 +504,76 @@ const RulesPage = () => {
               style={{ flex: 1, minHeight: 0, overflowX: 'hidden' }}
             />
           ) : (
-            <Box sx={{ flex: 1, minHeight: 0 }}>
+            <div className="min-h-0 flex-1">
               <BaseEmpty />
-            </Box>
+            </div>
           )}
 
-          <Box
-            sx={{
-              display: 'flex',
-              flex: '0 0 40px',
-              alignItems: 'center',
-              gap: 0.75,
-              px: 1,
-              borderTop: '1px solid var(--shell-border)',
-              bgcolor: ({ palette }) =>
-                alpha(
-                  palette.text.primary,
-                  palette.mode === 'dark' ? 0.03 : 0.018,
-                ),
-            }}
+          <div
+            className={cn(
+              'flex flex-[0_0_40px] items-center gap-compact px-component border-t border-[var(--color-border)]',
+              NEUTRAL_OVERLAY_BG,
+            )}
           >
-            <Tooltip
-              title={t(
-                canMutateRules
-                  ? 'rules.page.actions.add.trigger'
-                  : 'rules.feedback.notifications.mutationUnavailable',
-              )}
-            >
-              <span>
-                <IconButton
-                  size="small"
-                  aria-label={t('rules.page.actions.add.trigger')}
-                  disabled={!canMutateRules || loadingAddContext}
-                  onClick={handleOpenAdd}
-                  sx={{
-                    width: 30,
-                    height: 28,
-                    borderRadius: 'var(--radius-compact)',
-                    bgcolor: 'transparent',
-                    '&:hover': {
-                      bgcolor: 'var(--shell-nav-hover)',
-                    },
-                    '&:focus-visible': {
-                      outline: '2px solid var(--shell-focus)',
-                      outlineOffset: 1,
-                    },
-                  }}
-                >
-                  {loadingAddContext ? (
-                    <CircularProgress size={15} />
-                  ) : (
-                    <AddRoundedIcon fontSize="small" />
-                  )}
-                </IconButton>
-              </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t('rules.page.actions.add.trigger')}
+                    disabled={!canMutateRules || loadingAddContext}
+                    onClick={handleOpenAdd}
+                    className="h-7 w-[30px] rounded-[var(--radius-compact)] text-[var(--color-text-secondary)]"
+                  >
+                    {loadingAddContext ? (
+                      <Loader2 className="size-[15px] animate-spin" />
+                    ) : (
+                      <Plus className="size-[18px]" />
+                    )}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                {t(
+                  canMutateRules
+                    ? 'rules.page.actions.add.trigger'
+                    : 'rules.feedback.notifications.mutationUnavailable',
+                )}
+              </TooltipContent>
             </Tooltip>
-            <Tooltip
-              title={
-                !canMutateRules
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t('rules.page.actions.delete.trigger')}
+                    disabled={
+                      !canMutateRules || !selectedRule || preparingDelete
+                    }
+                    onClick={handlePrepareDelete}
+                    className="h-7 w-[30px] rounded-[var(--radius-compact)] text-[var(--color-text-secondary)]"
+                  >
+                    {preparingDelete ? (
+                      <Loader2 className="size-[15px] animate-spin" />
+                    ) : (
+                      <Minus className="size-[18px]" />
+                    )}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                {!canMutateRules
                   ? t('rules.feedback.notifications.mutationUnavailable')
                   : selectedRule
                     ? t('rules.page.actions.delete.trigger')
-                    : t('rules.page.actions.delete.selectFirst')
-              }
-            >
-              <span>
-                <IconButton
-                  size="small"
-                  aria-label={t('rules.page.actions.delete.trigger')}
-                  disabled={!canMutateRules || !selectedRule || preparingDelete}
-                  onClick={handlePrepareDelete}
-                  sx={{
-                    width: 30,
-                    height: 28,
-                    borderRadius: 'var(--radius-compact)',
-                    bgcolor: 'transparent',
-                    '&:hover': {
-                      bgcolor: 'var(--shell-nav-hover)',
-                    },
-                    '&:focus-visible': {
-                      outline: '2px solid var(--shell-focus)',
-                      outlineOffset: 1,
-                    },
-                  }}
-                >
-                  {preparingDelete ? (
-                    <CircularProgress size={15} />
-                  ) : (
-                    <RemoveRoundedIcon fontSize="small" />
-                  )}
-                </IconButton>
-              </span>
+                    : t('rules.page.actions.delete.selectFirst')}
+              </TooltipContent>
             </Tooltip>
-          </Box>
-        </Box>
-      </Box>
+          </div>
+        </div>
+      </div>
 
       {addContext && (
         <RuleAddDialog
@@ -724,78 +611,50 @@ const RulesPage = () => {
         open={Boolean(
           pendingDelete && pendingDelete.profileUid === currentProfileUid,
         )}
-        onClose={deleting ? undefined : () => setPendingDelete(null)}
-        maxWidth="xs"
-        fullWidth
-        slotProps={{
-          paper: {
-            sx: ({ palette }) => ({
-              ...getShellThemeVars(palette),
-              overflow: 'hidden',
-              border: '1px solid var(--shell-border-strong) !important',
-              borderRadius: 'var(--radius-overlay)',
-              bgcolor: 'var(--shell-panel) !important',
-              backgroundImage: 'none',
-              boxShadow: 'var(--shell-shadow) !important',
-            }),
-          },
+        onOpenChange={(next) => {
+          if (!next && !deleting) setPendingDelete(null)
         }}
       >
-        <DialogTitle sx={{ px: 2.5, pt: 2.25, pb: 1 }}>
-          {t('rules.page.actions.delete.title')}
-        </DialogTitle>
-        <DialogContent sx={{ px: 2.5, py: 1.25 }}>
-          <Typography color="text.secondary" sx={{ fontSize: 13.5 }}>
-            {t('rules.page.actions.delete.description')}
-          </Typography>
-          <Box
-            component="code"
-            title={pendingDelete?.rawRule}
-            sx={{
-              display: 'block',
-              mt: 1.5,
-              p: 1.25,
-              overflow: 'hidden',
-              border: '1px solid var(--shell-border)',
-              borderRadius: 'var(--radius-control)',
-              bgcolor: 'var(--shell-panel-muted)',
-              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-              fontSize: 12.5,
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              userSelect: 'text',
-            }}
-          >
-            {pendingDelete?.rawRule}
-          </Box>
-        </DialogContent>
-        <DialogActions
-          sx={{
-            px: 2.5,
-            py: 1.5,
-            borderTop: '1px solid var(--shell-border)',
-          }}
+        <DialogContent
+          showCloseButton={false}
+          className="gap-0 overflow-hidden rounded-[var(--radius-overlay)] border-[var(--color-border-strong)] bg-[var(--color-bg-page)] p-0 shadow-[var(--shadow-modal)] sm:max-w-md"
         >
-          <Button
-            variant="outlined"
-            disabled={deleting}
-            onClick={() => setPendingDelete(null)}
-            sx={{ textTransform: 'none' }}
-          >
-            {t('shared.actions.cancel')}
-          </Button>
-          <Button
-            color="error"
-            variant="contained"
-            loading={deleting}
-            onClick={handleDeleteRule}
-            sx={{ textTransform: 'none' }}
-          >
-            {t('rules.page.actions.delete.confirm')}
-          </Button>
-        </DialogActions>
+          <DialogHeader className="px-5 pt-4.5 pb-2 text-left">
+            <DialogTitle>{t('rules.page.actions.delete.title')}</DialogTitle>
+          </DialogHeader>
+
+          <div className="px-5 py-2.5">
+            <p className="text-[13.5px] text-[var(--color-text-secondary)]">
+              {t('rules.page.actions.delete.description')}
+            </p>
+            <code
+              title={pendingDelete?.rawRule}
+              className="mt-stack block truncate overflow-hidden rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-2.5 font-mono text-[12.5px] select-text"
+            >
+              {pendingDelete?.rawRule}
+            </code>
+          </div>
+
+          <DialogFooter className="gap-2 border-t border-[var(--color-border)] px-5 py-3">
+            <Button
+              variant="outline"
+              disabled={deleting}
+              onClick={() => setPendingDelete(null)}
+            >
+              {t('shared.actions.cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleting}
+              onClick={handleDeleteRule}
+            >
+              {deleting && <Loader2 className="animate-spin" />}
+              {t('rules.page.actions.delete.confirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
       </Dialog>
-    </Box>
+    </div>
   )
 }
 

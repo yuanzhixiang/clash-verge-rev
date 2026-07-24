@@ -1,13 +1,12 @@
-import {
-  AltRouteRounded,
-  LanOutlined,
-  LanRounded,
-  PublicRounded,
-  SettingsEthernetRounded,
-  WarningRounded,
-} from '@mui/icons-material'
-import { Box, Button, Typography } from '@mui/material'
 import { useLockFn } from 'ahooks'
+import {
+  EthernetPort,
+  Globe,
+  type LucideIcon,
+  Network,
+  Split,
+  TriangleAlert,
+} from 'lucide-react'
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { closeAllConnections } from 'tauri-plugin-mihomo-api'
@@ -15,7 +14,9 @@ import { closeAllConnections } from 'tauri-plugin-mihomo-api'
 import { BasePage, TooltipIcon } from '@/components/base'
 import { PolicyDashboard } from '@/components/proxy/policy-dashboard'
 import { ProxyGroups } from '@/components/proxy/proxy-groups'
+import { Button } from '@/components/ui/button'
 import { useVerge } from '@/hooks/use-verge'
+import { cn } from '@/lib/utils'
 import {
   useAppRefreshers,
   useClashConfigData,
@@ -31,10 +32,10 @@ import { debugLog } from '@/utils/debug'
 const MODES = ['direct', 'global', 'rule'] as const
 type Mode = (typeof MODES)[number]
 const MODE_SET = new Set<string>(MODES)
-const MODE_ICONS: Record<Mode, typeof AltRouteRounded> = {
-  direct: SettingsEthernetRounded,
-  global: PublicRounded,
-  rule: AltRouteRounded,
+const MODE_ICONS: Record<Mode, LucideIcon> = {
+  direct: EthernetPort,
+  global: Globe,
+  rule: Split,
 }
 const isMode = (value: unknown): value is Mode =>
   typeof value === 'string' && MODE_SET.has(value)
@@ -155,18 +156,9 @@ const ProxyPage = () => {
       full
       contentStyle={{ height: '100%' }}
       title={
-        <Box
-          component="span"
+        <span
           data-tauri-drag-region="true"
-          sx={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 0.75,
-            fontSize: { xs: 28, sm: 34 },
-            fontWeight: 720,
-            lineHeight: 1.08,
-            letterSpacing: '-0.045em',
-          }}
+          className="inline-flex items-center gap-compact text-[28px] font-[720] leading-[1.08] tracking-[-0.045em] sm:text-[34px]"
         >
           {isChainMode
             ? t('proxies.page.title.chainMode')
@@ -174,49 +166,23 @@ const ProxyPage = () => {
           {isChainMode && (
             <TooltipIcon
               title={chainWarning}
-              icon={WarningRounded}
-              color="warning"
-              sx={{ p: 0.25 }}
+              icon={TriangleAlert}
+              className="text-[var(--color-warning)]"
             />
           )}
-        </Box>
+        </span>
       }
     >
-      <Box
+      <div
         ref={pageScrollRef}
-        sx={{
-          height: '100%',
-          overflowY: 'auto',
-          scrollbarGutter: 'stable',
-        }}
+        className="h-full overflow-y-auto [scrollbar-gutter:stable]"
       >
-        <Box
-          sx={{
-            px: { xs: 2, sm: 3 },
-            pt: 2,
-            pb: 1,
-          }}
-        >
-          <Box
-            sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              alignItems: 'center',
-              gap: 1.5,
-            }}
-          >
-            <Box
+        <div className="px-inset pt-inset pb-component sm:px-block">
+          <div className="flex flex-wrap items-center gap-stack">
+            <div
               role="group"
               aria-label={t('proxies.page.labels.outboundMode')}
-              sx={{
-                display: 'inline-flex',
-                minWidth: 0,
-                flex: '0 1 auto',
-                gap: 0.5,
-                borderRadius: 'var(--radius-pill)',
-                bgcolor: 'var(--shell-panel-muted)',
-                p: 0.5,
-              }}
+              className="inline-flex min-w-0 flex-[0_1_auto] gap-inline rounded-[var(--radius-pill)] bg-[var(--color-bg-subtle)] p-inline"
             >
               {MODES.map((mode) => {
                 const selected = mode === activeMode
@@ -225,91 +191,57 @@ const ProxyPage = () => {
                   <Button
                     key={mode}
                     aria-pressed={selected}
-                    variant={selected ? 'contained' : 'text'}
+                    variant={selected ? 'default' : 'ghost'}
                     onClick={() => onChangeMode(mode)}
-                    startIcon={<ModeIcon sx={{ fontSize: 18 }} />}
-                    sx={{
-                      minWidth: 0,
-                      height: 36,
-                      px: 1.75,
-                      border: 0,
-                      borderRadius: 'var(--radius-pill)',
-                      whiteSpace: 'nowrap',
-                      color: selected ? 'primary.contrastText' : 'text.primary',
-                      '&:hover': {
-                        border: 0,
-                        bgcolor: selected
-                          ? 'primary.main'
-                          : 'var(--shell-nav-hover)',
-                      },
-                    }}
+                    className={cn(
+                      'h-9 min-w-0 rounded-[var(--radius-pill)] px-3.5 whitespace-nowrap',
+                      selected
+                        ? 'hover:bg-primary'
+                        : 'text-[var(--color-text-primary)]',
+                    )}
                   >
+                    <ModeIcon className="size-[18px]" />
                     {t(`proxies.page.modes.${mode}`)}
                   </Button>
                 )
               })}
-            </Box>
+            </div>
 
             <Button
-              size="small"
-              variant={isChainMode ? 'contained' : 'text'}
+              variant={isChainMode ? 'default' : 'ghost'}
               onClick={onToggleChainMode}
-              sx={{
-                height: 38,
-                flex: '0 0 auto',
-                borderRadius: 'var(--radius-control)',
-                bgcolor: isChainMode
-                  ? 'primary.main'
-                  : 'var(--shell-panel-muted)',
-                '&:hover': {
-                  bgcolor: isChainMode
-                    ? 'primary.main'
-                    : 'var(--shell-nav-hover)',
-                },
-              }}
-              startIcon={
-                isChainMode ? (
-                  <LanRounded fontSize="small" />
-                ) : (
-                  <LanOutlined fontSize="small" />
-                )
-              }
+              className={cn(
+                'h-[38px] flex-[0_0_auto] rounded-[var(--radius-control)]',
+                isChainMode
+                  ? 'hover:bg-primary'
+                  : 'bg-[var(--color-bg-subtle)] text-[var(--color-accent)] hover:bg-[var(--color-bg-hover)]',
+              )}
             >
+              <Network className="size-[18px]" />
               {t('proxies.page.actions.toggleChain')}
             </Button>
-          </Box>
+          </div>
 
-          <Typography
-            color="text.secondary"
-            sx={{ mt: 1.25, fontSize: 13, lineHeight: 1.4 }}
-          >
+          <p className="mt-2.5 text-label text-[var(--color-text-secondary)]">
             {t(`proxies.page.modeDescriptions.${activeMode}`)}
-          </Typography>
-        </Box>
+          </p>
+        </div>
 
-        <Box>
+        <div>
           {isChainMode ? (
-            <Box
-              sx={{
-                mx: { xs: 1, sm: 2 },
-                mt: 1,
-                border: '1px solid var(--shell-border)',
-                borderRadius: 'var(--radius-control)',
-                bgcolor: 'var(--shell-panel-muted)',
-              }}
-            >
+            <div className="mx-component mt-component rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-bg-subtle)] sm:mx-inset">
               <ProxyGroups
                 mode={activeMode}
                 isChainMode
                 chainConfigData={chainConfigData}
                 scrollElementRef={pageScrollRef}
               />
-            </Box>
+            </div>
           ) : (
             <PolicyDashboard />
           )}
-        </Box>
-      </Box>
+        </div>
+      </div>
     </BasePage>
   )
 }

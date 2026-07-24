@@ -1,20 +1,5 @@
-import {
-  DeleteForeverRounded,
-  TableChartRounded,
-  TableRowsRounded,
-  ViewColumnRounded,
-} from '@mui/icons-material'
-import {
-  Box,
-  Button,
-  ButtonGroup,
-  Fab,
-  IconButton,
-  MenuItem,
-  Tooltip,
-  Zoom,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
+import { Columns3, Rows3, Table, Trash2 } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { closeAllConnections } from 'tauri-plugin-mihomo-api'
@@ -37,10 +22,18 @@ import {
   useConnectionRowViews,
 } from '@/components/connection/connection-row-view'
 import { ConnectionTable } from '@/components/connection/connection-table'
+import { Button } from '@/components/ui/button'
+import { SelectItem } from '@/components/ui/select'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useConnectionData } from '@/hooks/use-connection-data'
 import { useConnectionSetting } from '@/hooks/use-connection-setting'
 import { useTrafficData } from '@/hooks/use-traffic-data'
 import { useVisibility } from '@/hooks/use-visibility'
+import { cn } from '@/lib/utils'
 import parseTraffic from '@/utils/parse-traffic'
 
 type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[]
@@ -180,9 +173,7 @@ const ConnectionsPage = () => {
     <BasePage
       full
       title={
-        <span style={{ whiteSpace: 'nowrap' }}>
-          {t('connections.page.title')}
-        </span>
+        <span className="whitespace-nowrap">{t('connections.page.title')}</span>
       }
       contentStyle={{
         height: '100%',
@@ -194,17 +185,23 @@ const ConnectionsPage = () => {
         position: 'relative',
       }}
       header={
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Box sx={{ mx: 1 }}>
+        <div className="flex items-center gap-inset">
+          <div className="mx-component">
             {t('shared.labels.downloaded')}:{' '}
             {parseTraffic(traffic?.downTotal || 0)}
-          </Box>
-          <Box sx={{ mx: 1 }}>
+          </div>
+          <div className="mx-component">
             {t('shared.labels.uploaded')}: {parseTraffic(traffic?.upTotal || 0)}
-          </Box>
-          <IconButton
-            color="inherit"
-            size="small"
+          </div>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="text-current"
+            aria-label={
+              isTableLayout
+                ? t('shared.actions.listView')
+                : t('shared.actions.tableView')
+            }
             onClick={() =>
               setSetting((o) =>
                 o?.layout !== 'table'
@@ -213,90 +210,71 @@ const ConnectionsPage = () => {
               )
             }
           >
-            {isTableLayout ? (
-              <TableRowsRounded titleAccess={t('shared.actions.listView')} />
-            ) : (
-              <TableChartRounded titleAccess={t('shared.actions.tableView')} />
-            )}
-          </IconButton>
-          <Button size="small" variant="contained" onClick={onCloseAll}>
-            <span style={{ whiteSpace: 'nowrap' }}>
+            {isTableLayout ? <Rows3 /> : <Table />}
+          </Button>
+          <Button size="sm" onClick={onCloseAll}>
+            <span className="whitespace-nowrap">
               {t('shared.actions.closeAll')}
             </span>
           </Button>
-        </Box>
+        </div>
       }
     >
-      <Box
-        sx={{
-          pt: 1,
-          mb: 0.5,
-          mx: '10px',
-          minHeight: '36px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          userSelect: 'text',
-          position: 'sticky',
-          top: 0,
-          zIndex: 2,
-        }}
-      >
-        <ButtonGroup sx={{ mr: 1, flexBasis: 'content' }}>
+      <div className="sticky top-0 z-[2] mx-stack mb-inline flex min-h-9 select-text items-center gap-component pt-component">
+        <div className="mr-component flex shrink-0">
           <Button
-            size="small"
-            variant={connectionsType === 'active' ? 'contained' : 'outlined'}
+            size="sm"
+            variant={connectionsType === 'active' ? 'default' : 'outline'}
+            className="rounded-r-none"
             onClick={() => selectConnectionsType('active')}
           >
             {t('connections.components.actions.active')}{' '}
             {connections?.activeConnections.length}
           </Button>
           <Button
-            size="small"
-            variant={connectionsType === 'closed' ? 'contained' : 'outlined'}
+            size="sm"
+            variant={connectionsType === 'closed' ? 'default' : 'outline'}
+            className="-ml-px rounded-l-none"
             onClick={() => selectConnectionsType('closed')}
           >
             {t('connections.components.actions.closed')}{' '}
             {connections?.closedConnections.length}
           </Button>
-        </ButtonGroup>
+        </div>
         {!isTableLayout && (
           <BaseStyledSelect
             value={curOrderOpt}
-            onChange={(e) => setCurOrderOpt(e.target.value as OrderKey)}
+            onValueChange={(v) => setCurOrderOpt(v as OrderKey)}
           >
             {ORDER_OPTIONS.map((option) => (
-              <MenuItem key={option.id} value={option.id}>
-                <span style={{ fontSize: 14 }}>{t(option.labelKey)}</span>
-              </MenuItem>
+              <SelectItem key={option.id} value={option.id}>
+                {t(option.labelKey)}
+              </SelectItem>
             ))}
           </BaseStyledSelect>
         )}
-        <Box
-          sx={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            '& > *': {
-              flex: 1,
-            },
-          }}
-        >
+        <div className="flex flex-1 items-center [&>*]:flex-1">
           <BaseSearchBox onSearch={handleSearch} />
-        </Box>
+        </div>
         {isTableLayout && hasTableData && (
-          <Tooltip title={t('connections.components.columnManager.title')}>
-            <IconButton
-              size="small"
-              aria-label={t('connections.components.columnManager.title')}
-              onClick={() => setIsColumnManagerOpen(true)}
-              sx={{ flex: '0 0 auto' }}
-            >
-              <ViewColumnRounded fontSize="small" />
-            </IconButton>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="flex-none"
+                aria-label={t('connections.components.columnManager.title')}
+                onClick={() => setIsColumnManagerOpen(true)}
+              >
+                <Columns3 />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              {t('connections.components.columnManager.title')}
+            </TooltipContent>
           </Tooltip>
         )}
-      </Box>
+      </div>
 
       {!hasTableData ? (
         <BaseEmpty />
@@ -333,25 +311,20 @@ const ConnectionsPage = () => {
         ref={detailRef}
         onClose={() => setSelectedConnectionId(null)}
       />
-      <Zoom
-        in={connectionsType === 'closed' && filterConn.length > 0}
-        unmountOnExit
-      >
-        <Fab
-          size="medium"
-          variant="extended"
-          sx={{
-            position: 'absolute',
-            right: 16,
-            bottom: isTableLayout ? 70 : 16,
-          }}
-          color="primary"
+      {connectionsType === 'closed' && filterConn.length > 0 && (
+        <Button
           onClick={() => clearClosedConnections()}
+          className={cn(
+            'absolute right-inset z-10 animate-in gap-inline rounded-[var(--radius-pill)] shadow-[var(--shadow-card)] fade-in zoom-in-95',
+            isTableLayout
+              ? 'bottom-[calc(var(--spacing-page)+var(--spacing-compact))]'
+              : 'bottom-inset',
+          )}
         >
-          <DeleteForeverRounded sx={{ mr: 1 }} fontSize="small" />
+          <Trash2 className="size-4" />
           {t('shared.actions.clear')}
-        </Fab>
-      </Zoom>
+        </Button>
+      )}
     </BasePage>
   )
 }

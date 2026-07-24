@@ -1,4 +1,5 @@
-import { Box, List, Menu, MenuItem, Paper, ThemeProvider } from '@mui/material'
+// ThemeProvider 暂时保留至 Phase F（届时移除 MUI 主题引擎）
+import { ThemeProvider } from '@mui/material'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { useTheme as useNextTheme } from 'next-themes'
@@ -10,7 +11,6 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useLocation, useNavigate } from 'react-router'
@@ -22,13 +22,17 @@ import {
   WindowControls,
   WindowResizeHandles,
 } from '@/components/layout/window-controller'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu'
 import { useI18n } from '@/hooks/use-i18n'
 import { useVerge } from '@/hooks/use-verge'
 import { useVisibility } from '@/hooks/use-visibility'
 import { useWindowDecorations } from '@/hooks/use-window'
-import { useThemeMode } from '@/services/states'
 import getSystem from '@/utils/get-system'
-import { getShellCanvasColor, getShellThemeVars } from '@/utils/shell-theme'
 
 import {
   useCustomTheme,
@@ -47,14 +51,11 @@ import 'dayjs/locale/zh-cn'
 
 const LogsPage = lazy(() => preloadLogsPage())
 
-type MenuContextPosition = { top: number; left: number }
-
 dayjs.extend(relativeTime)
 
 const OS = getSystem()
 
 const Layout = () => {
-  const mode = useThemeMode()
   const { t } = useTranslation()
   const { theme } = useCustomTheme()
   const { verge, patchVerge } = useVerge()
@@ -74,27 +75,10 @@ const Layout = () => {
     setNextTheme(theme.palette.mode)
   }, [theme.palette.mode, setNextTheme])
 
-  const [menuContextPosition, setMenuContextPosition] =
-    useState<MenuContextPosition | null>(null)
-
   const windowControlsRef = useRef<any>(null)
   const { decorated } = useWindowDecorations()
 
-  const handleMenuContextMenu = useCallback(
-    (event: React.MouseEvent<HTMLElement>) => {
-      event.preventDefault()
-      event.stopPropagation()
-      setMenuContextPosition({ top: event.clientY, left: event.clientX })
-    },
-    [],
-  )
-
-  const handleMenuContextClose = useCallback(() => {
-    setMenuContextPosition(null)
-  }, [])
-
   const handleToggleNavCollapsed = useCallback(() => {
-    setMenuContextPosition(null)
     void patchVerge({ collapse_navbar: !navCollapsed })
   }, [navCollapsed, patchVerge])
 
@@ -150,18 +134,7 @@ const Layout = () => {
 
   if (!themeReady) {
     return (
-      <div
-        style={{
-          width: '100vw',
-          height: '100vh',
-          background: getShellCanvasColor(mode),
-          transition: 'background 0.2s',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: mode === 'light' ? '#333' : '#fff',
-        }}
-      ></div>
+      <div className="flex h-screen w-screen items-center justify-center bg-[var(--color-bg-canvas)] text-[var(--color-text-primary)] transition-colors" />
     )
   }
 
@@ -183,13 +156,19 @@ const Layout = () => {
             }
           `}
       </style>
-      <Paper
-        square
-        elevation={0}
+      <div
         className={`${OS} layout${navCollapsed ? ' layout--nav-collapsed' : ''}${OS === 'macos' && decorated !== false ? ' layout--native-macos-titlebar' : ''}`}
         style={{
           borderTopLeftRadius: '0px',
           borderTopRightRadius: '0px',
+          backgroundColor: 'var(--shell-canvas)',
+          ...(OS === 'linux'
+            ? {
+                borderRadius: 'var(--radius-control)',
+                width: '100vw',
+                height: '100vh',
+              }
+            : {}),
         }}
         onContextMenu={(e) => {
           if (
@@ -202,21 +181,6 @@ const Layout = () => {
             e.preventDefault()
           }
         }}
-        sx={[
-          ({ palette }) => {
-            return {
-              ...getShellThemeVars(palette),
-              bgcolor: 'var(--shell-canvas)',
-            }
-          },
-          OS === 'linux'
-            ? {
-                borderRadius: 'var(--radius-control)',
-                width: '100vw',
-                height: '100vh',
-              }
-            : {},
-        ]}
       >
         {decorated === false && <WindowResizeHandles />}
 
@@ -232,54 +196,38 @@ const Layout = () => {
                 data-tauri-drag-region="true"
               />
             )}
-            <List className="the-menu" onContextMenu={handleMenuContextMenu}>
-              {navItems.map((item) => (
-                <Fragment key={item.path}>
-                  {item.path === '/proxies' && (
-                    <Box
-                      component="li"
-                      className="the-menu__group-label"
-                      aria-hidden="true"
-                    >
-                      {t('layout.components.navigation.groups.proxies')}
-                    </Box>
-                  )}
-                  <LayoutItem
-                    to={item.path}
-                    icon={item.icon}
-                    onPreload={item.preload}
-                  >
-                    {t(item.label)}
-                  </LayoutItem>
-                </Fragment>
-              ))}
-            </List>
-
-            <Menu
-              open={Boolean(menuContextPosition)}
-              onClose={handleMenuContextClose}
-              anchorReference="anchorPosition"
-              anchorPosition={
-                menuContextPosition
-                  ? {
-                      top: menuContextPosition.top,
-                      left: menuContextPosition.left,
-                    }
-                  : undefined
-              }
-              transitionDuration={200}
-              slotProps={{
-                list: {
-                  sx: { py: 0.5 },
-                },
-              }}
-            >
-              <MenuItem onClick={handleToggleNavCollapsed} dense>
-                {navCollapsed
-                  ? t('layout.components.navigation.menu.expandNavBar')
-                  : t('layout.components.navigation.menu.collapseNavBar')}
-              </MenuItem>
-            </Menu>
+            <ContextMenu>
+              <ContextMenuTrigger asChild>
+                <ul className="the-menu">
+                  {navItems.map((item) => (
+                    <Fragment key={item.path}>
+                      {item.path === '/proxies' && (
+                        <li
+                          className="the-menu__group-label"
+                          aria-hidden="true"
+                        >
+                          {t('layout.components.navigation.groups.proxies')}
+                        </li>
+                      )}
+                      <LayoutItem
+                        to={item.path}
+                        icon={item.icon}
+                        onPreload={item.preload}
+                      >
+                        {t(item.label)}
+                      </LayoutItem>
+                    </Fragment>
+                  ))}
+                </ul>
+              </ContextMenuTrigger>
+              <ContextMenuContent>
+                <ContextMenuItem onSelect={handleToggleNavCollapsed}>
+                  {navCollapsed
+                    ? t('layout.components.navigation.menu.expandNavBar')
+                    : t('layout.components.navigation.menu.collapseNavBar')}
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
           </div>
 
           <div className="layout-content__right">
@@ -308,16 +256,9 @@ const Layout = () => {
                   >
                     <Suspense
                       fallback={
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            height: '100%',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
+                        <div className="flex h-full items-center justify-center">
                           <BaseLoading />
-                        </Box>
+                        </div>
                       }
                     >
                       <LogsPage />
@@ -328,7 +269,7 @@ const Layout = () => {
             </div>
           </div>
         </div>
-      </Paper>
+      </div>
     </ThemeProvider>
   )
 }

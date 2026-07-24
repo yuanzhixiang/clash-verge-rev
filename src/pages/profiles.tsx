@@ -9,23 +9,23 @@ import {
   useSensors,
 } from '@dnd-kit/core'
 import { SortableContext, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
-import {
-  CheckBoxOutlineBlankRounded,
-  CheckBoxRounded,
-  ClearRounded,
-  ContentPasteRounded,
-  DeleteRounded,
-  IndeterminateCheckBoxRounded,
-  LocalFireDepartmentRounded,
-  RefreshRounded,
-  TextSnippetOutlined,
-} from '@mui/icons-material'
-import { Box, Button, Grid, IconButton, Stack, Typography } from '@mui/material'
 import { TauriEvent } from '@tauri-apps/api/event'
 import { readText } from '@tauri-apps/plugin-clipboard-manager'
 import { readTextFile } from '@tauri-apps/plugin-fs'
 import { useLockFn } from 'ahooks'
 import { throttle } from 'lodash-es'
+import {
+  ClipboardPaste,
+  FileText,
+  Flame,
+  Loader2,
+  RefreshCw,
+  Square,
+  SquareCheck,
+  SquareMinus,
+  Trash2,
+  X,
+} from 'lucide-react'
 import {
   useCallback,
   useEffect,
@@ -46,6 +46,7 @@ import {
   type ProfileViewerRef,
 } from '@/components/profile/profile-viewer'
 import { ConfigViewer } from '@/components/setting/mods/config-viewer'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useListen } from '@/hooks/use-listen'
 import { useProfiles } from '@/hooks/use-profiles'
@@ -743,18 +744,9 @@ const ProfilePage = () => {
     <BasePage
       full
       title={
-        <Typography
-          component="span"
-          sx={{
-            m: 0,
-            fontSize: { xs: 28, sm: 34 },
-            fontWeight: 720,
-            lineHeight: 1.08,
-            letterSpacing: '-0.045em',
-          }}
-        >
+        <span className="m-0 text-[28px] leading-[1.08] font-[720] tracking-[-0.045em] sm:text-[34px]">
           {t('profiles.page.title')}
-        </Typography>
+        </span>
       }
       contentStyle={{
         height: '100%',
@@ -762,72 +754,65 @@ const ProfilePage = () => {
         flexDirection: 'column',
       }}
       header={
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <div className="flex items-center gap-component">
           {!batchMode ? (
             <>
               {/* Batch mode toggle button */}
-              <IconButton
-                size="small"
-                color="inherit"
+              <Button
+                variant="ghost"
+                size="icon-sm"
                 title={t('profiles.page.batch.title')}
                 onClick={toggleBatchMode}
               >
-                <CheckBoxOutlineBlankRounded />
-              </IconButton>
+                <Square className="size-5" />
+              </Button>
 
-              <IconButton
-                size="small"
-                color="inherit"
+              <Button
+                variant="ghost"
+                size="icon-sm"
                 title={t('profiles.page.actions.updateAll')}
                 onClick={onUpdateAll}
               >
-                <RefreshRounded />
-              </IconButton>
+                <RefreshCw className="size-5" />
+              </Button>
 
-              <IconButton
-                size="small"
-                color="inherit"
+              <Button
+                variant="ghost"
+                size="icon-sm"
                 title={t('profiles.page.actions.viewRuntimeConfig')}
                 onClick={() => configRef.current?.open()}
               >
-                <TextSnippetOutlined />
-              </IconButton>
+                <FileText className="size-5" />
+              </Button>
 
-              <IconButton
-                size="small"
-                color="primary"
+              <Button
+                variant="ghost"
+                size="icon-sm"
                 title={t('profiles.page.actions.reactivate')}
                 onClick={() => onEnhance(true)}
               >
-                <LocalFireDepartmentRounded />
-              </IconButton>
+                <Flame className="size-5 text-[var(--color-accent)]" />
+              </Button>
 
               {/* 故障检测和紧急恢复按钮 */}
               {(error || isStale) && (
-                <IconButton
-                  size="small"
-                  color="warning"
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   title="数据异常，点击强制刷新"
                   onClick={onEmergencyRefresh}
-                  sx={{
-                    animation: 'pulse 2s infinite',
-                    '@keyframes pulse': {
-                      '0%': { opacity: 1 },
-                      '50%': { opacity: 0.5 },
-                      '100%': { opacity: 1 },
-                    },
-                  }}
+                  className="animate-pulse"
                 >
-                  <ClearRounded />
-                </IconButton>
+                  <X className="size-5 text-[var(--color-warning)]" />
+                </Button>
               )}
             </>
           ) : (
             // Batch mode header
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <IconButton
-                size="small"
-                color="inherit"
+            <div className="flex items-center gap-component">
+              <Button
+                variant="ghost"
+                size="icon-sm"
                 title={
                   isAllSelected()
                     ? t('profiles.page.batch.actions.deselectAll')
@@ -838,49 +823,37 @@ const ProfilePage = () => {
                 }
               >
                 {getSelectionState() === 'all' ? (
-                  <CheckBoxRounded />
+                  <SquareCheck className="size-5" />
                 ) : getSelectionState() === 'partial' ? (
-                  <IndeterminateCheckBoxRounded />
+                  <SquareMinus className="size-5" />
                 ) : (
-                  <CheckBoxOutlineBlankRounded />
+                  <Square className="size-5" />
                 )}
-              </IconButton>
-              <IconButton
-                size="small"
-                color="error"
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
                 title={t('profiles.page.batch.actions.delete')}
                 onClick={deleteSelectedProfiles}
                 disabled={selectedProfiles.size === 0}
+                className="text-[var(--color-danger)]"
               >
-                <DeleteRounded />
-              </IconButton>
-              <Button size="small" variant="outlined" onClick={toggleBatchMode}>
+                <Trash2 className="size-5" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={toggleBatchMode}>
                 {t('profiles.page.batch.actions.done')}
               </Button>
-              <Box
-                sx={{ flex: 1, textAlign: 'right', color: 'text.secondary' }}
-              >
+              <div className="flex-1 text-right text-[var(--color-text-secondary)]">
                 {t('profiles.page.batch.summary.selected')}{' '}
                 {selectedProfiles.size} {t('profiles.page.batch.summary.items')}
-              </Box>
-            </Box>
+              </div>
+            </div>
           )}
-        </Box>
+        </div>
       }
     >
-      <Stack
-        direction="row"
-        spacing={1.5}
-        sx={{
-          px: { xs: 2, sm: 3 },
-          pt: { xs: 2, sm: 2.5 },
-          pb: 1.5,
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-        }}
-      >
-        <div className="relative flex-[1_1_360px] min-w-full sm:min-w-[240px]">
+      <div className="flex flex-wrap items-center gap-stack px-inset pt-inset pb-stack sm:px-block sm:pt-[20px]">
+        <div className="relative min-w-full flex-[1_1_360px] sm:min-w-[240px]">
           <Input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
@@ -899,163 +872,114 @@ const ProfilePage = () => {
           />
           <div className="absolute right-1 top-1/2 -translate-y-1/2">
             {!url ? (
-              <IconButton
-                size="small"
-                sx={{ p: 0.5 }}
+              <Button
+                variant="ghost"
+                size="icon-xs"
                 title={t('profiles.page.importForm.actions.paste')}
                 onClick={onCopyLink}
               >
-                <ContentPasteRounded fontSize="inherit" />
-              </IconButton>
+                <ClipboardPaste className="size-4" />
+              </Button>
             ) : (
-              <IconButton
-                size="small"
-                sx={{ p: 0.5 }}
+              <Button
+                variant="ghost"
+                size="icon-xs"
                 title={t('shared.actions.clear')}
                 onClick={() => setUrl('')}
               >
-                <ClearRounded fontSize="inherit" />
-              </IconButton>
+                <X className="size-4" />
+              </Button>
             )}
           </div>
         </div>
         <Button
-          disabled={!url || disabled}
-          loading={loading}
-          variant="contained"
-          size="small"
-          sx={{
-            height: 38,
-            borderRadius: 'var(--radius-control)',
-            px: 1.75,
-          }}
+          disabled={!url || disabled || loading}
+          size="sm"
+          className="h-[38px] rounded-[var(--radius-control)] px-[14px]"
           onClick={onImport}
         >
+          {loading && <Loader2 className="size-4 animate-spin" />}
           {t('profiles.page.actions.import')}
         </Button>
         <Button
-          variant="contained"
-          size="small"
-          sx={{
-            height: 38,
-            borderRadius: 'var(--radius-control)',
-            px: 1.75,
-          }}
+          size="sm"
+          className="h-[38px] rounded-[var(--radius-control)] px-[14px]"
           onClick={() => viewerRef.current?.create()}
         >
           {t('shared.actions.new')}
         </Button>
-      </Stack>
+      </div>
 
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={onDragEnd}
       >
-        <Box
-          sx={{
-            px: { xs: 2, sm: 3 },
-            pb: { xs: 2, sm: 3 },
-            flex: 1,
-            minHeight: 0,
-            overflowY: 'auto',
-          }}
-        >
-          <Box
-            sx={{
-              overflow: 'hidden',
-              border: '1px solid var(--shell-border)',
-              borderRadius: 'var(--radius-control)',
-              bgcolor: 'var(--shell-panel)',
-              '& .MuiGrid-root:last-of-type > div > .MuiBox-root:first-of-type':
-                {
-                  borderBottom: 0,
-                },
-            }}
-          >
-            <Grid container spacing={0}>
-              <SortableContext
-                items={profileItems.map((x) => {
-                  return x.uid
-                })}
-              >
-                {profileItems.map((item) => (
-                  <Grid size={12} key={item.file}>
-                    <ProfileItem
-                      id={item.uid}
-                      selected={profiles.current === item.uid}
-                      activating={activatings.includes(item.uid)}
-                      itemData={item}
-                      mutateProfiles={mutateProfiles}
-                      onSelect={(f) => onSelect(item.uid, f)}
-                      onEdit={() => viewerRef.current?.edit(item)}
-                      onSave={async (prev, curr) => {
-                        if (prev !== curr && profiles.current === item.uid) {
-                          await onEnhance(false)
-                          //  await restartCore();
-                          //   Notice.success(t("settings.feedback.notifications.clash.restartSuccess"), 1000);
-                        }
-                      }}
-                      onDelete={() => {
-                        if (batchMode) {
-                          toggleProfileSelection(item.uid)
-                        } else {
-                          onDelete(item.uid)
-                        }
-                      }}
-                      batchMode={batchMode}
-                      isSelected={selectedProfiles.has(item.uid)}
-                      onSelectionChange={() => toggleProfileSelection(item.uid)}
-                    />
-                  </Grid>
-                ))}
-              </SortableContext>
-            </Grid>
-          </Box>
-          <Typography
-            component="h2"
-            color="text.secondary"
-            sx={{ mt: 2.5, mb: 0.75, px: 0.5, fontSize: 11, fontWeight: 550 }}
-          >
+        <div className="min-h-0 flex-1 overflow-y-auto px-inset pb-inset sm:px-block sm:pb-block">
+          <div className="overflow-hidden rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-bg-page)] [&>div:last-child>div:first-of-type]:border-b-0">
+            <SortableContext
+              items={profileItems.map((x) => {
+                return x.uid
+              })}
+            >
+              {profileItems.map((item) => (
+                <ProfileItem
+                  key={item.file}
+                  id={item.uid}
+                  selected={profiles.current === item.uid}
+                  activating={activatings.includes(item.uid)}
+                  itemData={item}
+                  mutateProfiles={mutateProfiles}
+                  onSelect={(f) => onSelect(item.uid, f)}
+                  onEdit={() => viewerRef.current?.edit(item)}
+                  onSave={async (prev, curr) => {
+                    if (prev !== curr && profiles.current === item.uid) {
+                      await onEnhance(false)
+                      //  await restartCore();
+                      //   Notice.success(t("settings.feedback.notifications.clash.restartSuccess"), 1000);
+                    }
+                  }}
+                  onDelete={() => {
+                    if (batchMode) {
+                      toggleProfileSelection(item.uid)
+                    } else {
+                      onDelete(item.uid)
+                    }
+                  }}
+                  batchMode={batchMode}
+                  isSelected={selectedProfiles.has(item.uid)}
+                  onSelectionChange={() => toggleProfileSelection(item.uid)}
+                />
+              ))}
+            </SortableContext>
+          </div>
+          <h2 className="mt-[20px] mb-compact px-inline text-[11px] font-[550] text-[var(--color-text-secondary)]">
             {t('profiles.page.sections.extensions')}
-          </Typography>
-          <Box
-            sx={{
-              mb: 1,
-              overflow: 'hidden',
-              border: '1px solid var(--shell-border)',
-              borderRadius: 'var(--radius-control)',
-              bgcolor: 'var(--shell-panel)',
-              '& .MuiGrid-root:last-of-type .MuiBox-root:first-of-type': {
-                borderBottom: 0,
-              },
-            }}
-          >
-            <Grid container spacing={0}>
-              <Grid size={12}>
-                <ProfileMore
-                  id="Merge"
-                  onSave={async (prev, curr) => {
-                    if (prev !== curr) {
-                      await onEnhance(false)
-                    }
-                  }}
-                />
-              </Grid>
-              <Grid size={12}>
-                <ProfileMore
-                  id="Script"
-                  logInfo={chainLogs['Script']}
-                  onSave={async (prev, curr) => {
-                    if (prev !== curr) {
-                      await onEnhance(false)
-                    }
-                  }}
-                />
-              </Grid>
-            </Grid>
-          </Box>
-        </Box>
+          </h2>
+          <div className="mb-component overflow-hidden rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-bg-page)] [&>div:last-child>div:first-of-type]:border-b-0">
+            <div>
+              <ProfileMore
+                id="Merge"
+                onSave={async (prev, curr) => {
+                  if (prev !== curr) {
+                    await onEnhance(false)
+                  }
+                }}
+              />
+            </div>
+            <div>
+              <ProfileMore
+                id="Script"
+                logInfo={chainLogs['Script']}
+                onSave={async (prev, curr) => {
+                  if (prev !== curr) {
+                    await onEnhance(false)
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </div>
         <DragOverlay />
       </DndContext>
 

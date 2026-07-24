@@ -1,9 +1,4 @@
-import {
-  PlayCircleOutlineRounded,
-  PauseCircleOutlineRounded,
-  SwapVertRounded,
-} from '@mui/icons-material'
-import { Box, Button, IconButton, MenuItem } from '@mui/material'
+import { ArrowUpDown, CirclePause, CirclePlay } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -17,8 +12,11 @@ import {
   type VirtualListHandle,
 } from '@/components/base'
 import LogItem from '@/components/log/log-item'
+import { Button } from '@/components/ui/button'
+import { SelectItem } from '@/components/ui/select'
 import { useClashLog } from '@/hooks/use-clash-log'
 import { useLogData } from '@/hooks/use-log-data'
+import { cn } from '@/lib/utils'
 
 const LogPage = () => {
   const { t } = useTranslation()
@@ -98,25 +96,27 @@ const LogPage = () => {
         overflow: 'auto',
       }}
       header={
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton
+        <div className="flex items-center gap-inset">
+          <Button
+            variant="ghost"
+            size="icon-sm"
             title={t(
               enableLog ? 'shared.actions.pause' : 'shared.actions.resume',
             )}
             aria-label={t(
               enableLog ? 'shared.actions.pause' : 'shared.actions.resume',
             )}
-            size="small"
-            color="inherit"
             onClick={handleToggleLog}
           >
             {enableLog ? (
-              <PauseCircleOutlineRounded />
+              <CirclePause className="size-6" />
             ) : (
-              <PlayCircleOutlineRounded />
+              <CirclePlay className="size-6" />
             )}
-          </IconButton>
-          <IconButton
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
             title={t(
               isDescending
                 ? 'logs.actions.showAscending'
@@ -127,51 +127,47 @@ const LogPage = () => {
                 ? 'logs.actions.showAscending'
                 : 'logs.actions.showDescending',
             )}
-            size="small"
-            color="inherit"
             onClick={handleToggleOrder}
           >
-            <SwapVertRounded
-              sx={{
-                transform: isDescending ? 'scaleY(-1)' : 'none',
-                transition: 'transform 0.2s ease',
-              }}
+            <ArrowUpDown
+              className={cn(
+                'size-6 transition-transform duration-[var(--duration-base)]',
+                isDescending && '-scale-y-100',
+              )}
             />
-          </IconButton>
+          </Button>
 
           <Button
-            size="small"
-            variant="contained"
+            size="sm"
             onClick={() => {
               refreshGetClashLog(true)
             }}
           >
             {t('shared.actions.clear')}
           </Button>
-        </Box>
+        </div>
       }
     >
-      <Box
-        sx={{
-          pt: 1,
-          mb: 0.5,
-          mx: '10px',
-          height: '39px',
-          display: 'flex',
-          alignItems: 'center',
-        }}
-      >
+      <div className="mx-[10px] mb-inline flex h-[39px] items-center pt-component">
         <BaseStyledSelect
           value={logState}
-          onChange={(e) => handleLogLevelChange(e.target.value as LogFilter)}
+          onValueChange={(value) => handleLogLevelChange(value as LogFilter)}
         >
-          <MenuItem value="all">{t('shared.filters.logLevels.all')}</MenuItem>
-          <MenuItem value="debug">
+          <SelectItem value="all">
+            {t('shared.filters.logLevels.all')}
+          </SelectItem>
+          <SelectItem value="debug">
             {t('shared.filters.logLevels.debug')}
-          </MenuItem>
-          <MenuItem value="info">{t('shared.filters.logLevels.info')}</MenuItem>
-          <MenuItem value="warn">{t('shared.filters.logLevels.warn')}</MenuItem>
-          <MenuItem value="err">{t('shared.filters.logLevels.error')}</MenuItem>
+          </SelectItem>
+          <SelectItem value="info">
+            {t('shared.filters.logLevels.info')}
+          </SelectItem>
+          <SelectItem value="warn">
+            {t('shared.filters.logLevels.warn')}
+          </SelectItem>
+          <SelectItem value="err">
+            {t('shared.filters.logLevels.error')}
+          </SelectItem>
         </BaseStyledSelect>
         <BaseSearchBox
           onSearch={(matcher, state) => {
@@ -179,7 +175,7 @@ const LogPage = () => {
             setSearchState(state)
           }}
         />
-      </Box>
+      </div>
 
       {filteredLogs.length > 0 ? (
         <VirtualList

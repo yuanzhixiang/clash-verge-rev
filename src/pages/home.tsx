@@ -1,37 +1,30 @@
-import {
-  DnsOutlined,
-  HelpOutlineRounded,
-  HistoryEduOutlined,
-  RouterOutlined,
-  SettingsOutlined,
-  SpeedOutlined,
-} from '@mui/icons-material'
-import {
-  Box,
-  Button,
-  Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  FormGroup,
-  Grid,
-  IconButton,
-  Skeleton,
-  Tooltip,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
+import {
+  CircleHelp,
+  Gauge,
+  Router,
+  ScrollText,
+  Server,
+  Settings,
+} from 'lucide-react'
 import { Suspense, lazy, useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BasePage } from '@/components/base'
+import { BaseDialog, BasePage } from '@/components/base'
 import { ClashModeCard } from '@/components/home/clash-mode-card'
 import { CurrentProxyCard } from '@/components/home/current-proxy-card'
 import { EnhancedCard } from '@/components/home/enhanced-card'
 import { EnhancedTrafficStats } from '@/components/home/enhanced-traffic-stats'
 import { HomeProfileCard } from '@/components/home/home-profile-card'
 import { ProxyTunCard } from '@/components/home/proxy-tun-card'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useProfiles } from '@/hooks/use-profiles'
 import { useVerge } from '@/hooks/use-verge'
 import { entry_lightweight_mode, openWebUrl } from '@/services/cmds'
@@ -57,6 +50,10 @@ const LazySystemInfoCard = lazy(() =>
   })),
 )
 
+const cardFallback = (
+  <Skeleton className="h-[200px] w-full rounded-[var(--radius-card)]" />
+)
+
 // 定义首页卡片设置接口
 interface HomeCardsSettings {
   profile: boolean
@@ -79,6 +76,19 @@ interface HomeSettingsDialogProps {
   homeCards: HomeCardsSettings
   onSave: (cards: HomeCardsSettings) => void
 }
+
+// 设置弹窗的卡片开关项（key + i18n 文案），顺序即展示顺序
+const CARD_OPTIONS: { key: string; label: string }[] = [
+  { key: 'profile', label: 'home.page.settings.cards.profile' },
+  { key: 'proxy', label: 'home.page.settings.cards.currentProxy' },
+  { key: 'network', label: 'home.page.settings.cards.network' },
+  { key: 'mode', label: 'home.page.settings.cards.proxyMode' },
+  { key: 'traffic', label: 'home.page.settings.cards.traffic' },
+  { key: 'test', label: 'home.page.settings.cards.tests' },
+  { key: 'ip', label: 'home.page.settings.cards.ip' },
+  { key: 'clashinfo', label: 'home.page.settings.cards.clashInfo' },
+  { key: 'systeminfo', label: 'home.page.settings.cards.systemInfo' },
+]
 
 const serializeCardFlags = (cards: HomeCardsSettings) =>
   Object.keys(cards)
@@ -111,100 +121,33 @@ const HomeSettingsDialog = ({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>{t('home.page.settings.title')}</DialogTitle>
-      <DialogContent>
-        <FormGroup>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={cards.profile || false}
-                onChange={() => handleToggle('profile')}
-              />
-            }
-            label={t('home.page.settings.cards.profile')}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={cards.proxy || false}
-                onChange={() => handleToggle('proxy')}
-              />
-            }
-            label={t('home.page.settings.cards.currentProxy')}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={cards.network || false}
-                onChange={() => handleToggle('network')}
-              />
-            }
-            label={t('home.page.settings.cards.network')}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={cards.mode || false}
-                onChange={() => handleToggle('mode')}
-              />
-            }
-            label={t('home.page.settings.cards.proxyMode')}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={cards.traffic || false}
-                onChange={() => handleToggle('traffic')}
-              />
-            }
-            label={t('home.page.settings.cards.traffic')}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={cards.test || false}
-                onChange={() => handleToggle('test')}
-              />
-            }
-            label={t('home.page.settings.cards.tests')}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={cards.ip || false}
-                onChange={() => handleToggle('ip')}
-              />
-            }
-            label={t('home.page.settings.cards.ip')}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={cards.clashinfo || false}
-                onChange={() => handleToggle('clashinfo')}
-              />
-            }
-            label={t('home.page.settings.cards.clashInfo')}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={cards.systeminfo || false}
-                onChange={() => handleToggle('systeminfo')}
-              />
-            }
-            label={t('home.page.settings.cards.systemInfo')}
-          />
-        </FormGroup>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>{t('shared.actions.cancel')}</Button>
-        <Button onClick={handleSave} color="primary">
-          {t('shared.actions.save')}
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <BaseDialog
+      open={open}
+      title={t('home.page.settings.title')}
+      contentSx={{ maxWidth: 444 }}
+      okBtn={t('shared.actions.save')}
+      cancelBtn={t('shared.actions.cancel')}
+      onOk={handleSave}
+      onCancel={onClose}
+      onClose={onClose}
+    >
+      <div className="flex flex-col gap-compact">
+        {CARD_OPTIONS.map(({ key, label }) => (
+          <label
+            key={key}
+            className="flex cursor-pointer select-none items-center gap-component py-inline"
+          >
+            <Checkbox
+              checked={cards[key] || false}
+              onCheckedChange={() => handleToggle(key)}
+            />
+            <span className="text-body text-[var(--color-text-primary)]">
+              {t(label)}
+            </span>
+          </label>
+        ))}
+      </div>
+    </BaseDialog>
   )
 }
 
@@ -276,9 +219,12 @@ const HomePage = () => {
       if (!effectiveHomeCards[cardKey]) return null
 
       return (
-        <Grid size={size} key={cardKey}>
+        <div
+          className={size === 12 ? 'col-span-6 md:col-span-12' : 'col-span-6'}
+          key={cardKey}
+        >
           {component}
-        </Grid>
+        </div>
       )
     },
     [effectiveHomeCards],
@@ -324,7 +270,7 @@ const HomePage = () => {
         'traffic',
         <EnhancedCard
           title={t('home.page.cards.trafficStats')}
-          icon={<SpeedOutlined />}
+          icon={<Gauge />}
           iconColor="secondary"
         >
           <EnhancedTrafficStats />
@@ -333,25 +279,25 @@ const HomePage = () => {
       ),
       renderCard(
         'test',
-        <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
+        <Suspense fallback={cardFallback}>
           <LazyTestCard />
         </Suspense>,
       ),
       renderCard(
         'ip',
-        <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
+        <Suspense fallback={cardFallback}>
           <LazyIpInfoCard />
         </Suspense>,
       ),
       renderCard(
         'clashinfo',
-        <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
+        <Suspense fallback={cardFallback}>
           <LazyClashInfoCard />
         </Suspense>,
       ),
       renderCard(
         'systeminfo',
-        <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
+        <Suspense fallback={cardFallback}>
           <LazySystemInfoCard />
         </Suspense>,
       ),
@@ -367,34 +313,45 @@ const HomePage = () => {
       title={t('home.page.title')}
       contentStyle={{ padding: 2 }}
       header={
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Tooltip title={t('home.page.tooltips.lightweightMode')} arrow>
-            <IconButton
-              onClick={async () => await entry_lightweight_mode()}
-              size="small"
-              color="inherit"
-            >
-              <HistoryEduOutlined />
-            </IconButton>
+        <div className="flex items-center">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={async () => await entry_lightweight_mode()}
+              >
+                <ScrollText />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {t('home.page.tooltips.lightweightMode')}
+            </TooltipContent>
           </Tooltip>
-          <Tooltip title={t('home.page.tooltips.manual')} arrow>
-            <IconButton onClick={toGithubDoc} size="small" color="inherit">
-              <HelpOutlineRounded />
-            </IconButton>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon-sm" onClick={toGithubDoc}>
+                <CircleHelp />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('home.page.tooltips.manual')}</TooltipContent>
           </Tooltip>
-          <Tooltip title={t('home.page.tooltips.settings')} arrow>
-            <IconButton onClick={openSettings} size="small" color="inherit">
-              <SettingsOutlined />
-            </IconButton>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon-sm" onClick={openSettings}>
+                <Settings />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('home.page.tooltips.settings')}</TooltipContent>
           </Tooltip>
-        </Box>
+        </div>
       }
     >
-      <Grid container spacing={1.5} columns={{ xs: 6, sm: 6, md: 12 }}>
+      <div className="grid grid-cols-6 gap-stack md:grid-cols-12">
         {criticalCards}
 
         {nonCriticalCards}
-      </Grid>
+      </div>
 
       {/* 首页设置弹窗 */}
       <HomeSettingsDialog
@@ -414,7 +371,7 @@ const NetworkSettingsCard = () => {
   return (
     <EnhancedCard
       title={t('home.page.cards.networkSettings')}
-      icon={<DnsOutlined />}
+      icon={<Server />}
       iconColor="primary"
       action={null}
     >
@@ -429,7 +386,7 @@ const ClashModeEnhancedCard = () => {
   return (
     <EnhancedCard
       title={t('home.page.cards.proxyMode')}
-      icon={<RouterOutlined />}
+      icon={<Router />}
       iconColor="info"
       action={null}
     >
