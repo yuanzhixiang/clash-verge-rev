@@ -1,48 +1,14 @@
-import { styled } from '@mui/material'
-
-const Loading = styled('div')`
-  position: relative;
-  display: flex;
-  height: 100%;
-  min-height: 18px;
-  box-sizing: border-box;
-  align-items: center;
-
-  & > div {
-    box-sizing: border-box;
-    width: 6px;
-    height: 6px;
-    margin: 2px;
-    border-radius: 50%;
-    animation: loading 0.7s -0.15s infinite linear;
-  }
-
-  & > div:nth-child(2n-1) {
-    animation-delay: -0.5s;
-  }
-
-  @keyframes loading {
-    50% {
-      opacity: 0.2;
-      transform: scale(0.75);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-`
-
-const LoadingItem = styled('div')(({ theme }) => ({
-  background: theme.palette.text.secondary,
-}))
+const dotClass =
+  'size-1.5 m-0.5 rounded-full bg-[color:var(--color-text-secondary)] ' +
+  'animate-[loading-dot_0.7s_-0.15s_infinite_linear] ' +
+  '[&:nth-child(2n-1)]:[animation-delay:-0.5s]'
 
 export const BaseLoading = () => {
   return (
-    <Loading>
-      <LoadingItem />
-      <LoadingItem />
-      <LoadingItem />
-    </Loading>
+    <div className="relative box-border flex h-full min-h-[18px] items-center">
+      <div className={dotClass} />
+      <div className={dotClass} />
+      <div className={dotClass} />
+    </div>
   )
 }

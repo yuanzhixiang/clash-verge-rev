@@ -131,6 +131,18 @@
   --text-display--line-height: 1.15;
 }
 
+/* ---- 组件动画关键帧 ---- */
+@keyframes loading-dot {
+  50% {
+    opacity: 0.2;
+    transform: scale(0.75);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* ---- 基础层 ---- */
 @layer base {
   * {
