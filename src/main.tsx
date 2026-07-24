@@ -1,7 +1,9 @@
 import './assets/styles/index.scss'
+import './assets/styles/globals.css'
 
 import { ResizeObserver } from '@juggle/resize-observer'
 import { ComposeContextProvider } from 'foxact/compose-context-provider'
+import { ThemeProvider as NextThemesProvider } from 'next-themes'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router'
@@ -57,17 +59,24 @@ const initializeApp = (initialThemeMode: 'light' | 'dark') => {
   const root = createRoot(container)
   root.render(
     <React.StrictMode>
-      <ComposeContextProvider contexts={contexts}>
-        <BaseErrorBoundary>
-          <SWRConfig value={swrConfig}>
-            <WindowProvider>
-              <AppDataProvider>
-                <RouterProvider router={router} />
-              </AppDataProvider>
-            </WindowProvider>
-          </SWRConfig>
-        </BaseErrorBoundary>
-      </ComposeContextProvider>
+      <NextThemesProvider
+        attribute="class"
+        enableSystem={false}
+        defaultTheme={initialThemeMode}
+        disableTransitionOnChange
+      >
+        <ComposeContextProvider contexts={contexts}>
+          <BaseErrorBoundary>
+            <SWRConfig value={swrConfig}>
+              <WindowProvider>
+                <AppDataProvider>
+                  <RouterProvider router={router} />
+                </AppDataProvider>
+              </WindowProvider>
+            </SWRConfig>
+          </BaseErrorBoundary>
+        </ComposeContextProvider>
+      </NextThemesProvider>
     </React.StrictMode>,
   )
 }

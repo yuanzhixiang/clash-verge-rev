@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import path from 'node:path'
 
+import tailwindcss from '@tailwindcss/vite'
 import legacy from '@vitejs/plugin-legacy'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
@@ -177,6 +178,7 @@ export default defineConfig({
   plugins: [
     safeTauriCoreInvokeBridge,
     safeReadOnlyCliRelay,
+    tailwindcss(),
     svgr(),
     react(),
     legacy({

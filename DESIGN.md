@@ -1,376 +1,137 @@
-# Clash Verge Rev 设计规范
-
-## 1. 规范定位
-
-本项目采用 **Surge × Linear** 的桌面工具设计语言：以 macOS 原生应用的空间、圆角和雾面层次为骨架，以 Linear 的克制配色、hairline 边框和高信息密度为细节标准。
-
-设计目标：
-
-- 清晰、安静、专业，适合长时间使用的网络工具。
-- Light 与 Dark 使用同一套层级关系，不为任一主题单独设计另一套结构。
-- 强调色只用于选中、焦点、主要操作和少量状态，不进行大面积染色。
-- 优先使用实色表面、细边框和留白表达层级；阴影只用于真正浮起的卡片或弹窗。
-- 新 UI 必须复用现有 MUI、Emotion、基础组件和 shell 变量，避免产生第二套组件语言。
-
-## 2. 强制执行流程
-
-新增或重做任何页面、组件、弹窗前，必须按以下顺序执行：
-
-1. 完整阅读本文件。
-2. 阅读对应源码路径下的 `plan/` 镜像文档。
-3. 优先复用 `BasePage`、`BaseSearchBox`、`EnhancedCard`、MUI 组件和 shell 变量。
-4. 设计与本规范冲突时，先更新本规范或相关 Plan，确认后再实现。
-5. 同时检查 Light、Dark、hover、pressed、focus-visible、disabled、loading、空态、错误态和窄窗口。
-
-禁止只根据单张截图临时写死颜色、阴影或间距。禁止为单个页面复制一套近似但不一致的设计 token。
-
-## 3. 视觉原则
-
-### 3.1 层级而非装饰
-
-- 页面层级顺序为：窗口画布 → 主内容面板 → 卡片/列表 → 浮层。
-- 同层元素使用同一表面；不要通过随机渐变、彩色阴影或多种强调色制造差异。
-- 列表优先使用单一容器与横向分隔线，不把每一行都做成独立卡片。
-- 表格依靠表头、斑马纹、留白和 hover 组织信息，默认不画列间竖线。
-
-### 3.2 强调色克制
-
-- 主色只用于主要按钮、当前选项、焦点环、链接和关键状态。
-- hover 通常只提升中性表面，不把整行或整张卡片染成主色。
-- 图标可使用低透明度语义色底，但不得让多个高饱和颜色同时争夺注意力。
-
-### 3.3 桌面工具密度
-
-- 页头和概览卡片允许宽松留白。
-- 配置列表、规则、连接、日志等高密度区域使用 32–44px 行高。
-- 操作控件以 32、36、38px 为主要高度，不使用移动端式超大按钮。
-
-## 4. 配色
-
-所有运行时颜色应优先从 MUI Palette 或 `src/utils/shell-theme.ts` 读取，不直接在业务组件中复制色值。
-
-### 4.1 品牌与强调色
-
-| Token | Light | Dark | 用途 |
-|---|---:|---:|---|
-| Primary | `#5E6AD2` | `#7B85E8` | 主按钮、选中项、焦点、关键链接 |
-| On Primary | `#FFFFFF` | `#FFFFFF` | 主色表面上的文字和图标 |
-| Secondary | `#FC9B76` | `#FF9F0A` | 少量辅助提示，不用于大面积装饰 |
-| Info | `#4C8DFF` | `#0A84FF` | 信息状态 |
-| Success | `#06943D` | `#30D158` | 成功、在线、可用 |
-| Warning | `#FF9500` | `#FF9F0A` | 警告、待配置 |
-| Error | `#FF3B30` | `#FF453A` | 错误、危险操作 |
-
-主色透明背景建议：
-
-- 极轻选中/装饰：`alpha(primary, 0.06–0.08)`。
-- 常规选中：`alpha(primary, 0.10–0.14)`。
-- Dark 模式可在相同语义上增加约 `0.02–0.05` 透明度。
-
-### 4.2 Light 表面
-
-| Token | 色值 | 用途 |
-|---|---:|---|
-| Canvas | `#EDF2F7` | 窗口外层画布、侧栏背景 |
-| Panel | `#FBFCFD` | 主内容面板、页面背景 |
-| Panel Muted | `#F2F5F8` | tonal 按钮、搜索框、次级区域 |
-| Card | `#FFFFFF` | 首页卡片、浮起内容块 |
-| Primary Text | `#000000` | 标题、主要正文 |
-| Secondary Text | `rgba(60, 60, 67, 0.60)` | 描述、时间、元数据 |
-| Hairline | `rgba(31, 35, 40, 0.09)` | 普通边框和分隔线 |
-| Hairline Strong | `rgba(31, 35, 40, 0.14)` | 浮层、强调边界 |
-| Nav Hover | `rgba(0, 0, 0, 0.05)` | 导航和列表 hover |
-| Nav Selected | `rgba(0, 0, 0, 0.085)` | 当前导航、中性选中态 |
-
-### 4.3 Dark 表面
-
-| Token | 色值 | 用途 |
-|---|---:|---|
-| Canvas | `#151619` | 窗口外层画布、侧栏背景 |
-| Panel | `#1B1C20` | 主内容面板、页面背景 |
-| Panel Muted | `#232429` | tonal 按钮、搜索框、次级区域 |
-| Card | `#232429` | 首页卡片、浮起内容块 |
-| Primary Text | `#FFFFFF` | 标题、主要正文 |
-| Secondary Text | `rgba(235, 235, 245, 0.60)` | 描述、时间、元数据 |
-| Hairline | `rgba(255, 255, 255, 0.08)` | 普通边框和分隔线 |
-| Hairline Strong | `rgba(255, 255, 255, 0.13)` | 浮层、强调边界 |
-| Nav Hover | `rgba(255, 255, 255, 0.05)` | 导航和列表 hover |
-| Nav Selected | `rgba(255, 255, 255, 0.085)` | 当前导航、中性选中态 |
-
-### 4.4 文本对比规则
-
-- 标题和关键数值使用 Primary Text。
-- 描述、更新时间、占位符、标签使用 Secondary Text。
-- disabled 内容在 Secondary Text 基础上降低透明度，但仍须可辨认。
-- 不使用浅灰正文承载关键操作或错误信息。
-- 颜色不能成为状态的唯一表达；必须同时提供文字、图标、形状或选中位置。
-
-## 5. 字体与排版
-
-### 5.1 字体家族
-
-默认字体栈：
-
-```css
--apple-system, BlinkMacSystemFont, "Microsoft YaHei UI", "Microsoft YaHei",
-Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji"
-```
-
-- macOS 优先使用系统 SF 字体，保证原生桌面质感。
-- Windows 优先使用 Microsoft YaHei UI，避免中文与西文字重不协调。
-- 代码、规则原文和日志使用 `ui-monospace, SFMono-Regular, Menlo, monospace`。
-- 不为单个页面引入新的 Web Font。
-
-### 5.2 字号层级
-
-| 层级 | 字号 | 字重 | 行高 | 字距 | 使用场景 |
-|---|---:|---:|---:|---:|---|
-| 页面标题 | `28px` | `650` | `1.15` | `-0.035em` | 常规 `BasePage` 标题 |
-| 强页面标题 | `34px` | `700–720` | `1.08` | `-0.045em` | Rules 等独立高密度页面 |
-| 弹窗标题 | `20px` | `650` | `1.25` | `-0.025em` | Dialog 标题 |
-| 卡片标题 | `16px` | `600` | `1.25` | `-0.015em` | 首页和概览卡片 |
-| 小节标题 | `14px` | `600` | `1.35` | `-0.01em` | 列表分组、表单小节 |
-| 正文 | `14px` | `400` | `1.5` | `0` | 默认正文和列表内容 |
-| 按钮 | `13.5px` | `550` | `1.2` | `0` | 常规按钮、工具栏控件 |
-| 次要正文 | `12px` | `400` | `1.4` | `0` | 更新时间、辅助信息 |
-| 标签 | `11px` | `500` | `1` | `0` | Meta Tag、状态标签 |
-| 表格/规则代码 | `12–13px` | `400–500` | `1.5` | `0` | 规则、ID、日志 |
-
-窄窗口中常规页面标题降为 `24px`，不要通过缩放整个页面解决空间不足。
-
-### 5.3 排版规则
-
-- 页面标题和弹窗标题使用负字距；正文不使用明显负字距。
-- 正文默认左对齐；数值列可右对齐。
-- 长名称单行省略，并通过 `title` 或 Tooltip 提供完整内容。
-- 不使用全大写作为常规层级；协议名和固定缩写除外。
-- 同一行内标题、标签、时间的视觉顺序应为：标题最强，标签次之，时间最弱。
-
-## 6. 间距与布局
-
-### 6.1 基础间距系统
-
-以 `4px` 为基础单位：
-
-| Token | 数值 | 常见用途 |
-|---|---:|---|
-| `space-1` | `4px` | 图标微调、紧凑标签间距 |
-| `space-2` | `8px` | 按钮组、图标与文字、紧凑行内间距 |
-| `space-3` | `12px` | 控件间距、列表内次级间距 |
-| `space-4` | `16px` | 常规组件内边距 |
-| `space-5` | `20px` | 紧凑区块间距 |
-| `space-6` | `24px` | 卡片内边距、模块间距 |
-| `space-7` | `28px` | 页面水平留白 |
-| `space-8` | `32px` | 大区块留白 |
-| `space-12` | `48px` | 独立章节间距，谨慎使用 |
-
-不要使用无法归入 4px 系统的随意数值；视觉微调允许 `1px`、`2px` 和半个 MUI spacing 单位。
-
-### 6.2 应用壳层
-
-- 展开侧栏：`232px`。
-- 折叠侧栏：`72px`。
-- 主面板距窗口边缘：默认 `12px`，小窗口 `8px`。
-- 主内容面板圆角：默认 `20px`，小窗口 `12px`。
-- macOS Overlay 左侧交通灯安全区：`28px`。
-- 主面板内部标题栏拖拽区：`28px`。
-
-### 6.3 页面
-
-- 常规页头高度：`76px`；窄窗口 `66px`。
-- 常规页面左右留白：`28px`；窄窗口 `18px`。
-- 常规内容顶部：`18px`；底部：`24px`。
-- 页面内容最大宽度：`1440px`，高密度表格可使用 full 模式占满。
-- 页头操作控件间距：`8–12px`；标题与操作区之间至少 `20px`。
-
-### 6.4 卡片与列表
-
-- 卡片内边距：常规 `18–24px`。
-- 卡片之间：`12px` 或 `16px`。
-- 弹窗标题区水平留白：`24px`；较宽 Provider 弹窗使用 `24px`。
-- 弹窗内容底部留白：`24px`。
-- 工具列表行：`60–68px`；带流量详情的 Provider 行可为 `88–92px`。
-- 紧凑表格行：`32–36px`。
-- 导航项高：`44px`；相邻导航项垂直间隔约 `3px`。
-
-## 7. 圆角、边框与阴影
-
-### 7.1 圆角
-
-| Token | CSS 变量 | 数值 | 使用场景 |
-|---|---|---:|---|
-| Compact | `--radius-compact` | `6px` | Meta Tag、Tooltip、小状态块、微型容器 |
-| Control | `--radius-control` | `9px` | 按钮、输入框、图标按钮、导航项、紧凑表格容器 |
-| Container | `--radius-container` | `12px` | 卡片、列表容器、普通 Paper |
-| Overlay | `--radius-overlay` | `18px` | Dialog、Popover、Menu 等浮层 |
-| Shell | `--radius-shell` | `20px` | 应用主内容面板 |
-| Pill | `--radius-pill` | `999px` | 搜索框、分段选择器、Chip、进度轨道和 Switch 轨道 |
-| Circle | 无变量 | `50%` | 头像、状态点、圆形图标和加载器 |
-
-业务样式必须引用语义 CSS 变量，不得在 `sx`、Emotion 或 SCSS 中写数字圆角或复制像素值。`0` 只用于明确取消连续列表边缘的圆角；`50%` 只用于宽高相等的真实圆形。数据可视化图元可以使用 Circle 或 Pill，但不得借此为普通按钮、卡片或列表引入新的圆角值。
-
-### 7.2 边框
-
-- 普通边框：`1px solid var(--shell-border)`。
-- 浮层或需要更清晰边界时：`1px solid var(--shell-border-strong)`。
-- 卡片、列表、表格默认只画完整外框和必要的横向分隔线。
-- 禁止默认绘制表格列间竖线、Provider 行尾竖分隔线或 hover 后出现的强调色竖线。
-- 输入框聚焦只增强最外层圆角描边；内部原生 `input` 不得出现额外矩形 outline。
-- 分段控件聚焦或 hover 不得在单个按钮边缘产生被裁切的竖线。
-
-### 7.3 阴影
-
-Light：
-
-- 卡片默认：`0 10px 28px rgba(63, 78, 96, 0.07)`。
-- 卡片 hover：`0 14px 32px rgba(63, 78, 96, 0.10)`。
-- Dialog：`0 28px 80px rgba(25, 35, 48, 0.20)`。
-- 应用主面板：Windows/Linux 可用 `0 18px 48px rgba(55, 70, 90, 0.11)`；macOS 不使用外阴影。
-
-Dark：
-
-- 卡片默认：`0 10px 28px rgba(0, 0, 0, 0.16)`。
-- 卡片 hover：`0 14px 32px rgba(0, 0, 0, 0.20)`。
-- Dialog：`0 28px 80px rgba(0, 0, 0, 0.45)`。
-- 应用主面板：Windows/Linux 可用 `0 18px 48px rgba(0, 0, 0, 0.30)`；macOS 不使用外阴影。
-
-列表行、表格行、导航项和普通按钮禁止添加投影。
-
-## 8. 组件规范
-
-### 8.1 按钮
-
-- 默认高度：`36px`；紧凑按钮 `32px`；页头 tonal/搜索配套按钮 `38px`。
-- 默认圆角：`9px`；页头 tonal 按钮可用 `12px`。
-- 水平内边距：`14px`；紧凑按钮 `10–12px`。
-- 字号 `13.5px`、字重 `550`，禁止自动大写。
-- Primary：主色背景 + 白色文字，不添加阴影。
-- Outlined：透明或高层表面 + hairline 边框；hover 只轻微提升表面或边框。
-- Tonal：`Panel Muted` 背景，用于 Provider、筛选和次级入口。
-- Text/Icon：默认无背景，hover 使用 `Nav Hover`。
-- destructive 操作只有确认态或明确危险动作使用 Error 色。
-- loading 时保持原尺寸，禁用重复触发；图标更新可使用匀速旋转。
-
-### 8.2 图标按钮
-
-- 常规点击区域至少 `32×32px`，圆角 `9px`。
-- 图标通常 `18–20px`。
-- 默认使用 Secondary Text；hover 后可提升到 Primary Text 或语义色。
-- 必须提供 `aria-label`，仅图标不足以表达含义时增加 Tooltip。
-
-### 8.3 输入框与搜索框
-
-- 普通输入框高 `36–38px`，圆角 `9px`。
-- 页面搜索框使用 Pill 圆角，常用宽度 `320–380px`。
-- 输入文字 `13.5px`；placeholder 使用 Secondary Text。
-- 默认 hairline 边框；hover 不切换为高饱和描边；focus 使用 Primary 单层描边。
-- 搜索图标与输入文字间距 `8px`，尾部匹配选项保持紧凑。
-- 禁止内部矩形焦点框、双层 focus ring 和突兀的蓝色分隔线。
-
-### 8.4 开关
-
-- 使用 MUI Switch 的紧凑尺寸；轨道为 Pill。
-- 未启用轨道保持低对比，启用时使用 Primary 或对应语义色。
-- 开关标签与说明文字必须可以独立说明当前功能，不能只靠颜色判断。
-
-### 8.5 卡片
-
-- 表面：`var(--shell-card)`。
-- 圆角：`12px`。
-- 边框：普通 hairline。
-- 内边距：`18–24px`。
-- 可交互卡片 hover 最多上移 `1px`，并轻微加强边框和阴影。
-- 不可交互卡片不应为了装饰增加 hover 动画。
-- 图标容器推荐 `36×36px`、圆角 `12px`、语义色 `12%` 透明背景。
-- 卡片标题 `16px/600`；描述和指标建立明确字号对比。
-
-### 8.6 导航栏
-
-- 展开宽度 `232px`，背景使用 Canvas。
-- 导航项高 `44px`，使用 Control 圆角 `9px`，水平内边距约 `13px`。
-- 图标 `20px`，图标与文字间距约 `16px`。
-- 文本 `14.5px/450`。
-- hover 使用 `Nav Hover`；选中使用 `Nav Selected`，不改变文字字重，不画左侧高亮条。
-- 分组标题 `12px/500`，使用 Secondary Text 并降低透明度。
-- 折叠态只显示图标，必须保留 title 与可访问名称。
-
-### 8.7 列表与 Provider
-
-- 多条同类数据优先放在一个 `12px` 圆角的 hairline 容器中。
-- 行之间只使用横向 hairline；最后一行不画底线。
-- hover 使用约 `alpha(text.primary, 0.045–0.055)` 的中性背景。
-- 行尾操作直接放在固定宽度区域中，不增加竖向 Divider。
-- Meta Tag 高 `20px`，使用 Compact 圆角 `6px`，字号 `11px/500`。
-- Provider 弹窗宽约 `680px`，圆角 `18px`；标题栏固定，列表独立滚动，不设置冗余底部关闭栏。
-
-### 8.8 表格
-
-- 表头与行高通常为 `32px`。
-- 使用完整外框、Control 圆角 `9px` 和固定表头。
-- 默认不画列间竖线和逐行横线；使用低对比斑马纹与 hover。
-- 选中行使用低透明度 Primary 或中性选中面，不使用整行高饱和蓝色。
-- 长内容省略并允许复制；列宽必须与表头对齐。
-
-### 8.9 Dialog
-
-- 常规圆角 `18px`，实色 Panel 表面，禁止透明穿透。
-- 使用 Hairline Strong 外框和平台对应阴影。
-- 标题 `20px/650`，标题栏水平留白 `24px`，顶部约 `22–24px`。
-- 标题栏右侧依次放主要操作和关闭按钮。
-- 内容区水平和底部留白 `24px`。
-- 复杂弹窗内容独立滚动，标题栏保持稳定。
-- Dialog 通过 Portal 渲染时必须在 Paper 上重新声明 shell 主题变量。
-
-## 9. 交互与动效
-
-- 常规颜色和表面过渡：`160–180ms ease`。
-- 页面不使用大幅入场动画；必要时仅做轻微淡入。
-- 卡片 hover 位移不得超过 `1px`。
-- pressed 状态比 hover 略深，但不得改变布局尺寸。
-- focus-visible 必须清晰可见；输入框显示外层描边，按钮显示完整圆角焦点环。
-- 禁止因 focus 或 hover 出现额外矩形、竖线、布局跳动或边框宽度变化。
-- 尊重 disabled 和 loading 状态；loading 不应导致按钮宽度变化。
-
-## 10. 响应式规则
-
-- `≤720px` 使用折叠导航和更小页面留白。
-- 页头空间不足时允许工具栏换行；搜索框优先占满一行。
-- 不通过隐藏关键操作解决空间不足；优先隐藏次要元数据。
-- 表格必须保留必要列并允许横向滚动，不静默压缩到不可读。
-- Dialog 宽度使用 `min(目标宽度, calc(100vw - 24px))`，最大高度不超过 `calc(100vh - 24px)`。
-
-## 11. 可访问性
-
-- 所有可点击图标必须有 `aria-label`。
-- 折叠导航、图标按钮和截断文字必须提供 title 或 Tooltip。
-- 键盘用户可以访问所有按钮、搜索选项、列表行和 Dialog 操作。
-- `focus-visible` 不能被全局清除，也不能被父容器裁切成不完整线段。
-- 正文和关键控件需满足可读对比度；disabled 状态仍需辨认功能含义。
-- 不仅依靠红、绿、蓝表达状态，必须同时提供文字或图标。
-
-## 12. 禁止事项
-
-- 禁止紫色渐变、彩色光晕和与业务无关的装饰纹理。
-- 禁止在普通列表中堆叠大量独立卡片。
-- 禁止为同类按钮混用多个高度、圆角和字重。
-- 禁止写死只适用于 Light 或 Dark 的旧背景色。
-- 禁止在表格、分段控件和 Provider 行中出现无意义的竖线。
-- 禁止全局移除 outline；只能为具体组件提供更合适的可见焦点样式。
-- 禁止为了“更有设计感”批量重排未触碰页面或引入新 UI 框架。
-- 禁止绕过对应 `plan/` 文档直接改变页面流程、业务口径或权限行为。
-
-## 13. 实现映射
-
-当前规范的主要代码入口：
-
-- 主题与 MUI 组件覆盖：`src/pages/_layout/hooks/use-custom-theme.ts`
-- 默认 Palette：`src/pages/_theme.tsx`
-- Shell 色彩变量：`src/utils/shell-theme.ts`
-- 应用壳层：`src/assets/styles/layout.scss`
-- 页面容器：`src/assets/styles/page.scss`
-- 基础页面：`src/components/base/base-page.tsx`
-- 搜索框：`src/components/base/base-search-box.tsx`
-- 首页卡片：`src/components/home/enhanced-card.tsx`
-- 导航项：`src/components/layout/layout-item.tsx`
-
-如果代码与本规范不一致，应优先判断是否为历史遗留。新页面不得复制历史样式；应使用本规范和上述入口逐步收敛。
+# 设计系统规范
+
+本项目的所有视觉样式由三部分共同治理：
+
+- `tokens.css` — 基础层：原始 + 语义 design token。间距、文字、颜色、圆角、
+  阴影、动效、尺寸、z-index、断点的唯一事实源。
+- `shadcn-adapter.css` — 项目的 `globals.css`。把 shadcn/ui（Tailwind v4）的
+  主题变量映射到我们的语义 token，并向 Tailwind 注册语义间距/文字工具类。
+  改主题只改 `tokens.css`，不改本文件，更不改组件源码。
+- `components/ui/*` — 组件层，采纳自 shadcn/ui。源码归本项目所有；
+  Radix 提供的行为与无障碍能力必须保持完整。
+
+暗色模式基于 class（`<html>` 上的 `.dark`，配 next-themes）。暗色覆写
+集中在适配层的 `.dark` 块中，且只覆写语义 token。
+
+## 核心规则
+
+1. **业务代码只允许引用语义层 token**（通过 `var()` 或下文的语义工具类）。
+   禁止使用原始层变量，禁止裸值。
+2. **禁止魔法数字。** 间距、字号、字重、颜色、圆角、阴影、动画时长/缓动
+   一律不允许字面量（如 `margin-top: 20px`、`color: #666`、`transition: 0.3s ease`）。
+   例外仅有：`border-width: 1px`、`0`、`@media` 中的断点字面量。
+3. **禁止发明新值。** 现有 token 不适配时，选最接近的一档并报告：
+   "此处 token 不适配，建议新增语义 token：`<名字>: <职责>`"，由人决定。
+   禁止静默硬编码。
+4. **暗色模式只覆写语义层**，位置在适配层的 `.dark` 块。新增颜色必须
+   同时补暗色值。间距、文字、圆角两种模式下不变。
+5. **一致性优先于局部美观。** 按 token 实现后略有瑕疵的，保留 token 并
+   指出问题，不许用一次性硬编码去"修"。
+
+## 组件层：shadcn/ui
+
+- **优先使用已有 shadcn 组件。** 按钮、对话框、下拉、选择器、toast 等
+  shadcn 已提供的，禁止手搓同类组件。缺的组件用 shadcn CLI 装进
+  `components/ui/`。
+- **组件是自有源码。** 变体和视觉修改进组件文件本身（扩展它的 `cva`
+  variants），禁止在调用处用 `className` 覆盖。
+- **调用处只允许传布局类**：宽度、flex/grid 定位、以及使用语义工具类的
+  外部间距（`mb-block`、`gap-stack`）。调用处禁止覆盖组件的颜色、
+  padding、圆角、阴影、字体。
+- **`components/ui/` 内部由 shadcn 配方治理**：数字间距类（`px-3`、`gap-2`）
+  和 shadcn 颜色类（`bg-accent`、`text-muted-foreground`）只允许在这里出现。
+- 命名提醒：shadcn 语境的 `accent` 是悬停面，不是品牌主色；品牌主色是
+  `primary`。
+- **禁止在组件文件里改主题值。** 一切主题走 `tokens.css` → 适配层。
+- **无障碍：** 禁止删除 Radix 提供的 ARIA 属性、键盘处理和焦点样式。
+  页面级语义（唯一 `h1`、标题层级、landmark）与颜色对比度仍由我们负责。
+  动效必须尊重 `prefers-reduced-motion`。
+
+## 间距：先判断关系，再查表
+
+在 `components/ui/` 之外，使用语义工具类（或等价 `var()`）：
+
+| 关系 | 工具类 / token | 值 | 典型场景 |
+|---|---|---|---|
+| 光学校准 | `*-adjust` | 2px | 图标与文字对齐补偿 |
+| 同一元素的内部部件 | `*-inline` | 4px | 图标与其文字 |
+| 紧凑控件内衬 | `*-compact` | 6px | 高密度菜单项 |
+| 组件内部 | `*-component` | 8px | 组件内元素间 |
+| 同组相邻项 | `*-stack` | 12px | 列表项之间 |
+| 容器内衬 | `*-inset` | 16px | 卡片 padding、表单字段间 |
+| 内容块之间 | `*-block` | 24px | 卡片与卡片、gutter、页边距 |
+| 小节之间 | `*-section-sm` | 32px | 标题区与内容 |
+| 大区块之间 | `*-section` | 48px | 页面章节分隔 |
+| 页面级留白 | `*-page` | 64px | hero、页脚前 |
+
+`*` 可以是任意间距工具类前缀：`p-inset`、`gap-stack`、`mb-block`、
+`space-y-stack` 等。数字间距类（`p-4`、`gap-3`）在 `components/ui/` 之外禁用。
+
+间距编码归属关系——关系越近间距越小。要表达"更疏远"就上调一档，
+不许微调像素。优先用父容器 `gap`，不给子元素各自加 margin。
+
+## 文字：只有八个角色
+
+每个角色 = 尺寸行高工具类 + 配套字重类，必须成对使用，禁止混搭：
+
+| 角色 | 工具类 | 字重类 | 用途 |
+|---|---|---|---|
+| Caption | `text-caption` | `font-normal` | 辅助说明、时间戳 |
+| Label | `text-label` | `font-medium` | 表单标签、按钮文字 |
+| Body | `text-body` | `font-normal` | 应用界面正文默认 |
+| Body large | `text-body-lg` | `font-normal` | 营销页/长文正文 |
+| H3 | `text-h3` | `font-semibold` | 卡片标题 |
+| H2 | `text-h2` | `font-semibold` | 区块标题 |
+| H1 | `text-h1` | `font-semibold` + `tracking-tight` | 页面标题（每页至多一个） |
+| Display | `text-display` | `font-bold` + `tracking-tight` | 营销页 hero |
+
+字体族只允许 `--font-sans` 和 `--font-mono`，禁止直接写字体名。
+
+## 颜色
+
+- 文字只用四级：`--color-text-primary/secondary/muted/disabled`
+  （业务代码优先用 shadcn 工具类：`text-foreground`、`text-muted-foreground`）。
+- 背景只用：`--color-bg-page/subtle/hover/active`（`bg-background`、`bg-muted`、
+  悬停面用 `bg-accent`）。
+- 边框：默认 `--color-border`，输入框 `--color-border-strong`
+  （`border-border`、`border-input`）。
+- **品牌主色只出现在：可交互元素、当前/选中状态、focus ring**
+  （`bg-primary`、`text-primary`、`ring-ring`）。禁止装饰性使用。
+  主色出现得越少越有力。
+- 状态色只用于真实状态语义，配 `*-subtle` 底色。破坏性操作用 `destructive`。
+- 模态/抽屉遮罩用 `--color-backdrop`；focus 样式用组合好的 `--focus-ring`，
+  禁止手拼 outline。
+
+## 圆角、阴影、动效
+
+- 圆角：控件 `--radius-control`，卡片/弹层 `--radius-card`，徽章
+  `--radius-pill`。shadcn 的 `rounded-lg` 即控件圆角。不许出现第四种。
+- 阴影：`--shadow-card` / `--shadow-dropdown` / `--shadow-modal`，宁浅勿深。
+- 交互反馈统一：`transition: var(--transition-control);`
+- 弹层出现：`--motion-popover`（下拉/tooltip）或 `--motion-overlay`
+  （模态/抽屉）。动画属性只允许 transform 与 opacity。
+- 所有动画尊重 `prefers-reduced-motion: reduce`（降级为无动画或仅 opacity）。
+
+## 尺寸、层级、断点
+
+- 控件高度三档：`--size-control-sm/md/lg`（32/36/40px），同一行的输入框
+  与按钮必须同档。
+- 图标三档：`--icon-sm/md/lg`（16/20/24px），`--icon-sm` 配 label/body 文字。
+- 禁止裸写 `z-index`，用刻度（arbitrary value 写法 `z-[var(--z-modal)]`）：
+  `--z-dropdown` < `--z-sticky` < `--z-drawer` < `--z-modal` < `--z-toast`
+  < `--z-tooltip`。
+- 断点：640 / 768 / 1024 / 1280（sm/md/lg/xl）——只通过 Tailwind 响应式
+  前缀使用，这些字面量不允许出现在其他任何地方。
+
+## 自检清单（生成代码前过一遍）
+
+- [ ] 样式无字面量数值/色值（除 0、1px 边框、断点）
+- [ ] 业务代码只引用语义 token / 语义工具类
+- [ ] 数字间距类只出现在 `components/ui/` 内部
+- [ ] 用了已有 shadcn 组件而不是手搓同类
+- [ ] 调用处没有视觉性 `className` 覆盖
+- [ ] 间距按关系查表选取，同层级一致
+- [ ] 文字角色与字重成对使用，没有第九种文字样式
+- [ ] 品牌主色只在可交互/选中/focus 场景出现
+- [ ] 新增颜色补齐了 `.dark` 覆写
+- [ ] Radix 的 ARIA/键盘/焦点行为未被破坏；动效尊重 reduced motion

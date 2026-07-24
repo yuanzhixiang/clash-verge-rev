@@ -1,6 +1,7 @@
 import { Box, List, Menu, MenuItem, Paper, ThemeProvider } from '@mui/material'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
+import { useTheme as useNextTheme } from 'next-themes'
 import {
   Fragment,
   lazy,
@@ -65,6 +66,13 @@ const Layout = () => {
   const isLogsPage = pathname === '/logs'
   const pageVisible = useVisibility()
   const themeReady = useMemo(() => Boolean(theme), [theme])
+
+  // 把 MUI 解析出的明暗（palette.mode）同步给 next-themes，
+  // 由后者在 <html> 上加/去 .dark class，驱动 tokens.css 的暗色语义层。
+  const { setTheme: setNextTheme } = useNextTheme()
+  useEffect(() => {
+    setNextTheme(theme.palette.mode)
+  }, [theme.palette.mode, setNextTheme])
 
   const [menuContextPosition, setMenuContextPosition] =
     useState<MenuContextPosition | null>(null)
