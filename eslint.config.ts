@@ -150,4 +150,12 @@ export default defineConfig([
       },
     },
   },
+  {
+    // 采纳自 shadcn/ui 的组件底座：源码归本项目所有，但组件文件常同时导出
+    // 组件与 cva variants（如 buttonVariants），关闭 react-refresh 的单一导出约束。
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])
