@@ -59,7 +59,6 @@
     "cidr-block": "^2.3.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "cmdk": "^1.1.1",
     "dayjs": "1.11.21",
     "foxact": "^0.3.4",
     "foxts": "^5.4.2",
