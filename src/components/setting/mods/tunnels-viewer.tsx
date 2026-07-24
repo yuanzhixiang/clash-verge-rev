@@ -1,20 +1,18 @@
-import { Delete, ExpandLess, ExpandMore } from '@mui/icons-material'
-import {
-  Button,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemButton,
-  IconButton,
-  TextField,
-  Select,
-  MenuItem,
-} from '@mui/material'
+import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import { forwardRef, useImperativeHandle, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog } from '@/components/base'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
 import { useClash } from '@/hooks/use-clash'
 import { useProxiesData } from '@/providers/app-data-context'
 import { isPortInUse } from '@/services/cmds'
@@ -37,6 +35,9 @@ interface TunnelEntry {
   target: string
   proxy?: string
 }
+
+// Radix Select 不允许空字符串作为 item value，用哨兵值代表“默认（不指定）”
+const DEFAULT_OPTION = '__default__'
 
 export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
   const { t } = useTranslation()
@@ -212,271 +213,235 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
       }}
       onOk={handleSave}
     >
-      <List>
+      <div className="py-component">
         {draftTunnels.length > 0 && (
           <>
-            <ListItem sx={{ padding: '4px 0', opacity: 0.6 }}>
-              <ListItemText
-                primary={t(
-                  'settings.sections.clash.form.fields.tunnels.existing',
-                )}
-              />
-            </ListItem>
-            <List component="nav">
+            <div className="flex items-center py-[4px] opacity-60">
+              <span className="flex-1">
+                {t('settings.sections.clash.form.fields.tunnels.existing')}
+              </span>
+            </div>
+            <div>
               {tunnelEntries.map((item) => (
-                <ListItem
+                <div
                   key={`${item.key}`}
-                  sx={{ padding: '4px 0' }}
-                  secondaryAction={
-                    <IconButton
-                      edge="end"
-                      size="small"
-                      color="error"
-                      onClick={() => handleDelete(item.index)}
-                    >
-                      <Delete fontSize="small" />
-                    </IconButton>
-                  }
+                  className="flex items-center gap-component py-[4px]"
                 >
-                  <ListItemText
-                    primary={`${item.address} → ${item.target}`}
-                    secondary={`${item.network.join(', ')} · ${
-                      item.proxy ??
-                      t('settings.sections.clash.form.fields.tunnels.default')
-                    }`}
-                  />
-                </ListItem>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-body">{`${item.address} → ${item.target}`}</p>
+                    <p className="truncate text-caption text-[var(--color-text-secondary)]">
+                      {`${item.network.join(', ')} · ${
+                        item.proxy ??
+                        t('settings.sections.clash.form.fields.tunnels.default')
+                      }`}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="text-[var(--color-danger)]"
+                    onClick={() => handleDelete(item.index)}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
               ))}
-            </List>
-            <Divider sx={{ my: 2 }} />
+            </div>
+            <Separator className="my-inset" />
           </>
         )}
-        <ListItemButton
-          sx={{ padding: '4px 0', opacity: 0.8 }}
+        <button
+          type="button"
+          className="flex w-full items-center py-[4px] text-left opacity-80"
           onClick={() => setExpanded((v) => !v)}
         >
-          <ListItemText
-            primary={t(
-              'settings.sections.clash.form.fields.tunnels.actions.addNew',
-            )}
-          />
-          {expanded ? <ExpandLess /> : <ExpandMore />}
-        </ListItemButton>
+          <span className="flex-1">
+            {t('settings.sections.clash.form.fields.tunnels.actions.addNew')}
+          </span>
+          {expanded ? (
+            <ChevronUp className="size-5" />
+          ) : (
+            <ChevronDown className="size-5" />
+          )}
+        </button>
         {expanded && (
-          <ListItem sx={{ padding: '8px 0' }}>
-            <div style={{ width: '100%' }}>
-              {/* 输入框区域 */}
-              {/* 协议 */}
-              <ListItem sx={{ padding: '6px 2px' }}>
-                <ListItemText
-                  primary={t(
-                    'settings.sections.clash.form.fields.tunnels.protocols',
-                  )}
-                />
-                <Select
-                  size="small"
-                  sx={{ width: 200, '> div': { py: '7.5px' } }}
-                  value={values.network}
-                  onChange={(e) =>
-                    setValues((v) => ({
-                      ...v,
-                      network: e.target.value as string,
-                    }))
-                  }
-                >
-                  <MenuItem value="tcp">TCP</MenuItem>
-                  <MenuItem value="udp">UDP</MenuItem>
-                  <MenuItem value="tcp+udp">TCP + UDP</MenuItem>
-                </Select>
-              </ListItem>
+          <div className="w-full py-component">
+            {/* 输入框区域 */}
+            {/* 协议 */}
+            <div className="flex items-center gap-component py-compact px-adjust">
+              <span className="flex-1">
+                {t('settings.sections.clash.form.fields.tunnels.protocols')}
+              </span>
+              <Select
+                value={values.network}
+                onValueChange={(value) =>
+                  setValues((v) => ({ ...v, network: value }))
+                }
+              >
+                <SelectTrigger size="sm" className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tcp">TCP</SelectItem>
+                  <SelectItem value="udp">UDP</SelectItem>
+                  <SelectItem value="tcp+udp">TCP + UDP</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              {/* 本地监听地址 */}
-              <ListItem sx={{ padding: '6px 2px' }}>
-                <ListItemText
-                  primary={t(
-                    'settings.sections.clash.form.fields.tunnels.localAddr',
-                  )}
-                />
-                <TextField
-                  autoComplete="new-password"
-                  size="small"
-                  sx={{ width: 200 }}
-                  value={values.localAddr}
-                  placeholder="127.0.0.1"
-                  onChange={(e) =>
-                    setValues((v) => ({ ...v, localAddr: e.target.value }))
-                  }
-                />
-              </ListItem>
+            {/* 本地监听地址 */}
+            <div className="flex items-center gap-component py-compact px-adjust">
+              <span className="flex-1">
+                {t('settings.sections.clash.form.fields.tunnels.localAddr')}
+              </span>
+              <Input
+                autoComplete="new-password"
+                className="h-8 w-[200px]"
+                value={values.localAddr}
+                placeholder="127.0.0.1"
+                onChange={(e) =>
+                  setValues((v) => ({ ...v, localAddr: e.target.value }))
+                }
+              />
+            </div>
 
-              {/* 本地监听端口 */}
-              <ListItem sx={{ padding: '6px 2px' }}>
-                <ListItemText
-                  primary={t(
-                    'settings.sections.clash.form.fields.tunnels.localPort',
-                  )}
-                />
-                <TextField
-                  autoComplete="new-password"
-                  size="small"
-                  type="number"
-                  sx={{ width: 200 }}
-                  value={values.localPort}
-                  placeholder="6553"
-                  onChange={(e) =>
-                    setValues((v) => ({ ...v, localPort: e.target.value }))
-                  }
-                />
-              </ListItem>
+            {/* 本地监听端口 */}
+            <div className="flex items-center gap-component py-compact px-adjust">
+              <span className="flex-1">
+                {t('settings.sections.clash.form.fields.tunnels.localPort')}
+              </span>
+              <Input
+                autoComplete="new-password"
+                type="number"
+                className="h-8 w-[200px]"
+                value={values.localPort}
+                placeholder="6553"
+                onChange={(e) =>
+                  setValues((v) => ({ ...v, localPort: e.target.value }))
+                }
+              />
+            </div>
 
-              {/* 目标服务器地址 */}
-              <ListItem sx={{ padding: '6px 2px' }}>
-                <ListItemText
-                  primary={t(
-                    'settings.sections.clash.form.fields.tunnels.targetAddr',
-                  )}
-                />
-                <TextField
-                  autoComplete="new-password"
-                  size="small"
-                  sx={{ width: 200 }}
-                  value={values.targetAddr}
-                  placeholder="8.8.8.8"
-                  onChange={(e) =>
-                    setValues((v) => ({ ...v, targetAddr: e.target.value }))
-                  }
-                />
-              </ListItem>
+            {/* 目标服务器地址 */}
+            <div className="flex items-center gap-component py-compact px-adjust">
+              <span className="flex-1">
+                {t('settings.sections.clash.form.fields.tunnels.targetAddr')}
+              </span>
+              <Input
+                autoComplete="new-password"
+                className="h-8 w-[200px]"
+                value={values.targetAddr}
+                placeholder="8.8.8.8"
+                onChange={(e) =>
+                  setValues((v) => ({ ...v, targetAddr: e.target.value }))
+                }
+              />
+            </div>
 
-              {/* 目标服务器端口 */}
-              <ListItem sx={{ padding: '6px 2px' }}>
-                <ListItemText
-                  primary={t(
-                    'settings.sections.clash.form.fields.tunnels.targetPort',
-                  )}
-                />
-                <TextField
-                  autoComplete="new-password"
-                  size="small"
-                  type="number"
-                  sx={{ width: 200 }}
-                  value={values.targetPort}
-                  placeholder="53"
-                  onChange={(e) =>
-                    setValues((v) => ({ ...v, targetPort: e.target.value }))
-                  }
-                />
-              </ListItem>
+            {/* 目标服务器端口 */}
+            <div className="flex items-center gap-component py-compact px-adjust">
+              <span className="flex-1">
+                {t('settings.sections.clash.form.fields.tunnels.targetPort')}
+              </span>
+              <Input
+                autoComplete="new-password"
+                type="number"
+                className="h-8 w-[200px]"
+                value={values.targetPort}
+                placeholder="53"
+                onChange={(e) =>
+                  setValues((v) => ({ ...v, targetPort: e.target.value }))
+                }
+              />
+            </div>
 
-              {/* 代理组 */}
-              <ListItem sx={{ padding: '6px 2px' }}>
-                <ListItemText
-                  primary={
-                    <>
-                      {t(
-                        'settings.sections.clash.form.fields.tunnels.proxyGroup',
-                      )}
-                      <span style={{ fontSize: '0.9rem', color: 'gray' }}>
-                        {' '}
-                        (
-                        {t(
-                          'settings.sections.clash.form.fields.tunnels.optional',
-                        )}
-                        )
-                      </span>
-                    </>
-                  }
-                />
-                <Select
-                  size="small"
-                  sx={{ width: 200, '> div': { py: '7.5px' } }}
-                  value={values.group}
-                  displayEmpty
-                  onChange={(e) => {
-                    const nextGroup = e.target.value as string
-                    const group = proxyGroups.find((g) => g.name === nextGroup)
-                    const firstProxy = group?.all?.[0].name ?? ''
+            {/* 代理组 */}
+            <div className="flex items-center gap-component py-compact px-adjust">
+              <span className="flex-1">
+                {t('settings.sections.clash.form.fields.tunnels.proxyGroup')}
+                <span className="text-caption text-[var(--color-text-muted)]">
+                  {' '}
+                  ({t('settings.sections.clash.form.fields.tunnels.optional')})
+                </span>
+              </span>
+              <Select
+                value={values.group || DEFAULT_OPTION}
+                onValueChange={(value) => {
+                  const nextGroup = value === DEFAULT_OPTION ? '' : value
+                  const group = proxyGroups.find((g) => g.name === nextGroup)
+                  const firstProxy = group?.all?.[0].name ?? ''
 
-                    setValues((v) => ({
-                      ...v,
-                      group: nextGroup,
-                      proxy: firstProxy, // 组切换时自动选第一条节点
-                    }))
-                  }}
-                >
-                  <MenuItem value="">
-                    {t('settings.sections.clash.form.fields.tunnels.default')}
-                  </MenuItem>
-                  {groupNames.map((name) => (
-                    <MenuItem key={name} value={name}>
-                      {name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </ListItem>
-
-              {/* 代理节点 */}
-              <ListItem sx={{ padding: '6px 2px' }}>
-                <ListItemText
-                  primary={
-                    <>
-                      {t(
-                        'settings.sections.clash.form.fields.tunnels.proxyNode',
-                      )}
-                      <span style={{ fontSize: '0.9rem', color: 'gray' }}>
-                        {' '}
-                        (
-                        {t(
-                          'settings.sections.clash.form.fields.tunnels.optional',
-                        )}
-                        )
-                      </span>
-                    </>
-                  }
-                />
-                <Select
-                  size="small"
-                  sx={{ width: 200, '> div': { py: '7.5px' } }}
-                  value={values.proxy}
-                  displayEmpty
-                  onChange={(e) =>
-                    setValues((v) => ({
-                      ...v,
-                      proxy: e.target.value as string,
-                    }))
-                  }
-                  disabled={!values.group} // 没选组就禁用
-                >
-                  <MenuItem value="">
-                    {t('settings.sections.clash.form.fields.tunnels.default')}
-                  </MenuItem>
-                  {proxyOptions.map((node) => (
-                    <MenuItem key={node.name} value={node.name}>
-                      {node.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </ListItem>
-
-              {/* 添加按钮 */}
-              <Button
-                variant="contained"
-                size="small"
-                sx={{
-                  marginTop: '6px',
-                  marginRight: '2px',
-                  marginLeft: 'auto',
-                  display: 'block',
+                  setValues((v) => ({
+                    ...v,
+                    group: nextGroup,
+                    proxy: firstProxy, // 组切换时自动选第一条节点
+                  }))
                 }}
-                color="success"
+              >
+                <SelectTrigger size="sm" className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={DEFAULT_OPTION}>
+                    {t('settings.sections.clash.form.fields.tunnels.default')}
+                  </SelectItem>
+                  {groupNames.map((name) => (
+                    <SelectItem key={name} value={name}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 代理节点 */}
+            <div className="flex items-center gap-component py-compact px-adjust">
+              <span className="flex-1">
+                {t('settings.sections.clash.form.fields.tunnels.proxyNode')}
+                <span className="text-caption text-[var(--color-text-muted)]">
+                  {' '}
+                  ({t('settings.sections.clash.form.fields.tunnels.optional')})
+                </span>
+              </span>
+              <Select
+                value={values.proxy || DEFAULT_OPTION}
+                onValueChange={(value) =>
+                  setValues((v) => ({
+                    ...v,
+                    proxy: value === DEFAULT_OPTION ? '' : value,
+                  }))
+                }
+                disabled={!values.group} // 没选组就禁用
+              >
+                <SelectTrigger size="sm" className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={DEFAULT_OPTION}>
+                    {t('settings.sections.clash.form.fields.tunnels.default')}
+                  </SelectItem>
+                  {proxyOptions.map((node) => (
+                    <SelectItem key={node.name} value={node.name}>
+                      {node.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 添加按钮 */}
+            <div className="mt-compact flex justify-end pr-adjust">
+              <Button
+                size="sm"
+                className="bg-[var(--color-success)] text-white hover:opacity-90"
                 onClick={handleAdd}
               >
                 {t('settings.sections.clash.form.fields.tunnels.actions.add')}
               </Button>
             </div>
-          </ListItem>
+          </div>
         )}
-      </List>
+      </div>
     </BaseDialog>
   )
 })

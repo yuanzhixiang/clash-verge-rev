@@ -1,5 +1,11 @@
-import { Box, Button, Tooltip } from '@mui/material'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
+
+import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 interface ProxyGroupNavigatorProps {
   proxyGroupNames: string[]
@@ -90,63 +96,26 @@ export const ProxyGroupNavigator = ({
   }
 
   return (
-    <Box
-      sx={{
-        position: 'absolute',
-        right: 2,
-        top: '50%',
-        transform: 'translateY(-50%)',
-        zIndex: 10,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 0.25,
-        bgcolor: 'transparent',
-        borderRadius: 'var(--radius-control)',
-        boxShadow: 0,
-        p: 0.25,
-        maxHeight: '70vh',
-        overflowY: 'auto',
-        scrollbarWidth: 'none',
-        '&::-webkit-scrollbar': {
-          width: 0,
-          height: 0,
-        },
-        minWidth: 'auto',
-      }}
-    >
+    <div className="absolute top-1/2 right-0.5 z-10 flex max-h-[70vh] min-w-0 -translate-y-1/2 flex-col gap-adjust overflow-y-auto rounded-[var(--radius-control)] p-adjust [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {processedGroups.map(({ name, displayChar }) => (
-        <Tooltip key={name} title={name} placement="left" arrow>
-          <Button
-            size="small"
-            variant="text"
-            onClick={() => handleGroupClick(name)}
-            onMouseEnter={() => handleGroupHover(name)}
-            onFocus={() => handleGroupHover(name)}
-            onMouseLeave={handleButtonLeave}
-            onBlur={handleButtonLeave}
-            sx={{
-              minWidth: 28,
-              minHeight: 28,
-              width: 28,
-              height: 28,
-              fontSize: '12px',
-              fontWeight: 600,
-              padding: 0,
-              borderRadius: 'var(--radius-compact)',
-              color: 'text.secondary',
-              textAlign: 'center',
-              justifyContent: 'center',
-              textTransform: 'none',
-              '&:hover': {
-                bgcolor: 'primary.light',
-                color: 'primary.contrastText',
-              },
-            }}
-          >
-            {displayChar}
-          </Button>
+        <Tooltip key={name}>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleGroupClick(name)}
+              onMouseEnter={() => handleGroupHover(name)}
+              onFocus={() => handleGroupHover(name)}
+              onMouseLeave={handleButtonLeave}
+              onBlur={handleButtonLeave}
+              className="size-7 min-w-0 rounded-[var(--radius-compact)] p-0 text-xs font-semibold text-[var(--color-text-secondary)] normal-case hover:bg-[var(--color-accent)] hover:text-[var(--color-text-on-accent)]"
+            >
+              {displayChar}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left">{name}</TooltipContent>
         </Tooltip>
       ))}
-    </Box>
+    </div>
   )
 }

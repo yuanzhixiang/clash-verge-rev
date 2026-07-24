@@ -1,18 +1,11 @@
-import { Shuffle } from '@mui/icons-material'
-import {
-  CircularProgress,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  Stack,
-  TextField,
-} from '@mui/material'
 import { useLockFn, useRequest } from 'ahooks'
+import { Loader2, Shuffle } from 'lucide-react'
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, Switch } from '@/components/base'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useClashInfo } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
 import { isPortInUse } from '@/services/cmds'
@@ -221,10 +214,10 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
       }}
       okBtn={
         loading ? (
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            <CircularProgress size={20} />
+          <span className="flex items-center gap-component">
+            <Loader2 className="size-5 animate-spin" />
             {t('shared.statuses.saving')}
-          </Stack>
+          </span>
         ) : (
           t('shared.actions.save')
         )
@@ -234,179 +227,169 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
-      <List sx={{ width: '100%' }}>
-        <ListItem sx={{ padding: '4px 0', minHeight: 36 }}>
-          <ListItemText
-            primary={t('settings.modals.clashPort.fields.mixed')}
-            slotProps={{ primary: { sx: { fontSize: 12 } } }}
-          />
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <TextField
-              size="small"
-              sx={{ width: 80, mr: 0.5, fontSize: 12 }}
+      <div className="w-full">
+        <div className="flex min-h-9 items-center py-inline">
+          <span className="flex-1 text-xs text-[var(--color-text-primary)]">
+            {t('settings.modals.clashPort.fields.mixed')}
+          </span>
+          <div className="flex items-center">
+            <Input
+              className="mr-inline h-8 w-20 text-xs"
               value={mixedPort}
               onChange={(e) =>
                 setMixedPort(+e.target.value?.replace(/\D+/, '').slice(0, 5))
               }
-              slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
             />
-            <IconButton
-              size="small"
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="mr-inline"
               onClick={() => setMixedPort(generateRandomPort())}
               title={t('settings.modals.clashPort.actions.random')}
-              sx={{ mr: 0.5 }}
             >
-              <Shuffle fontSize="small" />
-            </IconButton>
+              <Shuffle className="size-4" />
+            </Button>
             <Switch
               size="small"
               checked={true}
               disabled={true}
-              sx={{ ml: 0.5, opacity: 0.7 }}
+              className="ml-inline opacity-70"
             />
           </div>
-        </ListItem>
+        </div>
 
-        <ListItem sx={{ padding: '4px 0', minHeight: 36 }}>
-          <ListItemText
-            primary={t('settings.modals.clashPort.fields.socks')}
-            slotProps={{ primary: { sx: { fontSize: 12 } } }}
-          />
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <TextField
-              size="small"
-              sx={{ width: 80, mr: 0.5, fontSize: 12 }}
+        <div className="flex min-h-9 items-center py-inline">
+          <span className="flex-1 text-xs text-[var(--color-text-primary)]">
+            {t('settings.modals.clashPort.fields.socks')}
+          </span>
+          <div className="flex items-center">
+            <Input
+              className="mr-inline h-8 w-20 text-xs"
               value={socksPort}
               onChange={(e) =>
                 setSocksPort(+e.target.value?.replace(/\D+/, '').slice(0, 5))
               }
               disabled={!socksEnabled}
-              slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
             />
-            <IconButton
-              size="small"
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="mr-inline"
               onClick={() => setSocksPort(generateRandomPort())}
               title={t('settings.modals.clashPort.actions.random')}
               disabled={!socksEnabled}
-              sx={{ mr: 0.5 }}
             >
-              <Shuffle fontSize="small" />
-            </IconButton>
+              <Shuffle className="size-4" />
+            </Button>
             <Switch
               size="small"
               checked={socksEnabled}
-              onChange={(_, c) => setSocksEnabled(c)}
-              sx={{ ml: 0.5 }}
+              onCheckedChange={(c) => setSocksEnabled(c)}
+              className="ml-inline"
             />
           </div>
-        </ListItem>
+        </div>
 
-        <ListItem sx={{ padding: '4px 0', minHeight: 36 }}>
-          <ListItemText
-            primary={t('settings.modals.clashPort.fields.http')}
-            slotProps={{ primary: { sx: { fontSize: 12 } } }}
-          />
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <TextField
-              size="small"
-              sx={{ width: 80, mr: 0.5, fontSize: 12 }}
+        <div className="flex min-h-9 items-center py-inline">
+          <span className="flex-1 text-xs text-[var(--color-text-primary)]">
+            {t('settings.modals.clashPort.fields.http')}
+          </span>
+          <div className="flex items-center">
+            <Input
+              className="mr-inline h-8 w-20 text-xs"
               value={httpPort}
               onChange={(e) =>
                 setHttpPort(+e.target.value?.replace(/\D+/, '').slice(0, 5))
               }
               disabled={!httpEnabled}
-              slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
             />
-            <IconButton
-              size="small"
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="mr-inline"
               onClick={() => setHttpPort(generateRandomPort())}
               title={t('settings.modals.clashPort.actions.random')}
               disabled={!httpEnabled}
-              sx={{ mr: 0.5 }}
             >
-              <Shuffle fontSize="small" />
-            </IconButton>
+              <Shuffle className="size-4" />
+            </Button>
             <Switch
               size="small"
               checked={httpEnabled}
-              onChange={(_, c) => setHttpEnabled(c)}
-              sx={{ ml: 0.5 }}
+              onCheckedChange={(c) => setHttpEnabled(c)}
+              className="ml-inline"
             />
           </div>
-        </ListItem>
+        </div>
 
         {OS !== 'windows' && (
-          <ListItem sx={{ padding: '4px 0', minHeight: 36 }}>
-            <ListItemText
-              primary={t('settings.modals.clashPort.fields.redir')}
-              slotProps={{ primary: { sx: { fontSize: 12 } } }}
-            />
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <TextField
-                size="small"
-                sx={{ width: 80, mr: 0.5, fontSize: 12 }}
+          <div className="flex min-h-9 items-center py-inline">
+            <span className="flex-1 text-xs text-[var(--color-text-primary)]">
+              {t('settings.modals.clashPort.fields.redir')}
+            </span>
+            <div className="flex items-center">
+              <Input
+                className="mr-inline h-8 w-20 text-xs"
                 value={redirPort}
                 onChange={(e) =>
                   setRedirPort(+e.target.value?.replace(/\D+/, '').slice(0, 5))
                 }
                 disabled={!redirEnabled}
-                slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
               />
-              <IconButton
-                size="small"
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="mr-inline"
                 onClick={() => setRedirPort(generateRandomPort())}
                 title={t('settings.modals.clashPort.actions.random')}
                 disabled={!redirEnabled}
-                sx={{ mr: 0.5 }}
               >
-                <Shuffle fontSize="small" />
-              </IconButton>
+                <Shuffle className="size-4" />
+              </Button>
               <Switch
                 size="small"
                 checked={redirEnabled}
-                onChange={(_, c) => setRedirEnabled(c)}
-                sx={{ ml: 0.5 }}
+                onCheckedChange={(c) => setRedirEnabled(c)}
+                className="ml-inline"
               />
             </div>
-          </ListItem>
+          </div>
         )}
 
         {OS === 'linux' && (
-          <ListItem sx={{ padding: '4px 0', minHeight: 36 }}>
-            <ListItemText
-              primary={t('settings.modals.clashPort.fields.tproxy')}
-              slotProps={{ primary: { sx: { fontSize: 12 } } }}
-            />
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <TextField
-                size="small"
-                sx={{ width: 80, mr: 0.5, fontSize: 12 }}
+          <div className="flex min-h-9 items-center py-inline">
+            <span className="flex-1 text-xs text-[var(--color-text-primary)]">
+              {t('settings.modals.clashPort.fields.tproxy')}
+            </span>
+            <div className="flex items-center">
+              <Input
+                className="mr-inline h-8 w-20 text-xs"
                 value={tproxyPort}
                 onChange={(e) =>
                   setTproxyPort(+e.target.value?.replace(/\D+/, '').slice(0, 5))
                 }
                 disabled={!tproxyEnabled}
-                slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
               />
-              <IconButton
-                size="small"
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="mr-inline"
                 onClick={() => setTproxyPort(generateRandomPort())}
                 title={t('settings.modals.clashPort.actions.random')}
                 disabled={!tproxyEnabled}
-                sx={{ mr: 0.5 }}
               >
-                <Shuffle fontSize="small" />
-              </IconButton>
+                <Shuffle className="size-4" />
+              </Button>
               <Switch
                 size="small"
                 checked={tproxyEnabled}
-                onChange={(_, c) => setTproxyEnabled(c)}
-                sx={{ ml: 0.5 }}
+                onCheckedChange={(c) => setTproxyEnabled(c)}
+                className="ml-inline"
               />
             </div>
-          </ListItem>
+          </div>
         )}
-      </List>
+      </div>
     </BaseDialog>
   )
 })

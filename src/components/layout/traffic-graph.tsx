@@ -1,4 +1,4 @@
-import { useTheme } from '@mui/material'
+import { useTheme } from 'next-themes'
 import { useEffect, useImperativeHandle, useRef, type Ref } from 'react'
 import { Traffic } from 'tauri-plugin-mihomo-api'
 
@@ -44,7 +44,9 @@ export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
   const cacheRef = useRef<Traffic | null>(null)
   const requestDrawRef = useRef<(animate?: boolean) => void>(() => {})
 
-  const { palette } = useTheme()
+  // 明暗真源交给 next-themes：resolvedTheme 变化触发重绘，
+  // 颜色则从 tokens.css 的语义 CSS 变量读取（随 .dark 自动切换）。
+  const { resolvedTheme } = useTheme()
 
   useImperativeHandle(ref, () => ({
     appendData: (data: Traffic) => {
@@ -97,10 +99,14 @@ export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
 
     if (!context) return
 
-    const { primary, secondary, divider } = palette
-    const refLineColor = divider || 'rgba(0, 0, 0, 0.12)'
-    const upLineColor = secondary.main || '#9c27b0'
-    const downLineColor = primary.main || '#5b5c9d'
+    const styles = getComputedStyle(canvas)
+    const readColor = (name: string, fallback: string) => {
+      const value = styles.getPropertyValue(name).trim()
+      return value || fallback
+    }
+    const refLineColor = readColor('--color-border', 'rgba(0, 0, 0, 0.12)')
+    const upLineColor = readColor('--color-secondary', '#9c27b0')
+    const downLineColor = readColor('--color-accent', '#5b5c9d')
 
     const cancelPendingDraw = () => {
       if (frameTimer !== null) {
@@ -273,7 +279,7 @@ export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
       resizeObserver?.disconnect()
       cancelPendingDraw()
     }
-  }, [palette])
+  }, [resolvedTheme])
 
   return <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
 }

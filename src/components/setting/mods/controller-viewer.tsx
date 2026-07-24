@@ -1,29 +1,18 @@
-import { ContentCopy } from '@mui/icons-material'
-import {
-  Alert,
-  Box,
-  CircularProgress,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  Snackbar,
-  TextField,
-  Tooltip,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
+import { Copy, Loader2 } from 'lucide-react'
 import { useImperativeHandle, useState, type Ref } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseDialog, DialogRef, Switch } from '@/components/base'
+import { BaseDialog, DialogRef, Switch, TooltipIcon } from '@/components/base'
+import { Input } from '@/components/ui/input'
 import { useClashInfo } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
+import { cn } from '@/lib/utils'
 import { showNotice } from '@/services/notice-service'
 
 export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
-  const [copySuccess, setCopySuccess] = useState<null | string>(null)
   const [isSaving, setIsSaving] = useState(false)
 
   const { clashInfo, patchInfo } = useClashInfo()
@@ -93,8 +82,11 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
     async (text: string, type: string) => {
       try {
         await navigator.clipboard.writeText(text)
-        setCopySuccess(type)
-        setTimeout(() => setCopySuccess(null))
+        showNotice.success(
+          type === 'controller'
+            ? 'settings.sections.externalController.messages.controllerCopied'
+            : 'settings.sections.externalController.messages.secretCopied',
+        )
       } catch (err) {
         console.warn('[ControllerViewer] copy to clipboard failed:', err)
         showNotice.error(
@@ -111,10 +103,10 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       contentSx={{ width: 400 }}
       okBtn={
         isSaving ? (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <CircularProgress size={16} color="inherit" />
+          <span className="flex items-center gap-component">
+            <Loader2 className="size-4 animate-spin" />
             {t('shared.statuses.saving')}
-          </Box>
+          </span>
         ) : (
           t('shared.actions.save')
         )
@@ -124,43 +116,30 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
-      <List>
-        <ListItem
-          sx={{
-            padding: '5px 2px',
-            display: 'flex',
-            justifyContent: 'space-between',
-          }}
-        >
-          <ListItemText
-            primary={t('settings.sections.externalController.fields.enable')}
-          />
+      <div>
+        <div className="flex items-center justify-between px-adjust py-[5px]">
+          <span className="text-[var(--color-text-primary)]">
+            {t('settings.sections.externalController.fields.enable')}
+          </span>
           <Switch
-            edge="end"
             checked={enableController}
-            onChange={(e) => setEnableController(e.target.checked)}
+            onCheckedChange={setEnableController}
             disabled={isSaving}
           />
-        </ListItem>
+        </div>
 
-        <ListItem
-          sx={{
-            padding: '5px 2px',
-            display: 'flex',
-            justifyContent: 'space-between',
-          }}
-        >
-          <ListItemText
-            primary={t('settings.sections.externalController.fields.address')}
-          />
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <TextField
-              size="small"
-              sx={{
-                width: 175,
-                opacity: enableController ? 1 : 0.5,
-                pointerEvents: enableController ? 'auto' : 'none',
-              }}
+        <div className="flex items-center justify-between px-adjust py-[5px]">
+          <span className="text-[var(--color-text-primary)]">
+            {t('settings.sections.externalController.fields.address')}
+          </span>
+          <div className="flex items-center gap-component">
+            <Input
+              className={cn(
+                'w-[175px]',
+                enableController
+                  ? 'opacity-100'
+                  : 'pointer-events-none opacity-50',
+              )}
               value={controller}
               placeholder={t(
                 'settings.sections.externalController.placeholders.address',
@@ -168,39 +147,28 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
               onChange={(e) => setController(e.target.value)}
               disabled={isSaving || !enableController}
             />
-            <Tooltip
+            <TooltipIcon
               title={t('settings.sections.externalController.tooltips.copy')}
-            >
-              <IconButton
-                size="small"
-                onClick={() => handleCopyToClipboard(controller, 'controller')}
-                color="primary"
-                disabled={isSaving || !enableController}
-              >
-                <ContentCopy fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        </ListItem>
+              icon={Copy}
+              className="text-[var(--color-accent)]"
+              onClick={() => handleCopyToClipboard(controller, 'controller')}
+              disabled={isSaving || !enableController}
+            />
+          </div>
+        </div>
 
-        <ListItem
-          sx={{
-            padding: '5px 2px',
-            display: 'flex',
-            justifyContent: 'space-between',
-          }}
-        >
-          <ListItemText
-            primary={t('settings.sections.externalController.fields.secret')}
-          />
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <TextField
-              size="small"
-              sx={{
-                width: 175,
-                opacity: enableController ? 1 : 0.5,
-                pointerEvents: enableController ? 'auto' : 'none',
-              }}
+        <div className="flex items-center justify-between px-adjust py-[5px]">
+          <span className="text-[var(--color-text-primary)]">
+            {t('settings.sections.externalController.fields.secret')}
+          </span>
+          <div className="flex items-center gap-component">
+            <Input
+              className={cn(
+                'w-[175px]',
+                enableController
+                  ? 'opacity-100'
+                  : 'pointer-events-none opacity-50',
+              )}
               value={secret}
               placeholder={t(
                 'settings.sections.externalController.placeholders.secret',
@@ -208,35 +176,16 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
               onChange={(e) => setSecret(e.target.value)}
               disabled={isSaving || !enableController}
             />
-            <Tooltip
+            <TooltipIcon
               title={t('settings.sections.externalController.tooltips.copy')}
-            >
-              <IconButton
-                size="small"
-                onClick={() => handleCopyToClipboard(secret, 'secret')}
-                color="primary"
-                disabled={isSaving || !enableController}
-              >
-                <ContentCopy fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        </ListItem>
-      </List>
-
-      <Snackbar
-        open={copySuccess !== null}
-        autoHideDuration={2000}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert severity="success">
-          {copySuccess === 'controller'
-            ? t(
-                'settings.sections.externalController.messages.controllerCopied',
-              )
-            : t('settings.sections.externalController.messages.secretCopied')}
-        </Alert>
-      </Snackbar>
+              icon={Copy}
+              className="text-[var(--color-accent)]"
+              onClick={() => handleCopyToClipboard(secret, 'secret')}
+              disabled={isSaving || !enableController}
+            />
+          </div>
+        </div>
+      </div>
     </BaseDialog>
   )
 }

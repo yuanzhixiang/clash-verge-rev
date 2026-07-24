@@ -1,20 +1,20 @@
-import {
-  Box,
-  FormControl,
-  InputAdornment,
-  InputLabel,
-  MenuItem,
-  Select,
-  styled,
-  TextField,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
-import type { Ref } from 'react'
+import type { ReactNode, Ref } from 'react'
 import { useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, Switch } from '@/components/base'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { useProfiles } from '@/hooks/use-profiles'
 import { createProfile, patchProfile } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -29,6 +29,15 @@ interface Props {
 export interface ProfileViewerRef {
   create: () => void
   edit: (item: IProfileItem) => void
+}
+
+function FieldRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-inline">
+      <Label className="text-[var(--color-text-secondary)]">{label}</Label>
+      {children}
+    </div>
+  )
 }
 
 // create or edit the profile
@@ -204,15 +213,6 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
     }
   }
 
-  const text = {
-    fullWidth: true,
-    size: 'small',
-    margin: 'normal',
-    variant: 'outlined',
-    autoComplete: 'off',
-    autoCorrect: 'off',
-  } as const
-
   const formType = watch('type')
   const isRemote = formType === 'remote'
   const isLocal = formType === 'local'
@@ -233,186 +233,222 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
       onOk={handleOk}
       loading={loading}
     >
-      <Controller
-        name="type"
-        control={control}
-        render={({ field }) => (
-          <FormControl size="small" fullWidth sx={{ mt: 1, mb: 1 }}>
-            <InputLabel>
-              {t('profiles.modals.profileForm.fields.type')}
-            </InputLabel>
-            <Select
-              {...field}
-              autoFocus
-              label={t('profiles.modals.profileForm.fields.type')}
-            >
-              <MenuItem value="remote">Remote</MenuItem>
-              <MenuItem value="local">Local</MenuItem>
-            </Select>
-          </FormControl>
-        )}
-      />
-
-      <Controller
-        name="name"
-        control={control}
-        render={({ field }) => (
-          <TextField {...text} {...field} label={t('shared.labels.name')} />
-        )}
-      />
-
-      <Controller
-        name="desc"
-        control={control}
-        render={({ field }) => (
-          <TextField
-            {...text}
-            {...field}
-            label={t('profiles.modals.profileForm.fields.description')}
-          />
-        )}
-      />
-
-      {isLocal && openType === 'new' && (
-        <FileInput
-          onChange={(file, val) => {
-            setValue('name', getValues('name') || file.name)
-            fileDataRef.current = val
-          }}
+      <div className="flex flex-col gap-stack">
+        <Controller
+          name="type"
+          control={control}
+          render={({ field }) => (
+            <FieldRow label={t('profiles.modals.profileForm.fields.type')}>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="remote">Remote</SelectItem>
+                  <SelectItem value="local">Local</SelectItem>
+                </SelectContent>
+              </Select>
+            </FieldRow>
+          )}
         />
-      )}
 
-      {isRemote && (
-        <>
-          <Controller
-            name="url"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...text}
+        <Controller
+          name="name"
+          control={control}
+          render={({ field }) => (
+            <FieldRow label={t('shared.labels.name')}>
+              <Input
                 {...field}
-                multiline
-                label={t('profiles.modals.profileForm.fields.subscriptionUrl')}
+                value={field.value ?? ''}
+                autoComplete="off"
+                autoCorrect="off"
               />
-            )}
-          />
+            </FieldRow>
+          )}
+        />
 
-          <Controller
-            name="option.user_agent"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...text}
+        <Controller
+          name="desc"
+          control={control}
+          render={({ field }) => (
+            <FieldRow
+              label={t('profiles.modals.profileForm.fields.description')}
+            >
+              <Input
                 {...field}
-                placeholder={`clash-verge/v${version}`}
-                label="User Agent"
+                value={field.value ?? ''}
+                autoComplete="off"
+                autoCorrect="off"
               />
-            )}
-          />
+            </FieldRow>
+          )}
+        />
 
-          <Controller
-            name="option.timeout_seconds"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...text}
-                {...field}
-                type="number"
-                placeholder="60"
-                label={t('profiles.modals.profileForm.fields.httpTimeout')}
-                slotProps={{
-                  input: {
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        {t('shared.units.seconds')}
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-            )}
+        {isLocal && openType === 'new' && (
+          <FileInput
+            onChange={(file, val) => {
+              setValue('name', getValues('name') || file.name)
+              fileDataRef.current = val
+            }}
           />
-          <Controller
-            name="option.update_interval"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...text}
-                {...field}
-                type="number"
-                label={t('profiles.modals.profileForm.fields.updateInterval')}
-                slotProps={{
-                  input: {
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        {t('shared.units.minutes')}
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-            )}
-          />
-          <Controller
-            name="option.with_proxy"
-            control={control}
-            render={({ field }) => (
-              <StyledBox>
-                <InputLabel>
-                  {t('profiles.modals.profileForm.fields.useSystemProxy')}
-                </InputLabel>
-                <Switch checked={field.value} {...field} color="primary" />
-              </StyledBox>
-            )}
-          />
+        )}
 
-          <Controller
-            name="option.self_proxy"
-            control={control}
-            render={({ field }) => (
-              <StyledBox>
-                <InputLabel>
-                  {t('profiles.modals.profileForm.fields.useClashProxy')}
-                </InputLabel>
-                <Switch checked={field.value} {...field} color="primary" />
-              </StyledBox>
-            )}
-          />
+        {isRemote && (
+          <>
+            <Controller
+              name="url"
+              control={control}
+              render={({ field }) => (
+                <FieldRow
+                  label={t(
+                    'profiles.modals.profileForm.fields.subscriptionUrl',
+                  )}
+                >
+                  <Textarea
+                    {...field}
+                    value={field.value ?? ''}
+                    autoComplete="off"
+                    autoCorrect="off"
+                  />
+                </FieldRow>
+              )}
+            />
 
-          <Controller
-            name="option.danger_accept_invalid_certs"
-            control={control}
-            render={({ field }) => (
-              <StyledBox>
-                <InputLabel>
-                  {t('profiles.modals.profileForm.fields.acceptInvalidCerts')}
-                </InputLabel>
-                <Switch checked={field.value} {...field} color="primary" />
-              </StyledBox>
-            )}
-          />
+            <Controller
+              name="option.user_agent"
+              control={control}
+              render={({ field }) => (
+                <FieldRow label="User Agent">
+                  <Input
+                    {...field}
+                    value={field.value ?? ''}
+                    placeholder={`clash-verge/v${version}`}
+                    autoComplete="off"
+                    autoCorrect="off"
+                  />
+                </FieldRow>
+              )}
+            />
 
-          <Controller
-            name="option.allow_auto_update"
-            control={control}
-            render={({ field }) => (
-              <StyledBox>
-                <InputLabel>
-                  {t('profiles.modals.profileForm.fields.allowAutoUpdate')}
-                </InputLabel>
-                <Switch checked={field.value} {...field} color="primary" />
-              </StyledBox>
-            )}
-          />
-        </>
-      )}
+            <Controller
+              name="option.timeout_seconds"
+              control={control}
+              render={({ field }) => (
+                <FieldRow
+                  label={t('profiles.modals.profileForm.fields.httpTimeout')}
+                >
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      value={field.value ?? ''}
+                      type="number"
+                      placeholder="60"
+                      className="pr-16"
+                      autoComplete="off"
+                    />
+                    <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm text-[var(--color-text-muted)]">
+                      {t('shared.units.seconds')}
+                    </span>
+                  </div>
+                </FieldRow>
+              )}
+            />
+            <Controller
+              name="option.update_interval"
+              control={control}
+              render={({ field }) => (
+                <FieldRow
+                  label={t('profiles.modals.profileForm.fields.updateInterval')}
+                >
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      value={field.value ?? ''}
+                      type="number"
+                      className="pr-16"
+                      autoComplete="off"
+                    />
+                    <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm text-[var(--color-text-muted)]">
+                      {t('shared.units.minutes')}
+                    </span>
+                  </div>
+                </FieldRow>
+              )}
+            />
+            <Controller
+              name="option.with_proxy"
+              control={control}
+              render={({ field }) => (
+                <div className="my-component ml-component flex items-center justify-between">
+                  <span className="text-sm text-[var(--color-text-primary)]">
+                    {t('profiles.modals.profileForm.fields.useSystemProxy')}
+                  </span>
+                  <Switch
+                    checked={!!field.value}
+                    onCheckedChange={field.onChange}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                  />
+                </div>
+              )}
+            />
+
+            <Controller
+              name="option.self_proxy"
+              control={control}
+              render={({ field }) => (
+                <div className="my-component ml-component flex items-center justify-between">
+                  <span className="text-sm text-[var(--color-text-primary)]">
+                    {t('profiles.modals.profileForm.fields.useClashProxy')}
+                  </span>
+                  <Switch
+                    checked={!!field.value}
+                    onCheckedChange={field.onChange}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                  />
+                </div>
+              )}
+            />
+
+            <Controller
+              name="option.danger_accept_invalid_certs"
+              control={control}
+              render={({ field }) => (
+                <div className="my-component ml-component flex items-center justify-between">
+                  <span className="text-sm text-[var(--color-text-primary)]">
+                    {t('profiles.modals.profileForm.fields.acceptInvalidCerts')}
+                  </span>
+                  <Switch
+                    checked={!!field.value}
+                    onCheckedChange={field.onChange}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                  />
+                </div>
+              )}
+            />
+
+            <Controller
+              name="option.allow_auto_update"
+              control={control}
+              render={({ field }) => (
+                <div className="my-component ml-component flex items-center justify-between">
+                  <span className="text-sm text-[var(--color-text-primary)]">
+                    {t('profiles.modals.profileForm.fields.allowAutoUpdate')}
+                  </span>
+                  <Switch
+                    checked={!!field.value}
+                    onCheckedChange={field.onChange}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                  />
+                </div>
+              )}
+            />
+          </>
+        )}
+      </div>
     </BaseDialog>
   )
 }
-
-const StyledBox = styled(Box)(() => ({
-  margin: '8px 0 8px 8px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-}))

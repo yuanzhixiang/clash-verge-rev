@@ -1,14 +1,6 @@
-import { EditRounded } from '@mui/icons-material'
-import {
-  Button,
-  List,
-  ListItem,
-  ListItemText,
-  styled,
-  TextField,
-  useTheme,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
+import { Pencil } from 'lucide-react'
+import { useTheme } from 'next-themes'
 import {
   useEffect,
   useImperativeHandle,
@@ -20,6 +12,8 @@ import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, DialogRef } from '@/components/base'
 import { EditorViewer } from '@/components/profile/editor-viewer'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useVerge } from '@/hooks/use-verge'
 import { defaultDarkTheme, defaultTheme } from '@/pages/_theme'
 import { showNotice } from '@/services/notice-service'
@@ -49,12 +43,6 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
     close: () => setOpen(false),
   }))
 
-  const textProps = {
-    size: 'small',
-    autoComplete: 'off',
-    sx: { width: 135 },
-  } as const
-
   const handleChange = (field: keyof typeof theme) => (e: any) => {
     setTheme((t) => ({ ...t, [field]: e.target.value }))
   }
@@ -68,9 +56,9 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
     }
   })
 
-  const { palette } = useTheme()
+  const { resolvedTheme } = useTheme()
 
-  const dt = palette.mode === 'light' ? defaultTheme : defaultDarkTheme
+  const dt = resolvedTheme === 'dark' ? defaultDarkTheme : defaultTheme
 
   type ThemeKey = keyof typeof theme & keyof typeof defaultTheme
 
@@ -128,17 +116,24 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
   const renderItem = (labelKey: string, key: ThemeKey) => {
     const label = t(labelKey)
     return (
-      <Item key={key}>
-        <ListItemText primary={label} />
-        <Round sx={{ background: theme[key] || dt[key] }} />
-        <TextField
-          {...textProps}
+      <div
+        key={key}
+        className="flex items-center gap-component py-[5px] px-adjust"
+      >
+        <span className="flex-1">{label}</span>
+        <span
+          className="inline-block size-6 rounded-[var(--radius-overlay)]"
+          style={{ background: theme[key] || dt[key] }}
+        />
+        <Input
+          autoComplete="off"
+          className="h-8 w-[135px]"
           value={theme[key] ?? ''}
           placeholder={dt[key]}
           onChange={handleChange(key)}
           onKeyDown={(e) => e.key === 'Enter' && onSave()}
         />
-      </Item>
+      </div>
     )
   }
 
@@ -153,29 +148,27 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
-      <List sx={{ pt: 0 }}>
+      <div>
         {fieldDefinitions.map((field) => renderItem(field.labelKey, field.key))}
 
-        <Item>
-          <ListItemText
-            primary={t('settings.components.verge.theme.fields.fontFamily')}
-          />
-          <TextField
-            {...textProps}
+        <div className="flex items-center gap-component py-[5px] px-adjust">
+          <span className="flex-1">
+            {t('settings.components.verge.theme.fields.fontFamily')}
+          </span>
+          <Input
+            autoComplete="off"
+            className="h-8 w-[135px]"
             value={theme.font_family ?? ''}
             onChange={handleChange('font_family')}
             onKeyDown={(e) => e.key === 'Enter' && onSave()}
           />
-        </Item>
-        <Item>
-          <ListItemText
-            primary={t('settings.components.verge.theme.fields.cssInjection')}
-          />
-          <Button
-            startIcon={<EditRounded />}
-            variant="outlined"
-            onClick={openCssEditor}
-          >
+        </div>
+        <div className="flex items-center gap-component py-[5px] px-adjust">
+          <span className="flex-1">
+            {t('settings.components.verge.theme.fields.cssInjection')}
+          </span>
+          <Button variant="outline" size="sm" onClick={openCssEditor}>
+            <Pencil className="size-4" />
             {t('settings.components.verge.theme.actions.editCss')}
           </Button>
           {editorOpen && (
@@ -193,20 +186,8 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
               }}
             />
           )}
-        </Item>
-      </List>
+        </div>
+      </div>
     </BaseDialog>
   )
 }
-
-const Item = styled(ListItem)(() => ({
-  padding: '5px 2px',
-}))
-
-const Round = styled('div')(() => ({
-  width: '24px',
-  height: '24px',
-  borderRadius: 'var(--radius-overlay)',
-  display: 'inline-block',
-  marginRight: '8px',
-}))

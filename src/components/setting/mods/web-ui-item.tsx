@@ -1,19 +1,11 @@
-import {
-  CheckRounded,
-  CloseRounded,
-  DeleteRounded,
-  EditRounded,
-  OpenInNewRounded,
-} from '@mui/icons-material'
-import {
-  Divider,
-  IconButton,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material'
+import { Check, ExternalLink, Pencil, Trash2, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Separator } from '@/components/ui/separator'
+import { cn } from '@/lib/utils'
 
 interface Props {
   value?: string
@@ -49,45 +41,42 @@ export const WebUIItem = (props: Props) => {
   if (editing || onlyEdit) {
     return (
       <>
-        <Stack
-          spacing={0.75}
-          direction="row"
-          sx={{ mt: 1, mb: 1, alignItems: 'center' }}
-        >
-          <TextField
+        <div className="my-component flex items-center gap-compact">
+          <Input
             autoComplete="new-password"
-            fullWidth
-            size="small"
+            className="h-8"
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             placeholder={t(
               'settings.modals.webUI.messages.supportedPlaceholders',
             )}
           />
-          <IconButton
-            size="small"
+          <Button
+            variant="ghost"
+            size="icon-sm"
             title={t('shared.actions.save')}
-            color="inherit"
+            className="text-current"
             onClick={() => {
               onChange(editValue)
               setEditing(false)
             }}
           >
-            <CheckRounded fontSize="inherit" />
-          </IconButton>
-          <IconButton
-            size="small"
+            <Check className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
             title={t('shared.actions.cancel')}
-            color="inherit"
+            className="text-current"
             onClick={() => {
               onCancel?.()
               setEditing(false)
             }}
           >
-            <CloseRounded fontSize="inherit" />
-          </IconButton>
-        </Stack>
-        <Divider />
+            <X className="size-4" />
+          </Button>
+        </div>
+        <Separator />
       </>
     )
   }
@@ -109,55 +98,51 @@ export const WebUIItem = (props: Props) => {
 
   return (
     <>
-      <Stack
-        spacing={0.75}
-        direction="row"
-        sx={{ alignItems: 'center', mt: 1, mb: 1 }}
-      >
-        <Typography
-          component="div"
+      <div className="my-component flex items-center gap-compact">
+        <div
           title={value}
-          color={value ? 'text.primary' : 'text.secondary'}
-          sx={({ palette }) => ({
-            width: '100%',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            '> .placeholder': {
-              color: palette.primary.main,
-            },
-          })}
+          className={cn(
+            'w-full truncate',
+            value
+              ? 'text-[var(--color-text-primary)]'
+              : 'text-[var(--color-text-secondary)]',
+            '[&>.placeholder]:text-[var(--color-accent)]',
+          )}
         >
           {renderedParts}
-        </Typography>
-        <IconButton
-          size="small"
+        </div>
+        <Button
+          variant="ghost"
+          size="icon-sm"
           title={t('settings.modals.webUI.actions.openUrl')}
-          color="inherit"
+          className="text-current"
           onClick={() => onOpenUrl?.(value)}
         >
-          <OpenInNewRounded fontSize="inherit" />
-        </IconButton>
-        <IconButton
-          size="small"
+          <ExternalLink className="size-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon-sm"
           title={t('shared.actions.edit')}
-          color="inherit"
+          className="text-current"
           onClick={() => {
             setEditing(true)
             setEditValue(value)
           }}
         >
-          <EditRounded fontSize="inherit" />
-        </IconButton>
-        <IconButton
-          size="small"
+          <Pencil className="size-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon-sm"
           title={t('shared.actions.delete')}
-          color="inherit"
+          className="text-current"
           onClick={onDelete}
         >
-          <DeleteRounded fontSize="inherit" />
-        </IconButton>
-      </Stack>
-      <Divider />
+          <Trash2 className="size-4" />
+        </Button>
+      </div>
+      <Separator />
     </>
   )
 }

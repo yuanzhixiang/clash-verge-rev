@@ -1,18 +1,9 @@
-import { CheckCircleOutlineRounded } from '@mui/icons-material'
-import {
-  alpha,
-  Box,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  styled,
-  type SxProps,
-  type Theme,
-} from '@mui/material'
+import { CircleCheck } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 import { BaseLoading } from '@/components/base'
 import { useProxyDelayState } from '@/hooks/use-proxy-delay-state'
+import { cn } from '@/lib/utils'
 import delayManager from '@/services/delay'
 
 interface Props {
@@ -20,30 +11,47 @@ interface Props {
   proxy: IProxyItem
   selected: boolean
   showType?: boolean
-  sx?: SxProps<Theme>
+  className?: string
   onClick?: (name: string) => void
 }
 
-const Widget = styled(Box)(() => ({
-  padding: '3px 6px',
-  fontSize: 14,
-  borderRadius: 'var(--radius-compact)',
-}))
+// 延迟 / Check 小组件
+function Widget({
+  className,
+  style,
+  onClick,
+  children,
+}: {
+  className?: string
+  style?: React.CSSProperties
+  onClick?: (e: React.MouseEvent) => void
+  children: ReactNode
+}) {
+  return (
+    <div
+      onClick={onClick}
+      style={style}
+      className={cn(
+        'rounded-[var(--radius-compact)] px-compact py-adjust text-body',
+        className,
+      )}
+    >
+      {children}
+    </div>
+  )
+}
 
-const TypeBox = styled('span')(({ theme }) => ({
-  display: 'inline-block',
-  border: '1px solid #ccc',
-  borderColor: alpha(theme.palette.text.secondary, 0.36),
-  color: alpha(theme.palette.text.secondary, 0.42),
-  borderRadius: 'var(--radius-container)',
-  fontSize: 10,
-  marginRight: '4px',
-  padding: '0 2px',
-  lineHeight: 1.25,
-}))
+// 描边标签
+function TypeBox({ children }: { children: ReactNode }) {
+  return (
+    <span className="mr-inline inline-block rounded-[var(--radius-container)] border border-[color-mix(in_srgb,var(--color-text-secondary)_36%,transparent)] px-adjust text-[10px] leading-[1.25] text-[color-mix(in_srgb,var(--color-text-secondary)_42%,transparent)]">
+      {children}
+    </span>
+  )
+}
 
 export const ProxyItem = (props: Props) => {
-  const { group, proxy, selected, showType = true, sx, onClick } = props
+  const { group, proxy, selected, showType = true, className, onClick } = props
 
   // -1/<=0 为不显示，-2 为 loading
   const { delayValue, isPreset, timeout, onDelay } = useProxyDelayState(
@@ -51,73 +59,42 @@ export const ProxyItem = (props: Props) => {
     group.name,
   )
 
+  const showDelay = delayValue > 0
+
   return (
-    <ListItem sx={sx}>
-      <ListItemButton
-        dense
-        selected={selected}
+    <li
+      className={cn(
+        'flex w-full items-center px-inset py-component',
+        className,
+      )}
+    >
+      <div
         onClick={() => onClick?.(proxy.name)}
-        sx={[
-          { borderRadius: 'var(--radius-compact)' },
-          ({ palette: { mode, primary } }) => {
-            const bgcolor = mode === 'light' ? '#ffffff' : '#24252f'
-            const selectColor = mode === 'light' ? primary.main : primary.light
-            const showDelay = delayValue > 0
-
-            return {
-              '&:hover .the-check': { display: !showDelay ? 'block' : 'none' },
-              '&:hover .the-delay': { display: showDelay ? 'block' : 'none' },
-              '&:hover .the-icon': { display: 'none' },
-              '&.Mui-selected': {
-                width: `calc(100% + 3px)`,
-                marginLeft: `-3px`,
-                borderLeft: `3px solid ${selectColor}`,
-                bgcolor:
-                  mode === 'light'
-                    ? alpha(primary.main, 0.15)
-                    : alpha(primary.main, 0.35),
-              },
-              backgroundColor: bgcolor,
-              marginBottom: '8px',
-              height: '40px',
-            }
-          },
-        ]}
+        className={cn(
+          'group mb-component flex h-10 w-full cursor-pointer items-center rounded-[var(--radius-compact)] bg-[var(--color-bg-card)] px-inset',
+          selected &&
+            '-ml-[3px] w-[calc(100%+3px)] border-l-[3px] border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_15%,transparent)] dark:bg-[color-mix(in_srgb,var(--color-accent)_35%,transparent)]',
+        )}
       >
-        <ListItemText
-          title={proxy.name}
-          secondary={
-            <>
-              <Box
-                sx={{
-                  display: 'inline-block',
-                  marginRight: '8px',
-                  fontSize: '14px',
-                  color: 'text.primary',
-                }}
-              >
-                {proxy.name}
-                {showType && proxy.now && ` - ${proxy.now}`}
-              </Box>
-              {showType && !!proxy.provider && (
-                <TypeBox>{proxy.provider}</TypeBox>
-              )}
-              {showType && <TypeBox>{proxy.type}</TypeBox>}
-              {showType && proxy.udp && <TypeBox>UDP</TypeBox>}
-              {showType && proxy.xudp && <TypeBox>XUDP</TypeBox>}
-              {showType && proxy.tfo && <TypeBox>TFO</TypeBox>}
-              {showType && proxy.mptcp && <TypeBox>MPTCP</TypeBox>}
-              {showType && proxy.smux && <TypeBox>SMUX</TypeBox>}
-            </>
-          }
-        />
+        <div className="min-w-0 flex-1" title={proxy.name}>
+          <span className="mr-component inline-block text-body text-[var(--color-text-primary)]">
+            {proxy.name}
+            {showType && proxy.now && ` - ${proxy.now}`}
+          </span>
+          {showType && !!proxy.provider && <TypeBox>{proxy.provider}</TypeBox>}
+          {showType && <TypeBox>{proxy.type}</TypeBox>}
+          {showType && proxy.udp && <TypeBox>UDP</TypeBox>}
+          {showType && proxy.xudp && <TypeBox>XUDP</TypeBox>}
+          {showType && proxy.tfo && <TypeBox>TFO</TypeBox>}
+          {showType && proxy.mptcp && <TypeBox>MPTCP</TypeBox>}
+          {showType && proxy.smux && <TypeBox>SMUX</TypeBox>}
+        </div>
 
-        <ListItemIcon
-          sx={{
-            justifyContent: 'flex-end',
-            color: 'primary.main',
-            display: isPreset ? 'none' : '',
-          }}
+        <div
+          className={cn(
+            'flex items-center justify-end text-[var(--color-accent)]',
+            isPreset && 'hidden',
+          )}
         >
           {delayValue === -2 && (
             <Widget>
@@ -127,16 +104,15 @@ export const ProxyItem = (props: Props) => {
 
           {delayValue !== -2 && (
             <Widget
-              className="the-check"
+              className={cn(
+                'hidden cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-accent)_15%,transparent)]',
+                !showDelay && 'group-hover:block',
+              )}
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
                 onDelay(proxy.provider)
               }}
-              sx={({ palette }) => ({
-                display: 'none', // hover 时显示
-                ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
-              })}
             >
               Check
             </Widget>
@@ -145,16 +121,15 @@ export const ProxyItem = (props: Props) => {
           {delayValue > 0 && (
             // 显示延迟
             <Widget
-              className="the-delay"
+              className="cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-accent)_15%,transparent)]"
+              style={{
+                color: delayManager.formatDelayColor(delayValue, timeout),
+              }}
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
                 onDelay(proxy.provider)
               }}
-              sx={({ palette }) => ({
-                color: delayManager.formatDelayColor(delayValue, timeout),
-                ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
-              })}
             >
               {delayManager.formatDelay(delayValue, timeout)}
             </Widget>
@@ -162,13 +137,10 @@ export const ProxyItem = (props: Props) => {
 
           {delayValue !== -2 && delayValue <= 0 && selected && (
             // 展示已选择的 icon
-            <CheckCircleOutlineRounded
-              className="the-icon"
-              sx={{ fontSize: 16 }}
-            />
+            <CircleCheck className="size-4 group-hover:hidden" />
           )}
-        </ListItemIcon>
-      </ListItemButton>
-    </ListItem>
+        </div>
+      </div>
+    </li>
   )
 }

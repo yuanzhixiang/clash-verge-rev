@@ -1,18 +1,12 @@
-import Visibility from '@mui/icons-material/Visibility'
-import VisibilityOff from '@mui/icons-material/VisibilityOff'
-import {
-  TextField,
-  Button,
-  Grid,
-  Stack,
-  IconButton,
-  InputAdornment,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
+import { Eye, EyeOff } from 'lucide-react'
 import { useState, useRef, memo, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useVerge } from '@/hooks/use-verge'
 import { saveWebdavConfig, createWebdavBackup } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -57,6 +51,12 @@ export const BackupConfigViewer = memo(
     const url = watch('url')
     const username = watch('username')
     const password = watch('password')
+
+    // 合并 react-hook-form 的 register ref 与本地 focus 用 ref，
+    // 使二者都指向真实的 input 元素（原 MUI inputRef 语义）。
+    const urlReg = register('url')
+    const usernameReg = register('username')
+    const passwordReg = register('password')
 
     const webdavChanged =
       webdav_url !== url ||
@@ -173,81 +173,84 @@ export const BackupConfigViewer = memo(
 
     return (
       <form onSubmit={(e) => e.preventDefault()}>
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, sm: 9 }}>
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  label={t('settings.modals.backup.fields.webdavUrl')}
-                  variant="outlined"
-                  size="small"
-                  {...register('url')}
+        <div className="flex flex-col gap-inset sm:flex-row">
+          <div className="flex min-w-0 flex-col gap-inset sm:flex-[3]">
+            <div className="mt-inline flex flex-col gap-inline">
+              <Label htmlFor="webdav-url">
+                {t('settings.modals.backup.fields.webdavUrl')}
+              </Label>
+              <Input
+                id="webdav-url"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+                {...urlReg}
+                ref={(el) => {
+                  urlReg.ref(el)
+                  urlRef.current = el
+                }}
+              />
+            </div>
+            <div className="flex gap-inset">
+              <div className="flex flex-1 flex-col gap-inline">
+                <Label htmlFor="webdav-username">
+                  {t('settings.modals.backup.fields.username')}
+                </Label>
+                <Input
+                  id="webdav-username"
                   autoCorrect="off"
                   autoCapitalize="off"
                   spellCheck="false"
-                  inputRef={urlRef}
-                  sx={{ mt: 1 }}
-                />
-              </Grid>
-              <Grid size={{ xs: 6 }}>
-                <TextField
-                  label={t('settings.modals.backup.fields.username')}
-                  variant="outlined"
-                  size="small"
-                  {...register('username')}
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck="false"
-                  inputRef={usernameRef}
-                />
-              </Grid>
-              <Grid size={{ xs: 6 }}>
-                <TextField
-                  label={t('shared.labels.password')}
-                  type={showPassword ? 'text' : 'password'}
-                  variant="outlined"
-                  size="small"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck="false"
-                  inputRef={passwordRef}
-                  {...register('password')}
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            onClick={handleClickShowPassword}
-                            edge="end"
-                          >
-                            {showPassword ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    },
+                  {...usernameReg}
+                  ref={(el) => {
+                    usernameReg.ref(el)
+                    usernameRef.current = el
                   }}
                 />
-              </Grid>
-            </Grid>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 3 }}>
-            <Stack
-              direction="column"
-              sx={{
-                justifyContent: 'space-between',
-                alignItems: 'stretch',
-                height: '100%',
-              }}
-            >
+              </div>
+              <div className="flex flex-1 flex-col gap-inline">
+                <Label htmlFor="webdav-password">
+                  {t('shared.labels.password')}
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="webdav-password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                    className="pr-9"
+                    {...passwordReg}
+                    ref={(el) => {
+                      passwordReg.ref(el)
+                      passwordRef.current = el
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={handleClickShowPassword}
+                    className="absolute top-1/2 right-1 -translate-y-1/2 text-[var(--color-text-secondary)]"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="size-4" />
+                    ) : (
+                      <Eye className="size-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="sm:flex-1">
+            <div className="flex h-full flex-col items-stretch justify-between gap-stack">
               {webdavChanged ||
               webdav_url === undefined ||
               webdav_username === undefined ||
               webdav_password === undefined ? (
                 <Button
-                  variant="contained"
-                  color={'primary'}
-                  sx={{ height: '100%' }}
+                  className="h-full w-full"
                   type="button"
                   onClick={handleSubmit(save)}
                 >
@@ -256,27 +259,25 @@ export const BackupConfigViewer = memo(
               ) : (
                 <>
                   <Button
-                    variant="contained"
-                    color="success"
+                    className="w-full bg-[var(--color-success)] text-white hover:opacity-90"
                     onClick={handleBackup}
                     type="button"
-                    size="large"
                   >
                     {t('settings.modals.backup.actions.backup')}
                   </Button>
                   <Button
-                    variant="outlined"
+                    variant="outline"
+                    className="w-full"
                     onClick={onRefresh}
                     type="button"
-                    size="large"
                   >
                     {t('shared.actions.refresh')}
                   </Button>
                 </>
               )}
-            </Stack>
-          </Grid>
-        </Grid>
+            </div>
+          </div>
+        </div>
       </form>
     )
   },

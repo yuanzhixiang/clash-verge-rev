@@ -1,21 +1,10 @@
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-} from '@mui/material'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { BaseDialog } from '@/components/base'
+import { Button } from '@/components/ui/button'
 import { showNotice } from '@/services/notice-service'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
-import { getShellThemeVars } from '@/utils/shell-theme'
 
 import {
   BUILTIN_PROXY_POLICIES,
@@ -43,6 +32,13 @@ const VALIDATION_KEYS: Record<string, TranslationKey> = {
   invalidRule: 'rules.modals.editor.form.validation.invalidRule',
   duplicateRule: 'rules.page.actions.add.validation.duplicateRule',
 }
+
+const PLACEMENT_LABEL_KEYS: Record<RulePlacement, TranslationKey> = {
+  prepend: 'rules.page.actions.add.position.prepend',
+  append: 'rules.page.actions.add.position.append',
+}
+
+const PLACEMENTS: RulePlacement[] = ['prepend', 'append']
 
 export const RuleAddDialog = ({
   open,
@@ -85,95 +81,52 @@ export const RuleAddDialog = ({
   }
 
   return (
-    <Dialog
+    <BaseDialog
       open={open}
+      title={t('rules.page.actions.add.title')}
+      contentSx={{ width: 420 }}
+      okBtn={t('rules.page.actions.add.confirm')}
+      cancelBtn={t('shared.actions.cancel')}
+      loading={submitting}
+      onOk={handleSubmit}
+      onCancel={submitting ? undefined : onClose}
       onClose={submitting ? undefined : onClose}
-      maxWidth="xs"
-      fullWidth
-      slotProps={{
-        paper: {
-          sx: ({ palette }) => ({
-            ...getShellThemeVars(palette),
-            overflow: 'hidden',
-            border: '1px solid var(--shell-border-strong) !important',
-            borderRadius: 'var(--radius-overlay)',
-            bgcolor: 'var(--shell-panel) !important',
-            backgroundImage: 'none',
-            boxShadow: 'var(--shell-shadow) !important',
-          }),
-        },
-      }}
     >
-      <DialogTitle sx={{ px: 2.5, pt: 2.25, pb: 1 }}>
-        <Typography component="span" sx={{ fontSize: 18, fontWeight: 650 }}>
-          {t('rules.page.actions.add.title')}
-        </Typography>
-      </DialogTitle>
+      <div className="flex flex-col gap-stack">
+        <RuleFormFields
+          autoFocus
+          value={form}
+          policyOptions={policyOptions}
+          ruleSetOptions={ruleSetOptions}
+          subRuleOptions={subRuleOptions}
+          onChange={setForm}
+        />
 
-      <DialogContent sx={{ px: 2.5, py: 0 }}>
-        <Stack spacing={1.75} sx={{ pt: 1.5, pb: 1.5 }}>
-          <RuleFormFields
-            autoFocus
-            value={form}
-            policyOptions={policyOptions}
-            ruleSetOptions={ruleSetOptions}
-            subRuleOptions={subRuleOptions}
-            onChange={setForm}
-          />
-
-          <Box>
-            <Typography
-              color="text.secondary"
-              sx={{ mb: 0.75, fontSize: 12.5, fontWeight: 560 }}
-            >
-              {t('rules.page.actions.add.position.label')}
-            </Typography>
-            <ToggleButtonGroup
-              exclusive
-              fullWidth
-              size="small"
-              value={placement}
-              onChange={(_, value: RulePlacement | null) =>
-                value && setPlacement(value)
-              }
-              aria-label={t('rules.page.actions.add.position.label')}
-              sx={{ '& .MuiToggleButton-root': { py: 0.65 } }}
-            >
-              <ToggleButton value="prepend">
-                {t('rules.page.actions.add.position.prepend')}
-              </ToggleButton>
-              <ToggleButton value="append">
-                {t('rules.page.actions.add.position.append')}
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
-        </Stack>
-      </DialogContent>
-
-      <DialogActions
-        sx={{
-          px: 2.5,
-          py: 1.5,
-          borderTop: '1px solid var(--shell-border)',
-        }}
-      >
-        <Button
-          variant="outlined"
-          onClick={onClose}
-          disabled={submitting}
-          sx={{ textTransform: 'none' }}
-        >
-          {t('shared.actions.cancel')}
-        </Button>
-        <Button
-          variant="contained"
-          loading={submitting}
-          onClick={handleSubmit}
-          sx={{ textTransform: 'none' }}
-        >
-          {t('rules.page.actions.add.confirm')}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        <div>
+          <p className="mb-compact text-[12.5px] font-[560] text-[var(--color-text-secondary)]">
+            {t('rules.page.actions.add.position.label')}
+          </p>
+          <div
+            role="group"
+            aria-label={t('rules.page.actions.add.position.label')}
+            className="flex gap-component"
+          >
+            {PLACEMENTS.map((option) => (
+              <Button
+                key={option}
+                type="button"
+                size="sm"
+                variant={placement === option ? 'default' : 'outline'}
+                aria-pressed={placement === option}
+                onClick={() => setPlacement(option)}
+                className="flex-1"
+              >
+                {t(PLACEMENT_LABEL_KEYS[option])}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </BaseDialog>
   )
 }

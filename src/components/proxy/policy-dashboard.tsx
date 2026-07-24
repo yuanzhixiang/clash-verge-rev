@@ -1,25 +1,17 @@
-import {
-  ContentCopyRounded,
-  DeleteOutlineRounded,
-  EditRounded,
-  NetworkCheckRounded,
-  SpeedRounded,
-} from '@mui/icons-material'
-import {
-  Box,
-  Button,
-  Divider,
-  ListItemIcon,
-  ListItemText,
-  Menu,
-  MenuItem,
-  Typography,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
+import { Copy, Gauge, Loader2, Pencil, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, BaseEmpty, BaseLoading } from '@/components/base'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useProfiles } from '@/hooks/use-profiles'
 import { useProxySelection } from '@/hooks/use-proxy-selection'
 import { useVerge } from '@/hooks/use-verge'
@@ -94,34 +86,14 @@ const SectionHeader = ({
   title: string
   actions?: React.ReactNode
 }) => (
-  <Box
-    sx={{
-      display: 'flex',
-      minHeight: 38,
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 2,
-      mb: 1.5,
-    }}
-  >
-    <Typography
-      component="h2"
-      color="primary.main"
-      sx={{
-        fontSize: 12,
-        fontWeight: 650,
-        letterSpacing: '0.08em',
-        textTransform: 'uppercase',
-      }}
-    >
+  <div className="mb-stack flex min-h-[38px] items-center justify-between gap-inset">
+    <h2 className="text-xs font-[650] tracking-[0.08em] text-[var(--color-accent)] uppercase">
       {title}
-    </Typography>
+    </h2>
     {actions && (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        {actions}
-      </Box>
+      <div className="flex items-center gap-component">{actions}</div>
     )}
-  </Box>
+  </div>
 )
 
 export const PolicyDashboard = () => {
@@ -343,33 +315,27 @@ export const PolicyDashboard = () => {
 
   if (isProxiesPending && !proxies) {
     return (
-      <Box sx={{ display: 'grid', height: '100%', placeItems: 'center' }}>
+      <div className="grid h-full place-items-center">
         <BaseLoading />
-      </Box>
+      </div>
     )
   }
 
   return (
-    <Box
-      sx={{
-        px: { xs: 2, sm: 3 },
-        pb: 3,
-      }}
-    >
-      <Box component="section" sx={{ mt: 2.5 }}>
+    <div className="px-inset pb-block sm:px-block">
+      <section className="mt-5">
         <SectionHeader
           title={t('proxies.page.sections.proxy')}
           actions={
             <>
               <Button
-                variant="text"
-                size="small"
-                loading={testingAll}
+                variant="ghost"
+                size="sm"
                 disabled={testingAll || standaloneProxies.length === 0}
                 onClick={() => void handleTestAll()}
-                startIcon={<NetworkCheckRounded fontSize="small" />}
-                sx={{ height: 36, bgcolor: 'var(--shell-panel-muted)' }}
+                className="h-9 gap-1.5 bg-[var(--color-bg-subtle)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]"
               >
+                {testingAll ? <Loader2 className="animate-spin" /> : <Gauge />}
                 {t('proxies.page.actions.testAll')}
               </Button>
               <ProviderButton />
@@ -378,17 +344,11 @@ export const PolicyDashboard = () => {
         />
 
         {standaloneProxies.length === 0 && !canEdit ? (
-          <Box sx={{ minHeight: 112 }}>
+          <div className="min-h-[112px]">
             <BaseEmpty text={t('proxies.page.messages.noNodes')} />
-          </Box>
+          </div>
         ) : (
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 240px))',
-              gap: 1.5,
-            }}
-          >
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,240px))] gap-stack">
             {standaloneProxies.map((proxy) => (
               <PolicyProxyCard
                 key={proxy.name}
@@ -408,25 +368,19 @@ export const PolicyDashboard = () => {
                 onClick={() => openCreateEditor('proxy')}
               />
             )}
-          </Box>
+          </div>
         )}
-      </Box>
+      </section>
 
-      <Box component="section" sx={{ mt: 4.5 }}>
+      <section className="mt-9">
         <SectionHeader title={t('proxies.page.sections.policyGroup')} />
 
         {groups.length === 0 && !canEdit ? (
-          <Box sx={{ minHeight: 112 }}>
+          <div className="min-h-[112px]">
             <BaseEmpty text={t('proxies.page.messages.noGroups')} />
-          </Box>
+          </div>
         ) : (
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 240px))',
-              gap: 1.5,
-            }}
-          >
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,240px))] gap-stack">
             {groups.map((group) => {
               const open = active?.groupName === group.name
               return (
@@ -447,9 +401,9 @@ export const PolicyDashboard = () => {
                 onClick={() => openCreateEditor('group')}
               />
             )}
-          </Box>
+          </div>
         )}
-      </Box>
+      </section>
 
       <PolicyGroupPopover
         key={active?.groupName ?? 'closed'}
@@ -477,78 +431,74 @@ export const PolicyDashboard = () => {
         }}
       />
 
-      <Menu
+      <DropdownMenu
         open={Boolean(proxyMenu)}
-        onClose={() => setProxyMenu(null)}
-        anchorReference="anchorPosition"
-        anchorPosition={proxyMenu?.position}
-        slotProps={{ list: { sx: { py: 0.5 } } }}
-        onContextMenu={(event) => {
-          event.preventDefault()
-          setProxyMenu(null)
+        onOpenChange={(o) => {
+          if (!o) setProxyMenu(null)
         }}
       >
-        {canEdit && (
-          <MenuItem
-            dense
-            onClick={() => {
-              const target = proxyMenu?.proxy
-              setProxyMenu(null)
-              if (target) void openEditEditor('proxy', target.name)
+        <DropdownMenuTrigger asChild>
+          <span
+            aria-hidden
+            className="pointer-events-none fixed"
+            style={{
+              left: proxyMenu?.position.left ?? 0,
+              top: proxyMenu?.position.top ?? 0,
             }}
-          >
-            <ListItemIcon>
-              <EditRounded fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>{t('proxies.page.menus.editProxy')}</ListItemText>
-          </MenuItem>
-        )}
-        {canEdit && (
-          <MenuItem
-            dense
-            onClick={() => {
-              const target = proxyMenu?.proxy
-              setProxyMenu(null)
-              if (target) void handleDuplicate('proxy', target.name)
-            }}
-          >
-            <ListItemIcon>
-              <ContentCopyRounded fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>{t('proxies.page.menus.duplicate')}</ListItemText>
-          </MenuItem>
-        )}
-        {canEdit && (
-          <MenuItem
-            dense
-            onClick={() => {
-              const target = proxyMenu?.proxy
-              setProxyMenu(null)
-              if (target) setConfirm({ kind: 'proxy', name: target.name })
-            }}
-            sx={({ palette }) => ({ color: palette.error.main })}
-          >
-            <ListItemIcon>
-              <DeleteOutlineRounded fontSize="small" color="error" />
-            </ListItemIcon>
-            <ListItemText>{t('proxies.page.menus.deleteProxy')}</ListItemText>
-          </MenuItem>
-        )}
-        {canEdit && <Divider sx={{ my: 0.5 }} />}
-        <MenuItem
-          dense
-          onClick={() => {
-            const target = proxyMenu?.proxy
-            setProxyMenu(null)
-            if (target) handleMenuTestLatency(target)
-          }}
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          side="bottom"
+          sideOffset={0}
+          onContextMenu={(event) => event.preventDefault()}
         >
-          <ListItemIcon>
-            <SpeedRounded fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>{t('proxies.page.menus.testLatency')}</ListItemText>
-        </MenuItem>
-      </Menu>
+          {canEdit && (
+            <DropdownMenuItem
+              onSelect={() => {
+                const target = proxyMenu?.proxy
+                if (target) void openEditEditor('proxy', target.name)
+              }}
+            >
+              <Pencil />
+              {t('proxies.page.menus.editProxy')}
+            </DropdownMenuItem>
+          )}
+          {canEdit && (
+            <DropdownMenuItem
+              onSelect={() => {
+                const target = proxyMenu?.proxy
+                if (target) void handleDuplicate('proxy', target.name)
+              }}
+            >
+              <Copy />
+              {t('proxies.page.menus.duplicate')}
+            </DropdownMenuItem>
+          )}
+          {canEdit && (
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={() => {
+                const target = proxyMenu?.proxy
+                if (target) setConfirm({ kind: 'proxy', name: target.name })
+              }}
+            >
+              <Trash2 />
+              {t('proxies.page.menus.deleteProxy')}
+            </DropdownMenuItem>
+          )}
+          {canEdit && <DropdownMenuSeparator />}
+          <DropdownMenuItem
+            onSelect={() => {
+              const target = proxyMenu?.proxy
+              if (target) handleMenuTestLatency(target)
+            }}
+          >
+            <Gauge />
+            {t('proxies.page.menus.testLatency')}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <PolicyYamlDialog
         key={editor ? `${editor.kind}-${editor.oldName ?? 'new'}` : 'closed'}
@@ -575,7 +525,7 @@ export const PolicyDashboard = () => {
         onClose={() => setConfirm(null)}
         onOk={() => void handleConfirmDelete()}
       >
-        <Typography variant="body2">
+        <p className="text-body text-[var(--color-text-secondary)]">
           {confirm
             ? t(
                 confirm.kind === 'group'
@@ -584,8 +534,8 @@ export const PolicyDashboard = () => {
                 { name: confirm.name },
               )
             : ''}
-        </Typography>
+        </p>
       </BaseDialog>
-    </Box>
+    </div>
   )
 }

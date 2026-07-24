@@ -8,21 +8,19 @@ import {
 } from '@dnd-kit/core'
 import { arrayMove, SortableContext, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { DragIndicatorRounded } from '@mui/icons-material'
-import {
-  Button,
-  Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
-} from '@mui/material'
+import { GripVertical } from 'lucide-react'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 export interface ConnectionColumnOption {
   id: string
@@ -75,22 +73,20 @@ export const ConnectionColumnManager = ({
   )
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>
-        {t('connections.components.columnManager.title')}
-      </DialogTitle>
-      <DialogContent sx={{ pt: 1 }}>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent aria-describedby={undefined} className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>
+            {t('connections.components.columnManager.title')}
+          </DialogTitle>
+        </DialogHeader>
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
           <SortableContext items={items}>
-            <List
-              dense
-              disablePadding
-              sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
-            >
+            <ul className="flex flex-col gap-component">
               {columns.map((column) => (
                 <SortableColumnItem
                   key={column.id}
@@ -101,18 +97,16 @@ export const ConnectionColumnManager = ({
                   disableToggle={column.visible && visibleCount <= 1}
                 />
               ))}
-            </List>
+            </ul>
           </SortableContext>
         </DndContext>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onReset}>
+            {t('shared.actions.resetToDefault')}
+          </Button>
+          <Button onClick={onClose}>{t('shared.actions.close')}</Button>
+        </DialogFooter>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button variant="text" onClick={onReset}>
-          {t('shared.actions.resetToDefault')}
-        </Button>
-        <Button variant="contained" onClick={onClose}>
-          {t('shared.actions.close')}
-        </Button>
-      </DialogActions>
     </Dialog>
   )
 }
@@ -146,42 +140,31 @@ const SortableColumnItem = ({
   )
 
   return (
-    <ListItem
+    <li
       ref={setNodeRef}
-      disableGutters
-      sx={{
-        px: 1,
-        py: 0.5,
-        borderRadius: 'var(--radius-compact)',
-        border: (theme) => `1px solid ${theme.palette.divider}`,
-        backgroundColor: isDragging ? 'action.hover' : 'transparent',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1,
-      }}
       style={style}
+      className={`flex items-center gap-component rounded-[var(--radius-compact)] border border-[var(--color-border)] px-component py-inline ${
+        isDragging ? 'bg-[var(--color-bg-hover)]' : ''
+      }`}
     >
       <Checkbox
-        edge="start"
         checked={column.visible}
         disabled={disableToggle}
-        onChange={(event) => column.toggleVisibility(event.target.checked)}
+        onCheckedChange={(checked) => column.toggleVisibility(checked === true)}
       />
-      <ListItemText
-        primary={column.label}
-        slotProps={{ primary: { variant: 'body2' } }}
-        sx={{ mr: 1 }}
-      />
-      <IconButton
-        edge="end"
-        size="small"
-        sx={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+      <span className="mr-component flex-1 text-[14px] text-[var(--color-text-primary)]">
+        {column.label}
+      </span>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className={`shrink-0 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         aria-label={dragHandleLabel}
         {...attributes}
         {...listeners}
       >
-        <DragIndicatorRounded fontSize="small" />
-      </IconButton>
-    </ListItem>
+        <GripVertical className="size-5" />
+      </Button>
+    </li>
   )
 }

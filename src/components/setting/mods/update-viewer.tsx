@@ -1,8 +1,9 @@
-import { alpha, Box, Button, LinearProgress } from '@mui/material'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { open as openUrl } from '@tauri-apps/plugin-shell'
 import type { DownloadEvent } from '@tauri-apps/plugin-updater'
 import { useLockFn } from 'ahooks'
+import { Loader2 } from 'lucide-react'
+import { useTheme } from 'next-themes'
 import type { Ref } from 'react'
 import {
   lazy,
@@ -16,7 +17,10 @@ import { useTranslation } from 'react-i18next'
 import type { Options as ReactMarkdownOptions } from 'react-markdown'
 
 import { BaseDialog, DialogRef } from '@/components/base'
+import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
 import { useUpdate } from '@/hooks/use-update'
+import { cn } from '@/lib/utils'
 import { showNotice } from '@/services/notice-service'
 import { useSetUpdateState, useUpdateState } from '@/services/states'
 
@@ -120,8 +124,36 @@ const remarkGitHubAlerts = () => {
   return visit
 }
 
+// react-markdown 渲染出的后代元素排版：用 Tailwind 任意后代变体表达，
+// 颜色全部走语义 token。
+const MARKDOWN_CLASS = cn(
+  'min-h-0 flex-1 overflow-auto break-words pr-stack -mr-component',
+  'text-body text-[var(--color-text-primary)]',
+  '[&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
+  '[&_h1]:mt-0 [&_h1]:mb-stack [&_h1]:text-h1',
+  '[&_h2]:mt-inset [&_h2]:mb-component [&_h2]:text-h2',
+  '[&_h3]:mt-inset [&_h3]:mb-compact [&_h3]:text-h3',
+  '[&_:is(h4,h5,h6)]:mt-stack [&_:is(h4,h5,h6)]:mb-compact [&_:is(h4,h5,h6)]:text-body [&_:is(h4,h5,h6)]:font-semibold',
+  '[&_p]:my-component',
+  '[&_:is(ul,ol)]:my-component [&_:is(ul,ol)]:pl-block',
+  '[&_li]:my-adjust',
+  '[&_a]:text-[var(--color-accent)] [&_a]:[overflow-wrap:anywhere]',
+  '[&_strong]:font-bold',
+  '[&_code]:px-inline [&_code]:py-px [&_code]:rounded-[var(--radius-compact)] [&_code]:bg-[var(--color-bg-hover)] [&_code]:text-[0.92em]',
+  '[&_pre]:my-stack [&_pre]:p-stack [&_pre]:overflow-auto [&_pre]:rounded-[var(--radius-compact)] [&_pre]:bg-[var(--color-bg-hover)]',
+  '[&_pre_code]:p-0 [&_pre_code]:bg-transparent [&_pre_code]:text-[0.9em]',
+  '[&_table]:block [&_table]:w-full [&_table]:my-stack [&_table]:overflow-x-auto [&_table]:border-collapse',
+  '[&_:is(th,td)]:px-component [&_:is(th,td)]:py-compact [&_:is(th,td)]:border [&_:is(th,td)]:border-[var(--color-border)] [&_:is(th,td)]:align-top',
+  '[&_th]:bg-[var(--color-bg-hover)] [&_th]:font-bold',
+  '[&_hr]:my-inset [&_hr]:border-0 [&_hr]:border-t [&_hr]:border-[var(--color-border)]',
+  '[&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-[var(--radius-compact)]',
+  '[&_blockquote:not(.markdown-alert)]:mt-stack [&_blockquote:not(.markdown-alert)]:mb-inset [&_blockquote:not(.markdown-alert)]:pl-inset [&_blockquote:not(.markdown-alert)]:text-[var(--color-text-secondary)] [&_blockquote:not(.markdown-alert)]:border-l-4 [&_blockquote:not(.markdown-alert)]:border-[var(--color-border)]',
+)
+
 export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation()
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
 
   const [open, setOpen] = useState(false)
   const updateState = useUpdateState()
@@ -213,32 +245,15 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
     <BaseDialog
       open={open}
       title={
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 2,
-            minWidth: 0,
-          }}
-        >
-          <Box
-            component="span"
-            sx={{
-              minWidth: 0,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
+        <div className="flex items-center justify-between gap-inset min-w-0">
+          <span className="min-w-0 truncate">
             {t('settings.modals.update.title', {
               version: updateInfo?.version ?? '',
             })}
-          </Box>
+          </span>
           <Button
-            variant="contained"
-            size="small"
-            sx={{ whiteSpace: 'nowrap' }}
+            size="sm"
+            className="whitespace-nowrap"
             onClick={() => {
               openUrl(
                 `https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/v${updateInfo?.version}`,
@@ -247,7 +262,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
           >
             {t('settings.modals.update.actions.goToRelease')}
           </Button>
-        </Box>
+        </div>
       }
       contentSx={{
         width: { xs: 'calc(100vw - 56px)', sm: 560 },
@@ -263,124 +278,15 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
       onCancel={() => setOpen(false)}
       onOk={onUpdate}
     >
-      <Box
-        sx={{
-          flex: 1,
-          minHeight: 0,
-          overflow: 'auto',
-          pr: 1.5,
-          mr: -1,
-          fontSize: 14,
-          lineHeight: 1.65,
-          color: 'text.primary',
-          overflowWrap: 'break-word',
-          '& > :first-child': {
-            mt: 0,
-          },
-          '& > :last-child': {
-            mb: 0,
-          },
-          '& h1': {
-            mt: 0,
-            mb: 1.5,
-            fontSize: 24,
-            lineHeight: 1.25,
-          },
-          '& h2': {
-            mt: 2.25,
-            mb: 1,
-            fontSize: 19,
-            lineHeight: 1.3,
-          },
-          '& h3': {
-            mt: 2,
-            mb: 0.75,
-            fontSize: 16,
-            lineHeight: 1.35,
-          },
-          '& h4, & h5, & h6': {
-            mt: 1.5,
-            mb: 0.75,
-            fontSize: 14,
-            lineHeight: 1.4,
-          },
-          '& p': {
-            my: 1,
-          },
-          '& ul, & ol': {
-            my: 1,
-            pl: 2.75,
-          },
-          '& li': {
-            my: 0.35,
-            pl: 0.25,
-          },
-          '& a': {
-            color: 'primary.main',
-            overflowWrap: 'anywhere',
-          },
-          '& strong': {
-            fontWeight: 700,
-          },
-          '& code': {
-            px: 0.5,
-            py: 0.125,
-            borderRadius: 'var(--radius-compact)',
-            bgcolor: 'action.hover',
-            fontSize: '0.92em',
-          },
-          '& pre': {
-            my: 1.5,
-            p: 1.5,
-            overflow: 'auto',
-            borderRadius: 'var(--radius-compact)',
-            bgcolor: 'action.hover',
-          },
-          '& pre code': {
-            p: 0,
-            bgcolor: 'transparent',
-            fontSize: '0.9em',
-          },
-          '& table': {
-            display: 'block',
-            width: '100%',
-            my: 1.5,
-            overflowX: 'auto',
-            borderCollapse: 'collapse',
-          },
-          '& th, & td': {
-            px: 1,
-            py: 0.75,
-            border: '1px solid',
-            borderColor: 'divider',
-            verticalAlign: 'top',
-          },
-          '& th': {
-            bgcolor: 'action.hover',
-            fontWeight: 700,
-          },
-          '& hr': {
-            my: 2,
-            border: 0,
-            borderTop: '1px solid',
-            borderColor: 'divider',
-          },
-          '& img': {
-            maxWidth: '100%',
-            height: 'auto',
-            borderRadius: 'var(--radius-compact)',
-          },
-          '& blockquote:not(.markdown-alert)': {
-            m: '12px 0 18px',
-            pl: 2,
-            color: 'text.secondary',
-            borderLeft: '4px solid',
-            borderColor: 'divider',
-          },
-        }}
-      >
+      <div className={MARKDOWN_CLASS}>
         {open && (
-          <Suspense fallback={<LinearProgress />}>
+          <Suspense
+            fallback={
+              <div className="flex justify-center py-inset">
+                <Loader2 className="size-6 animate-spin text-[var(--color-text-muted)]" />
+              </div>
+            }
+          >
             <LazyReactMarkdown
               remarkPlugins={[remarkGitHubAlerts]}
               components={{
@@ -401,37 +307,23 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
                     )
                   }
 
+                  const color = GITHUB_ALERTS[alertType].color
+                  const background = `color-mix(in srgb, ${color} ${
+                    isDark ? 16 : 8
+                  }%, transparent)`
+
                   return (
-                    <Box
-                      component="blockquote"
-                      className={className}
-                      sx={(theme) => {
-                        const color = GITHUB_ALERTS[alertType].color
-                        return {
-                          m: '12px 0 18px',
-                          px: 2,
-                          py: 1,
-                          borderLeft: `4px solid ${color}`,
-                          borderRadius: 'var(--radius-compact)',
-                          bgcolor: alpha(
-                            color,
-                            theme.palette.mode === 'dark' ? 0.16 : 0.08,
-                          ),
-                          '& p': {
-                            my: 0.75,
-                          },
-                          '& .markdown-alert-title': {
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.75,
-                            fontWeight: 700,
-                            lineHeight: 1.4,
-                          },
-                        }
-                      }}
+                    <blockquote
+                      className={cn(
+                        className,
+                        'mt-stack mb-inset px-inset py-component rounded-[var(--radius-compact)] border-l-4',
+                        '[&_p]:my-compact',
+                        '[&_.markdown-alert-title]:flex [&_.markdown-alert-title]:items-center [&_.markdown-alert-title]:gap-compact [&_.markdown-alert-title]:font-bold [&_.markdown-alert-title]:leading-[1.4]',
+                      )}
+                      style={{ borderLeftColor: color, background }}
                     >
                       {children}
-                    </Box>
+                    </blockquote>
                   )
                 },
               }}
@@ -440,14 +332,8 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
             </LazyReactMarkdown>
           </Suspense>
         )}
-      </Box>
-      {updateState && (
-        <LinearProgress
-          variant={total > 0 ? 'determinate' : 'indeterminate'}
-          value={progress}
-          sx={{ mt: 1 }}
-        />
-      )}
+      </div>
+      {updateState && <Progress value={progress} className="mt-component" />}
     </BaseDialog>
   )
 }

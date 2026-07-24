@@ -1,11 +1,11 @@
-import { ContentCopyRounded } from '@mui/icons-material'
-import { alpha, Box, Button, CircularProgress, IconButton } from '@mui/material'
 import { writeText } from '@tauri-apps/plugin-clipboard-manager'
+import { Copy, Loader2 } from 'lucide-react'
 import type { Ref } from 'react'
 import { useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, BaseEmpty, DialogRef } from '@/components/base'
+import { Button } from '@/components/ui/button'
 import { useNetworkInterfaces } from '@/hooks/use-network'
 import { showNotice } from '@/services/notice-service'
 
@@ -30,20 +30,20 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
     <BaseDialog
       open={open}
       title={
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div className="flex items-center justify-between">
           {t('settings.modals.networkInterface.title')}
-          <Box>
+          <div>
             <Button
-              variant="contained"
-              size="small"
+              type="button"
+              size="sm"
               onClick={() => {
                 setIsV4((prev) => !prev)
               }}
             >
               {isV4 ? 'Ipv6' : 'Ipv4'}
             </Button>
-          </Box>
-        </Box>
+          </div>
+        </div>
       }
       contentSx={{ width: 450 }}
       disableOk
@@ -52,18 +52,18 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
       onCancel={() => setOpen(false)}
     >
       {loading && isEmpty ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress size={24} />
-        </Box>
+        <div className="flex justify-center py-section-sm">
+          <Loader2 className="size-6 animate-spin text-[var(--color-text-secondary)]" />
+        </div>
       ) : isEmpty ? (
-        <Box sx={{ minHeight: 160 }}>
+        <div className="min-h-[160px]">
           <BaseEmpty />
-        </Box>
+        </div>
       ) : (
         networkInterfaces.map((item) => (
-          <Box key={item.name}>
+          <div key={item.name}>
             <h4>{item.name}</h4>
-            <Box>
+            <div>
               {item.addr.map((address) => {
                 const ip = getAddressIp(address)
                 return (
@@ -82,8 +82,8 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 label={t('settings.modals.networkInterface.fields.macAddress')}
                 content={item.mac_addr ?? ''}
               />
-            </Box>
-          </Box>
+            </div>
+          </div>
         ))
       )}
     </BaseDialog>
@@ -98,27 +98,14 @@ const AddressDisplay = ({
   content: string
 }) => {
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        margin: '8px 0',
-      }}
-    >
-      <Box>{label}</Box>
-      <Box
-        sx={({ palette }) => ({
-          borderRadius: 'var(--radius-control)',
-          padding: '2px 2px 2px 8px',
-          background:
-            palette.mode === 'dark'
-              ? alpha(palette.background.paper, 0.3)
-              : alpha(palette.grey[400], 0.3),
-        })}
-      >
-        <Box sx={{ display: 'inline', userSelect: 'text' }}>{content}</Box>
-        <IconButton
-          size="small"
+    <div className="my-component flex items-center justify-between">
+      <div>{label}</div>
+      <div className="flex items-center rounded-[var(--radius-control)] bg-[var(--color-bg-subtle)] py-adjust pr-adjust pl-component">
+        <span className="select-text">{content}</span>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={async () => {
             await writeText(content)
             showNotice.success(
@@ -126,9 +113,9 @@ const AddressDisplay = ({
             )
           }}
         >
-          <ContentCopyRounded sx={{ fontSize: '18px' }} />
-        </IconButton>
-      </Box>
-    </Box>
+          <Copy className="size-[18px]" />
+        </Button>
+      </div>
+    </div>
   )
 }

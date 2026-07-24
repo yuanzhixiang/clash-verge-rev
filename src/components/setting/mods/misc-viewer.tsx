@@ -1,19 +1,39 @@
-import {
-  InputAdornment,
-  List,
-  ListItem,
-  ListItemText,
-  MenuItem,
-  Select,
-  TextField,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
+import type { ReactNode } from 'react'
 import { forwardRef, useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, DialogRef, Switch, TooltipIcon } from '@/components/base'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useVerge } from '@/hooks/use-verge'
+import { cn } from '@/lib/utils'
 import { showNotice } from '@/services/notice-service'
+
+const AdornedInput = ({
+  endText,
+  wrapperClassName,
+  className,
+  ...props
+}: React.ComponentProps<typeof Input> & {
+  endText?: ReactNode
+  wrapperClassName?: string
+}) => (
+  <div className={cn('relative', wrapperClassName)}>
+    <Input {...props} className={cn('pr-14', className)} />
+    {endText != null && (
+      <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-body text-[var(--color-text-secondary)]">
+        {endText}
+      </span>
+    )}
+  </div>
+)
 
 export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation()
@@ -91,43 +111,40 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
-      <List>
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.misc.fields.appLogLevel')}
-          />
+      <ul className="py-component">
+        <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+          <span>{t('settings.modals.misc.fields.appLogLevel')}</span>
           <Select
-            size="small"
-            sx={{ width: 100, '> div': { py: '7.5px' } }}
             value={values.appLogLevel}
-            onChange={(e) =>
-              setValues((v) => ({
-                ...v,
-                appLogLevel: e.target.value as string,
-              }))
+            onValueChange={(value) =>
+              setValues((v) => ({ ...v, appLogLevel: value }))
             }
           >
-            {['trace', 'debug', 'info', 'warn', 'error', 'silent'].map((i) => (
-              <MenuItem value={i} key={i}>
-                {i[0].toUpperCase() + i.slice(1).toLowerCase()}
-              </MenuItem>
-            ))}
+            <SelectTrigger className="w-[100px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {['trace', 'debug', 'info', 'warn', 'error', 'silent'].map(
+                (i) => (
+                  <SelectItem value={i} key={i}>
+                    {i[0].toUpperCase() + i.slice(1).toLowerCase()}
+                  </SelectItem>
+                ),
+              )}
+            </SelectContent>
           </Select>
-        </ListItem>
+        </li>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.misc.fields.appLogMaxSize')}
-            sx={{ maxWidth: 'fit-content' }}
-          />
-          <TextField
+        <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+          <span>{t('settings.modals.misc.fields.appLogMaxSize')}</span>
+          <AdornedInput
             autoComplete="new-password"
-            size="small"
             type="number"
             autoCorrect="off"
             autoCapitalize="off"
-            spellCheck="false"
-            sx={{ width: 140, marginLeft: 'auto' }}
+            spellCheck={false}
+            wrapperClassName="w-[140px]"
+            endText={t('shared.units.kilobytes')}
             value={values.appLogMaxSize}
             onChange={(e) =>
               setValues((v) => ({
@@ -135,31 +152,19 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
                 appLogMaxSize: Math.max(1, parseInt(e.target.value) || 128),
               }))
             }
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    {t('shared.units.kilobytes')}
-                  </InputAdornment>
-                ),
-              },
-            }}
           />
-        </ListItem>
+        </li>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.misc.fields.appLogMaxCount')}
-            sx={{ maxWidth: 'fit-content' }}
-          />
-          <TextField
+        <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+          <span>{t('settings.modals.misc.fields.appLogMaxCount')}</span>
+          <AdornedInput
             autoComplete="new-password"
-            size="small"
             type="number"
             autoCorrect="off"
             autoCapitalize="off"
-            spellCheck="false"
-            sx={{ width: 140, marginLeft: 'auto' }}
+            spellCheck={false}
+            wrapperClassName="w-[140px]"
+            endText={t('shared.units.files')}
             value={values.appLogMaxCount}
             onChange={(e) =>
               setValues((v) => ({
@@ -167,182 +172,168 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
                 appLogMaxCount: Math.max(1, parseInt(e.target.value) || 1),
               }))
             }
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    {t('shared.units.files')}
-                  </InputAdornment>
-                ),
-              },
-            }}
           />
-        </ListItem>
+        </li>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.misc.fields.autoCloseConnections')}
-            sx={{ maxWidth: 'fit-content' }}
-          />
-          <TooltipIcon
-            title={t('settings.modals.misc.tooltips.autoCloseConnections')}
-            sx={{ opacity: '0.7' }}
-          />
+        <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+          <div className="flex items-center gap-inline">
+            <span>{t('settings.modals.misc.fields.autoCloseConnections')}</span>
+            <TooltipIcon
+              title={t('settings.modals.misc.tooltips.autoCloseConnections')}
+              className="opacity-70"
+            />
+          </div>
           <Switch
-            edge="end"
             checked={values.autoCloseConnection}
-            onChange={(_, c) =>
+            onCheckedChange={(c) =>
               setValues((v) => ({ ...v, autoCloseConnection: c }))
             }
-            sx={{ marginLeft: 'auto' }}
           />
-        </ListItem>
+        </li>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.misc.fields.autoCheckUpdate')}
-          />
+        <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+          <span>{t('settings.modals.misc.fields.autoCheckUpdate')}</span>
           <Switch
-            edge="end"
             checked={values.autoCheckUpdate}
-            onChange={(_, c) =>
+            onCheckedChange={(c) =>
               setValues((v) => ({ ...v, autoCheckUpdate: c }))
             }
           />
-        </ListItem>
+        </li>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.misc.fields.enableBuiltinEnhanced')}
-            sx={{ maxWidth: 'fit-content' }}
-          />
-          <TooltipIcon
-            title={t('settings.modals.misc.tooltips.enableBuiltinEnhanced')}
-            sx={{ opacity: '0.7' }}
-          />
+        <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+          <div className="flex items-center gap-inline">
+            <span>
+              {t('settings.modals.misc.fields.enableBuiltinEnhanced')}
+            </span>
+            <TooltipIcon
+              title={t('settings.modals.misc.tooltips.enableBuiltinEnhanced')}
+              className="opacity-70"
+            />
+          </div>
           <Switch
-            edge="end"
             checked={values.enableBuiltinEnhanced}
-            onChange={(_, c) =>
+            onCheckedChange={(c) =>
               setValues((v) => ({ ...v, enableBuiltinEnhanced: c }))
             }
-            sx={{ marginLeft: 'auto' }}
           />
-        </ListItem>
+        </li>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.misc.fields.proxyLayoutColumns')}
-          />
+        <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+          <span>{t('settings.modals.misc.fields.proxyLayoutColumns')}</span>
           <Select
-            size="small"
-            sx={{ width: 160, '> div': { py: '7.5px' } }}
-            value={values.proxyLayoutColumn}
-            onChange={(e) =>
-              setValues((v) => ({
-                ...v,
-                proxyLayoutColumn: e.target.value as number,
-              }))
+            value={String(values.proxyLayoutColumn)}
+            onValueChange={(value) =>
+              setValues((v) => ({ ...v, proxyLayoutColumn: Number(value) }))
             }
           >
-            <MenuItem value={6} key={6}>
-              {t('settings.modals.misc.options.proxyLayoutColumns.auto')}
-            </MenuItem>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <MenuItem value={i} key={i}>
-                {i}
-              </MenuItem>
-            ))}
+            <SelectTrigger className="w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="6" key={6}>
+                {t('settings.modals.misc.options.proxyLayoutColumns.auto')}
+              </SelectItem>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <SelectItem value={String(i)} key={i}>
+                  {i}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
-        </ListItem>
+        </li>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.misc.fields.autoLogClean')}
-          />
+        <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+          <span>{t('settings.modals.misc.fields.autoLogClean')}</span>
           <Select
-            size="small"
-            sx={{ width: 160, '> div': { py: '7.5px' } }}
-            value={values.autoLogClean}
-            onChange={(e) =>
-              setValues((v) => ({
-                ...v,
-                autoLogClean: e.target.value as number,
-              }))
+            value={String(values.autoLogClean)}
+            onValueChange={(value) =>
+              setValues((v) => ({ ...v, autoLogClean: Number(value) }))
             }
           >
-            {/* 1: 1天, 2: 7天, 3: 30天, 4: 90天*/}
-            {[
-              {
-                key: t('settings.modals.misc.options.autoLogClean.never'),
-                value: 0,
-              },
-              {
-                key: t('settings.modals.misc.options.autoLogClean.retainDays', {
-                  n: 1,
-                }),
-                value: 1,
-              },
-              {
-                key: t('settings.modals.misc.options.autoLogClean.retainDays', {
-                  n: 7,
-                }),
-                value: 2,
-              },
-              {
-                key: t('settings.modals.misc.options.autoLogClean.retainDays', {
-                  n: 30,
-                }),
-                value: 3,
-              },
-              {
-                key: t('settings.modals.misc.options.autoLogClean.retainDays', {
-                  n: 90,
-                }),
-                value: 4,
-              },
-            ].map((i) => (
-              <MenuItem key={i.value} value={i.value}>
-                {i.key}
-              </MenuItem>
-            ))}
+            <SelectTrigger className="w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {/* 1: 1天, 2: 7天, 3: 30天, 4: 90天*/}
+              {[
+                {
+                  key: t('settings.modals.misc.options.autoLogClean.never'),
+                  value: 0,
+                },
+                {
+                  key: t(
+                    'settings.modals.misc.options.autoLogClean.retainDays',
+                    {
+                      n: 1,
+                    },
+                  ),
+                  value: 1,
+                },
+                {
+                  key: t(
+                    'settings.modals.misc.options.autoLogClean.retainDays',
+                    {
+                      n: 7,
+                    },
+                  ),
+                  value: 2,
+                },
+                {
+                  key: t(
+                    'settings.modals.misc.options.autoLogClean.retainDays',
+                    {
+                      n: 30,
+                    },
+                  ),
+                  value: 3,
+                },
+                {
+                  key: t(
+                    'settings.modals.misc.options.autoLogClean.retainDays',
+                    {
+                      n: 90,
+                    },
+                  ),
+                  value: 4,
+                },
+              ].map((i) => (
+                <SelectItem key={i.value} value={String(i.value)}>
+                  {i.key}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
-        </ListItem>
+        </li>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.misc.fields.autoDelayDetection')}
-            sx={{ maxWidth: 'fit-content' }}
-          />
-          <TooltipIcon
-            title={t('settings.modals.misc.tooltips.autoDelayDetection')}
-            sx={{ opacity: '0.7' }}
-          />
+        <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+          <div className="flex items-center gap-inline">
+            <span>{t('settings.modals.misc.fields.autoDelayDetection')}</span>
+            <TooltipIcon
+              title={t('settings.modals.misc.tooltips.autoDelayDetection')}
+              className="opacity-70"
+            />
+          </div>
           <Switch
-            edge="end"
             checked={values.enableAutoDelayDetection}
-            onChange={(_, c) =>
+            onCheckedChange={(c) =>
               setValues((v) => ({ ...v, enableAutoDelayDetection: c }))
             }
-            sx={{ marginLeft: 'auto' }}
           />
-        </ListItem>
+        </li>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t(
-              'settings.modals.misc.fields.autoDelayDetectionInterval',
-            )}
-            sx={{ maxWidth: 'fit-content' }}
-          />
-          <TextField
+        <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+          <span>
+            {t('settings.modals.misc.fields.autoDelayDetectionInterval')}
+          </span>
+          <AdornedInput
             autoComplete="new-password"
-            size="small"
             type="number"
             autoCorrect="off"
             autoCapitalize="off"
-            spellCheck="false"
-            sx={{ width: 160, marginLeft: 'auto' }}
+            spellCheck={false}
+            wrapperClassName="w-[160px]"
+            endText={t('shared.units.minutes')}
             value={values.autoDelayDetectionIntervalMinutes}
             disabled={!values.enableAutoDelayDetection}
             onChange={(e) => {
@@ -354,54 +345,41 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
                 autoDelayDetectionIntervalMinutes: intervalMinutes,
               }))
             }}
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    {t('shared.units.minutes')}
-                  </InputAdornment>
-                ),
-              },
-            }}
           />
-        </ListItem>
+        </li>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.misc.fields.defaultLatencyTest')}
-            sx={{ maxWidth: 'fit-content' }}
-          />
-          <TooltipIcon
-            title={t('settings.modals.misc.tooltips.defaultLatencyTest')}
-            sx={{ opacity: '0.7' }}
-          />
-          <TextField
+        <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+          <div className="flex items-center gap-inline">
+            <span>{t('settings.modals.misc.fields.defaultLatencyTest')}</span>
+            <TooltipIcon
+              title={t('settings.modals.misc.tooltips.defaultLatencyTest')}
+              className="opacity-70"
+            />
+          </div>
+          <Input
             autoComplete="new-password"
-            size="small"
             autoCorrect="off"
             autoCapitalize="off"
-            spellCheck="false"
-            sx={{ width: 250, marginLeft: 'auto' }}
+            spellCheck={false}
+            className="w-[250px]"
             value={values.defaultLatencyTest}
             placeholder="http://cp.cloudflare.com/generate_204"
             onChange={(e) =>
               setValues((v) => ({ ...v, defaultLatencyTest: e.target.value }))
             }
           />
-        </ListItem>
+        </li>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.misc.fields.defaultLatencyTimeout')}
-          />
-          <TextField
+        <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+          <span>{t('settings.modals.misc.fields.defaultLatencyTimeout')}</span>
+          <AdornedInput
             autoComplete="new-password"
-            size="small"
             type="number"
             autoCorrect="off"
             autoCapitalize="off"
-            spellCheck="false"
-            sx={{ width: 250 }}
+            spellCheck={false}
+            wrapperClassName="w-[250px]"
+            endText={t('shared.units.milliseconds')}
             value={values.defaultLatencyTimeout}
             placeholder="10000"
             onChange={(e) =>
@@ -410,18 +388,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
                 defaultLatencyTimeout: parseInt(e.target.value),
               }))
             }
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    {t('shared.units.milliseconds')}
-                  </InputAdornment>
-                ),
-              },
-            }}
           />
-        </ListItem>
-      </List>
+        </li>
+      </ul>
     </BaseDialog>
   )
 })

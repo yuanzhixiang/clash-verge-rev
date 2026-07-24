@@ -1,10 +1,10 @@
-import { Box, Button, Typography } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import type { Ref } from 'react'
 import { useImperativeHandle, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, BaseEmpty, DialogRef } from '@/components/base'
+import { Button } from '@/components/ui/button'
 import { useClashInfo } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
 import { openWebUrl } from '@/services/cmds'
@@ -100,17 +100,12 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
     <BaseDialog
       open={open}
       title={
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div className="flex items-center justify-between">
           {t('settings.modals.webUI.title')}
-          <Button
-            variant="contained"
-            size="small"
-            disabled={editing}
-            onClick={() => setEditing(true)}
-          >
+          <Button size="sm" disabled={editing} onClick={() => setEditing(true)}>
             {t('shared.actions.new')}
           </Button>
-        </Box>
+        </div>
       }
       contentSx={{
         width: 450,
@@ -127,9 +122,9 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
       {!editing && webUIList.length === 0 && (
         <BaseEmpty
           extra={
-            <Typography sx={{ mt: 2, fontSize: '12px' }}>
+            <p className="mt-inset text-caption">
               {t('settings.modals.webUI.messages.placeholderInstruction')}
-            </Typography>
+            </p>
           }
         />
       )}

@@ -8,9 +8,8 @@ import {
   DragOverlay,
 } from '@dnd-kit/core'
 import { SortableContext } from '@dnd-kit/sortable'
-import { Add, NetworkCheck } from '@mui/icons-material'
-import { Box, IconButton, Tooltip, alpha, styled, Grid } from '@mui/material'
 import { emit } from '@tauri-apps/api/event'
+import { Gauge, Plus } from 'lucide-react'
 import { nanoid } from 'nanoid'
 import { useEffect, useRef, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -22,23 +21,15 @@ import google from '@/assets/image/test/google.svg?raw'
 import youtube from '@/assets/image/test/youtube.svg?raw'
 import { TestItem } from '@/components/test/test-item'
 import { TestViewer, TestViewerRef } from '@/components/test/test-viewer'
+import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useVerge } from '@/hooks/use-verge'
 
 import { EnhancedCard } from './enhanced-card'
-
-// 自定义滚动条样式
-const ScrollBox = styled(Box)(({ theme }) => ({
-  maxHeight: '180px',
-  overflowY: 'auto',
-  overflowX: 'hidden',
-  '&::-webkit-scrollbar': {
-    width: '6px',
-  },
-  '&::-webkit-scrollbar-thumb': {
-    backgroundColor: alpha(theme.palette.text.primary, 0.2),
-    borderRadius: 'var(--radius-compact)',
-  },
-}))
 
 // 默认测试列表，移到组件外部避免重复创建
 const DEFAULT_TEST_LIST = [
@@ -149,20 +140,20 @@ export const TestCard = () => {
   // 使用useMemo优化UI内容，减少渲染计算
   const renderTestItems = useMemo(
     () => (
-      <Grid container spacing={1} columns={12}>
+      <div className="grid grid-cols-4 gap-component">
         <SortableContext items={testList.map((x) => x.uid)}>
           {testList.map((item) => (
-            <Grid key={item.uid} size={3}>
+            <div key={item.uid}>
               <TestItem
                 id={item.uid}
                 itemData={item}
                 onEdit={() => viewerRef.current?.edit(item)}
                 onDelete={onDeleteTestListItem}
               />
-            </Grid>
+            </div>
           ))}
         </SortableContext>
-      </Grid>
+      </div>
     ),
     [testList, onDeleteTestListItem],
   )
@@ -178,23 +169,31 @@ export const TestCard = () => {
   return (
     <EnhancedCard
       title={t('home.components.tests.title')}
-      icon={<NetworkCheck />}
+      icon={<Gauge className="size-5" />}
       action={
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Tooltip title={t('tests.page.actions.testAll')} arrow>
-            <IconButton size="small" onClick={handleTestAll}>
-              <NetworkCheck fontSize="small" />
-            </IconButton>
+        <div className="flex gap-component">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon-sm" onClick={handleTestAll}>
+                <Gauge className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('tests.page.actions.testAll')}</TooltipContent>
           </Tooltip>
-          <Tooltip title={t('tests.modals.test.title.create')} arrow>
-            <IconButton size="small" onClick={handleCreateTest}>
-              <Add fontSize="small" />
-            </IconButton>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon-sm" onClick={handleCreateTest}>
+                <Plus className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {t('tests.modals.test.title.create')}
+            </TooltipContent>
           </Tooltip>
-        </Box>
+        </div>
       }
     >
-      <ScrollBox>
+      <div className="max-h-45 overflow-x-hidden overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-[var(--radius-compact)] [&::-webkit-scrollbar-thumb]:bg-[color-mix(in_srgb,var(--color-text-primary)_20%,transparent)]">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -203,7 +202,7 @@ export const TestCard = () => {
           {renderTestItems}
           <DragOverlay />
         </DndContext>
-      </ScrollBox>
+      </div>
 
       <TestViewer ref={viewerRef} onChange={onTestListItemChange} />
     </EnhancedCard>

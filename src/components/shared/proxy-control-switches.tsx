@@ -1,13 +1,12 @@
-import {
-  BuildRounded,
-  DeleteForeverRounded,
-  PauseCircleOutlineRounded,
-  PlayCircleOutlineRounded,
-  SettingsRounded,
-  WarningRounded,
-} from '@mui/icons-material'
-import { Box, Typography, alpha, useTheme } from '@mui/material'
 import { useLockFn } from 'ahooks'
+import {
+  CirclePause,
+  CirclePlay,
+  Settings,
+  Trash2,
+  TriangleAlert,
+  Wrench,
+} from 'lucide-react'
 import React, { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -19,6 +18,7 @@ import { useServiceUninstaller } from '@/hooks/use-service-uninstaller'
 import { useSystemProxyState } from '@/hooks/use-system-proxy-state'
 import { useSystemState } from '@/hooks/use-system-state'
 import { useVerge } from '@/hooks/use-verge'
+import { cn } from '@/lib/utils'
 import { showNotice } from '@/services/notice-service'
 
 interface ProxySwitchProps {
@@ -54,7 +54,6 @@ const SwitchRow = ({
   onError,
   highlight,
 }: SwitchRowProps) => {
-  const theme = useTheme()
   const [checked, setChecked] = useState(active)
   const pendingRef = useRef(false)
 
@@ -64,7 +63,7 @@ const SwitchRow = ({
     setChecked(active)
   }
 
-  const handleChange = (_: React.ChangeEvent, value: boolean) => {
+  const handleChange = (value: boolean) => {
     pendingRef.current = true
     setChecked(value)
     onToggle(value)
@@ -78,49 +77,36 @@ const SwitchRow = ({
   }
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        p: 1,
-        pr: 2,
-        borderRadius: 'var(--radius-control)',
-        bgcolor: highlight
-          ? alpha(theme.palette.success.main, 0.07)
-          : 'transparent',
-        opacity: disabled ? 0.6 : 1,
-        transition: 'background-color 0.3s',
-      }}
+    <div
+      className={cn(
+        'flex items-center justify-between rounded-[var(--radius-control)] p-component pr-inset transition-colors duration-[var(--duration-slow)]',
+        highlight &&
+          'bg-[color-mix(in_srgb,var(--color-success)_7%,transparent)]',
+        disabled && 'opacity-60',
+      )}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <div className="flex items-center">
         {active ? (
-          <PlayCircleOutlineRounded sx={{ color: 'success.main', mr: 1 }} />
+          <CirclePlay className="mr-component size-6 text-[var(--color-success)]" />
         ) : (
-          <PauseCircleOutlineRounded sx={{ color: 'text.disabled', mr: 1 }} />
+          <CirclePause className="mr-component size-6 text-[var(--color-text-disabled)]" />
         )}
-        <Typography
-          variant="subtitle1"
-          sx={{ fontWeight: 500, fontSize: '15px' }}
-        >
-          {label}
-        </Typography>
+        <span className="text-[0.9375rem] font-medium">{label}</span>
         <TooltipIcon
           title={infoTitle}
-          icon={SettingsRounded}
+          icon={Settings}
           onClick={onInfoClick}
-          sx={{ ml: 1 }}
+          className="ml-component"
         />
         {extraIcons}
-      </Box>
+      </div>
 
       <Switch
-        edge="end"
         disabled={disabled}
         checked={checked}
-        onChange={handleChange}
+        onCheckedChange={handleChange}
       />
-    </Box>
+    </div>
   )
 }
 
@@ -184,7 +170,7 @@ const ProxyControlSwitches = ({
   const isTunMode = label === t('settings.sections.system.toggles.tunMode')
 
   return (
-    <Box sx={{ width: '100%', pr: noRightPadding ? 1 : 2 }}>
+    <div className={cn('w-full', noRightPadding ? 'pr-component' : 'pr-inset')}>
       {isSystemProxyMode && (
         <SwitchRow
           label={t('settings.sections.proxyControl.fields.systemProxy')}
@@ -215,17 +201,16 @@ const ProxyControlSwitches = ({
                     title={t(
                       'settings.sections.proxyControl.tooltips.tunUnavailable',
                     )}
-                    icon={WarningRounded}
-                    sx={{ color: 'warning.main', ml: 1 }}
+                    icon={TriangleAlert}
+                    className="ml-component text-[var(--color-warning)]"
                   />
                   <TooltipIcon
                     title={t(
                       'settings.sections.proxyControl.actions.installService',
                     )}
-                    icon={BuildRounded}
-                    color="primary"
+                    icon={Wrench}
                     onClick={onInstallService}
-                    sx={{ ml: 1 }}
+                    className="ml-component text-[var(--color-accent)]"
                   />
                 </>
               )}
@@ -234,10 +219,9 @@ const ProxyControlSwitches = ({
                   title={t(
                     'settings.sections.proxyControl.actions.uninstallService',
                   )}
-                  icon={DeleteForeverRounded}
-                  color="secondary"
+                  icon={Trash2}
                   onClick={onUninstallService}
-                  sx={{ ml: 1 }}
+                  className="ml-component text-[var(--color-secondary)]"
                 />
               )}
             </>
@@ -247,7 +231,7 @@ const ProxyControlSwitches = ({
 
       <SysproxyViewer ref={sysproxyRef} />
       <TunViewer ref={tunRef} />
-    </Box>
+    </div>
   )
 }
 

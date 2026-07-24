@@ -1,10 +1,11 @@
-import { Delete as DeleteIcon } from '@mui/icons-material'
-import { Box, Button, Divider, List, ListItem, TextField } from '@mui/material'
 import { useLockFn, useRequest } from 'ahooks'
+import { Trash2 } from 'lucide-react'
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, Switch } from '@/components/base'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useClash } from '@/hooks/use-clash'
 import { restartCore } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -30,41 +31,6 @@ const getFullOrigins = (origins: string[]) => {
 // 过滤基础URL(确保后续添加)
 const filterBaseOriginsForUI = (origins: string[]) => {
   return origins.filter((origin: string) => !DEV_URLS.includes(origin.trim()))
-}
-
-// 统一使用的按钮样式
-const buttonStyle = {
-  borderRadius: 'var(--radius-control)',
-  textTransform: 'none',
-  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
-    transform: 'translateY(-1px)',
-  },
-  '&:active': {
-    transform: 'translateY(0)',
-  },
-}
-
-// 添加按钮样式
-const addButtonStyle = {
-  ...buttonStyle,
-  backgroundColor: '#4CAF50',
-  color: 'white',
-  '&:hover': {
-    backgroundColor: '#388E3C',
-  },
-}
-
-// 删除按钮样式
-const deleteButtonStyle = {
-  ...buttonStyle,
-  backgroundColor: '#FF5252',
-  color: 'white',
-  '&:hover': {
-    backgroundColor: '#D32F2F',
-  },
 }
 
 interface ClashHeaderConfigingRef {
@@ -198,99 +164,69 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
         onCancel={() => setOpen(false)}
         onOk={handleSave}
       >
-        <List sx={{ width: '90%', padding: 2 }}>
-          <ListItem sx={{ padding: '8px 0' }}>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                width: '100%',
-              }}
-            >
-              <span style={{ fontWeight: 'normal' }}>
+        <div className="w-[90%] p-inset">
+          <div className="py-component">
+            <div className="flex w-full items-center justify-between">
+              <span className="font-normal">
                 {t('settings.sections.externalCors.fields.allowPrivateNetwork')}
               </span>
               <Switch
-                edge="end"
                 checked={corsConfig.allowPrivateNetwork}
-                onChange={(e) =>
-                  handleCorsConfigChange(
-                    'allowPrivateNetwork',
-                    e.target.checked,
-                  )
+                onCheckedChange={(checked) =>
+                  handleCorsConfigChange('allowPrivateNetwork', checked)
                 }
               />
-            </Box>
-          </ListItem>
+            </div>
+          </div>
 
-          <Divider sx={{ my: 2 }} />
+          <div className="my-inset border-t border-[var(--color-border)]" />
 
-          <ListItem sx={{ padding: '8px 0' }}>
-            <div style={{ width: '100%' }}>
-              <div style={{ marginBottom: 8, fontWeight: 'bold' }}>
+          <div className="py-component">
+            <div className="w-full">
+              <div className="mb-component font-bold">
                 {t('settings.sections.externalCors.fields.allowedOrigins')}
               </div>
               {corsConfig.allowOrigins.map(({ key, value: origin }, index) => (
                 <div
                   key={key}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    marginBottom: 8,
-                  }}
+                  className="mb-component flex items-center gap-component"
                 >
-                  <TextField
-                    fullWidth
-                    size="small"
-                    sx={{ fontSize: 14, marginRight: 2 }}
+                  <Input
+                    className="text-body"
                     value={origin}
                     onChange={(e) => handleUpdateOrigin(index, e.target.value)}
                     placeholder={t(
                       'settings.sections.externalCors.placeholders.origin',
                     )}
-                    slotProps={{ htmlInput: { style: { fontSize: 14 } } }}
                   />
                   <Button
-                    variant="contained"
-                    color="error"
-                    size="small"
+                    variant="destructive"
+                    size="icon-sm"
                     onClick={() => handleDeleteOrigin(index)}
                     disabled={corsConfig.allowOrigins.length <= 0}
-                    sx={deleteButtonStyle}
                   >
-                    <DeleteIcon fontSize="small" />
+                    <Trash2 />
                   </Button>
                 </div>
               ))}
               <Button
-                variant="contained"
-                size="small"
+                size="sm"
                 onClick={handleAddOrigin}
-                sx={addButtonStyle}
+                className="bg-[var(--color-success)] text-white hover:bg-[var(--color-success)]/90"
               >
                 {t('settings.sections.externalCors.actions.add')}
               </Button>
 
-              <div
-                style={{
-                  marginTop: 12,
-                  padding: 8,
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: 'var(--radius-container)',
-                }}
-              >
-                <div
-                  style={{ color: '#666', fontSize: 12, fontStyle: 'italic' }}
-                >
+              <div className="mt-stack rounded-[var(--radius-container)] bg-[var(--color-bg-subtle)] p-component">
+                <div className="text-caption italic text-[var(--color-text-muted)]">
                   {t('settings.sections.externalCors.messages.alwaysIncluded', {
                     urls: DEV_URLS.join(', '),
                   })}
                 </div>
               </div>
             </div>
-          </ListItem>
-        </List>
+          </div>
+        </div>
       </BaseDialog>
     )
   },

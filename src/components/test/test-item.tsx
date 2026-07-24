@@ -1,15 +1,22 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { LanguageRounded } from '@mui/icons-material'
-import { Box, Divider, MenuItem, Menu, styled, alpha } from '@mui/material'
 import { UnlistenFn } from '@tauri-apps/api/event'
 import { useLockFn } from 'ahooks'
-import { useCallback, useEffect, useState } from 'react'
+import { Globe } from 'lucide-react'
+import { type HTMLAttributes, useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseLoading } from '@/components/base'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Separator } from '@/components/ui/separator'
 import { useIconCache } from '@/hooks/use-icon-cache'
 import { useListen } from '@/hooks/use-listen'
+import { cn } from '@/lib/utils'
 import { cmdTestDelay } from '@/services/cmds'
 import delayManager from '@/services/delay'
 import { showNotice } from '@/services/notice-service'
@@ -23,6 +30,36 @@ interface Props {
   onEdit: () => void
   onDelete: (uid: string) => void
 }
+
+// delayManager.formatDelayColor 返回 MUI 调色板路径字符串，
+// 映射到语义 token（避免改动共享的 delay service）。
+const delayColorVar = (path: string): string | undefined => {
+  switch (path) {
+    case 'error.main':
+      return 'var(--color-danger)'
+    case 'warning.main':
+      return 'var(--color-warning)'
+    case 'primary.main':
+      return 'var(--color-accent)'
+    case 'success.main':
+      return 'var(--color-success)'
+    default:
+      return undefined
+  }
+}
+
+const Widget = ({ className, ...props }: HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      'rounded-[var(--radius-compact)] px-compact py-[3px] text-body',
+      className,
+    )}
+    {...props}
+  />
+)
+
+const widgetHover =
+  'hover:bg-[color-mix(in_srgb,var(--color-accent)_15%,transparent)]'
 
 export const TestItem = ({
   id,
@@ -42,7 +79,7 @@ export const TestItem = ({
   })
 
   const { t } = useTranslation()
-  const [anchorEl, setAnchorEl] = useState<any>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [position, setPosition] = useState({ left: 0, top: 0 })
   const [delay, setDelay] = useState(-1)
   const { uid, name, icon, url } = itemData
@@ -56,12 +93,12 @@ export const TestItem = ({
   }, [url])
 
   const onEditTest = () => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     onEdit()
   }
 
   const onDelete = useLockFn(async () => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     try {
       removeTest(uid)
     } catch (err: any) {
@@ -99,9 +136,9 @@ export const TestItem = ({
   }, [url, addListener, onDelay, id])
 
   return (
-    <Box
-      sx={{
-        position: 'relative',
+    <div
+      className="relative"
+      style={{
         transform: CSS.Transform.toString(transform),
         transition,
         zIndex: isDragging ? 'calc(infinity)' : undefined,
@@ -109,20 +146,19 @@ export const TestItem = ({
     >
       <TestBox
         onContextMenu={(event) => {
-          const { clientX, clientY } = event
-          setPosition({ top: clientY, left: clientX })
-          setAnchorEl(event.currentTarget)
           event.preventDefault()
+          setPosition({ top: event.clientY, left: event.clientX })
+          setMenuOpen(true)
         }}
       >
-        <Box
-          sx={{ position: 'relative', cursor: 'move' }}
+        <div
+          className="relative cursor-move"
           ref={setNodeRef}
           {...attributes}
           {...listeners}
         >
           {icon && icon.trim() !== '' ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <div className="flex justify-center">
               {icon.trim().startsWith('http') && (
                 <img
                   src={iconCachePath === '' ? icon : iconCachePath}
@@ -138,24 +174,17 @@ export const TestItem = ({
                   height="40px"
                 />
               )}
-            </Box>
+            </div>
           ) : (
-            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-              <LanguageRounded sx={{ height: '40px' }} fontSize="large" />
-            </Box>
+            <div className="flex justify-center">
+              <Globe className="size-10" />
+            </div>
           )}
 
-          <Box sx={{ display: 'flex', justifyContent: 'center' }}>{name}</Box>
-        </Box>
-        <Divider sx={{ marginTop: '8px' }} />
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            marginTop: '8px',
-            color: 'primary.main',
-          }}
-        >
+          <div className="flex justify-center">{name}</div>
+        </div>
+        <Separator className="mt-component" />
+        <div className="mt-component flex justify-center text-[var(--color-accent)]">
           {delay === -2 && (
             <Widget>
               <BaseLoading />
@@ -164,15 +193,12 @@ export const TestItem = ({
 
           {delay === -1 && (
             <Widget
-              className="the-check"
+              className={cn('the-check', widgetHover)}
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
                 onDelay()
               }}
-              sx={({ palette }) => ({
-                ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
-              })}
             >
               {t('tests.components.item.actions.test')}
             </Widget>
@@ -181,55 +207,45 @@ export const TestItem = ({
           {delay >= 0 && (
             // 显示延迟
             <Widget
-              className="the-delay"
+              className={cn('the-delay', widgetHover)}
+              style={{
+                color: delayColorVar(delayManager.formatDelayColor(delay)),
+              }}
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
                 onDelay()
               }}
-              sx={({ palette }) => ({
-                color: delayManager.formatDelayColor(delay),
-                ':hover': {
-                  bgcolor: alpha(palette.primary.main, 0.15),
-                },
-              })}
             >
               {delayManager.formatDelay(delay)}
             </Widget>
           )}
-        </Box>
+        </div>
       </TestBox>
 
-      <Menu
-        open={!!anchorEl}
-        anchorEl={anchorEl}
-        onClose={() => setAnchorEl(null)}
-        anchorPosition={position}
-        anchorReference="anchorPosition"
-        transitionDuration={225}
-        slotProps={{ list: { sx: { py: 0.5 } } }}
-        onContextMenu={(e) => {
-          setAnchorEl(null)
-          e.preventDefault()
-        }}
-      >
-        {menu.map((item) => (
-          <MenuItem
-            key={item.label}
-            onClick={item.handler}
-            sx={{ minWidth: 120 }}
-            dense
-          >
-            {t(item.label)}
-          </MenuItem>
-        ))}
-      </Menu>
-    </Box>
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+        <DropdownMenuTrigger asChild>
+          <span
+            aria-hidden
+            className="pointer-events-none fixed h-0 w-0"
+            style={{ left: position.left, top: position.top }}
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          className="min-w-[120px]"
+          onContextMenu={(e) => {
+            setMenuOpen(false)
+            e.preventDefault()
+          }}
+        >
+          {menu.map((item) => (
+            <DropdownMenuItem key={item.label} onClick={item.handler}>
+              {t(item.label)}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   )
 }
-const Widget = styled(Box)(({ theme: { typography } }) => ({
-  padding: '3px 6px',
-  fontSize: 14,
-  fontFamily: typography.fontFamily,
-  borderRadius: 'var(--radius-compact)',
-}))

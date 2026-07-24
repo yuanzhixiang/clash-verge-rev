@@ -8,26 +8,10 @@ import {
   useSensors,
 } from '@dnd-kit/core'
 import { SortableContext, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
-import {
-  VerticalAlignBottomRounded,
-  VerticalAlignTopRounded,
-} from '@mui/icons-material'
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  List,
-  ListItem,
-  ListItemText,
-  TextField,
-  styled,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
 import yaml from 'js-yaml'
+import { ArrowDownToLine, ArrowUpToLine } from 'lucide-react'
+import { useTheme } from 'next-themes'
 import {
   startTransition,
   useCallback,
@@ -39,6 +23,7 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import {
+  BaseDialog,
   BaseSearchBox,
   MonacoEditor,
   Switch,
@@ -53,13 +38,22 @@ import {
   RuleConfigError,
   serializeRule,
 } from '@/components/rule/rule-config'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 import { readProfileFile, saveProfileFile } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import {
   type ProfileFormat,
   parseProfileContent,
 } from '@/services/profile-format'
-import { useThemeMode } from '@/services/states'
 import type { MonacoEditorInstance } from '@/types/monaco'
 import getSystem from '@/utils/get-system'
 
@@ -89,7 +83,7 @@ export const RulesEditorViewer = (props: Props) => {
     onSave,
   } = props
   const { t } = useTranslation()
-  const themeMode = useThemeMode()
+  const { resolvedTheme } = useTheme()
 
   const editorRef = useRef<MonacoEditorInstance | null>(null)
 
@@ -442,154 +436,156 @@ export const RulesEditorViewer = (props: Props) => {
   })
 
   return (
-    <Dialog
+    <BaseDialog
       open={open}
-      onClose={onClose}
-      maxWidth="xl"
-      fullWidth
+      title={
+        <div className="flex items-center justify-between pr-8">
+          {t('rules.modals.editor.title')}
+          <Button size="sm" onClick={() => setVisualization((prev) => !prev)}>
+            {visualization
+              ? t('shared.editorModes.advanced')
+              : t('shared.editorModes.visualization')}
+          </Button>
+        </div>
+      }
+      contentSx={{ width: 'calc(100vw - 64px)', maxWidth: 1400 }}
+      okBtn={t('shared.actions.save')}
+      cancelBtn={t('shared.actions.cancel')}
       disableEnforceFocus={!visualization}
+      onClose={onClose}
+      onCancel={onClose}
+      onOk={handleSave}
     >
-      <DialogTitle>
-        {
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            {t('rules.modals.editor.title')}
-            <Box>
-              <Button
-                variant="contained"
-                size="small"
-                onClick={() => {
-                  setVisualization((prev) => !prev)
-                }}
-              >
-                {visualization
-                  ? t('shared.editorModes.advanced')
-                  : t('shared.editorModes.visualization')}
-              </Button>
-            </Box>
-          </Box>
-        }
-      </DialogTitle>
-
-      <DialogContent
-        sx={{ display: 'flex', width: 'auto', height: 'calc(100vh - 185px)' }}
-      >
+      <div className="flex h-[calc(100vh-185px)] w-auto">
         {visualization ? (
           <>
-            <List
-              sx={{
-                width: '50%',
-                padding: '0 10px',
-              }}
-            >
-              <Item>
-                <ListItemText
-                  primary={t('rules.modals.editor.form.labels.type')}
-                />
-                <Autocomplete
-                  size="small"
-                  sx={{ minWidth: '240px' }}
-                  renderInput={(params) => <TextField {...params} />}
-                  options={rules}
-                  value={ruleType}
-                  getOptionLabel={(option) =>
-                    t(RULE_TYPE_LABEL_KEYS[option.name] ?? option.name)
-                  }
-                  renderOption={(props, option) => {
-                    const { key, ...optionProps } = props
-                    const label = t(
-                      RULE_TYPE_LABEL_KEYS[option.name] ?? option.name,
-                    )
-                    return (
-                      <li key={key} {...optionProps} title={label}>
-                        {label}
-                      </li>
-                    )
+            <div className="w-1/2 px-2.5">
+              <div className="flex items-center gap-component px-adjust py-[5px]">
+                <span className="flex-1 text-sm">
+                  {t('rules.modals.editor.form.labels.type')}
+                </span>
+                <Select
+                  value={ruleType.name}
+                  onValueChange={(name) => {
+                    const next = rules.find((x) => x.name === name)
+                    if (next) setRuleType(next)
                   }}
-                  onChange={(_, value) => value && setRuleType(value)}
-                />
-              </Item>
-              <Item
-                sx={{ display: !(ruleType.required ?? true) ? 'none' : '' }}
+                >
+                  <SelectTrigger className="min-w-[240px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {rules.map((option) => {
+                      const label = t(
+                        RULE_TYPE_LABEL_KEYS[option.name] ?? option.name,
+                      )
+                      return (
+                        <SelectItem
+                          key={option.name}
+                          value={option.name}
+                          title={label}
+                        >
+                          {label}
+                        </SelectItem>
+                      )
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div
+                className={cn(
+                  'flex items-center gap-component px-adjust py-[5px]',
+                  !(ruleType.required ?? true) && 'hidden',
+                )}
               >
-                <ListItemText
-                  primary={t('rules.modals.editor.form.labels.content')}
-                />
+                <span className="flex-1 text-sm">
+                  {t('rules.modals.editor.form.labels.content')}
+                </span>
 
                 {ruleType.name === 'RULE-SET' && (
-                  <Autocomplete
-                    size="small"
-                    sx={{ minWidth: '240px' }}
-                    renderInput={(params) => <TextField {...params} />}
-                    options={ruleSetList}
+                  <Select
                     value={ruleContent}
-                    onChange={(_, value) => value && setRuleContent(value)}
-                  />
+                    onValueChange={(value) => value && setRuleContent(value)}
+                  >
+                    <SelectTrigger className="min-w-[240px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ruleSetList.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 )}
                 {ruleType.name === 'SUB-RULE' && (
-                  <Autocomplete
-                    size="small"
-                    sx={{ minWidth: '240px' }}
-                    renderInput={(params) => <TextField {...params} />}
-                    options={subRuleList}
+                  <Select
                     value={ruleContent}
-                    onChange={(_, value) => value && setRuleContent(value)}
-                  />
+                    onValueChange={(value) => value && setRuleContent(value)}
+                  >
+                    <SelectTrigger className="min-w-[240px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subRuleList.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 )}
                 {ruleType.name !== 'RULE-SET' &&
                   ruleType.name !== 'SUB-RULE' && (
-                    <TextField
+                    <Input
                       autoComplete="new-password"
-                      size="small"
-                      sx={{ minWidth: '240px' }}
+                      className="min-w-[240px]"
                       value={ruleContent}
                       required={ruleType.required ?? true}
-                      error={(ruleType.required ?? true) && !ruleContent}
+                      aria-invalid={(ruleType.required ?? true) && !ruleContent}
                       placeholder={ruleType.example}
                       onChange={(e) => setRuleContent(e.target.value)}
                     />
                   )}
-              </Item>
-              <Item>
-                <ListItemText
-                  primary={t('rules.modals.editor.form.labels.proxyPolicy')}
-                />
-                <Autocomplete
-                  size="small"
-                  sx={{ minWidth: '240px' }}
-                  renderInput={(params) => <TextField {...params} />}
-                  options={proxyPolicyList}
+              </div>
+              <div className="flex items-center gap-component px-adjust py-[5px]">
+                <span className="flex-1 text-sm">
+                  {t('rules.modals.editor.form.labels.proxyPolicy')}
+                </span>
+                <Select
                   value={proxyPolicy}
-                  getOptionLabel={(option) =>
-                    t(PROXY_POLICY_LABEL_KEYS[option] ?? option)
-                  }
-                  renderOption={(props, option) => {
-                    const { key, ...optionProps } = props
-                    const label = t(PROXY_POLICY_LABEL_KEYS[option] ?? option)
-                    return (
-                      <li key={key} {...optionProps} title={label}>
-                        {label}
-                      </li>
-                    )
-                  }}
-                  onChange={(_, value) => value && setProxyPolicy(value)}
-                />
-              </Item>
+                  onValueChange={(value) => value && setProxyPolicy(value)}
+                >
+                  <SelectTrigger className="min-w-[240px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {proxyPolicyList.map((option) => {
+                      const label = t(PROXY_POLICY_LABEL_KEYS[option] ?? option)
+                      return (
+                        <SelectItem key={option} value={option} title={label}>
+                          {label}
+                        </SelectItem>
+                      )
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
               {ruleType.noResolve && (
-                <Item>
-                  <ListItemText
-                    primary={t('rules.modals.editor.form.toggles.noResolve')}
-                  />
+                <div className="flex items-center gap-component px-adjust py-[5px]">
+                  <span className="flex-1 text-sm">
+                    {t('rules.modals.editor.form.toggles.noResolve')}
+                  </span>
                   <Switch
                     checked={noResolve}
-                    onChange={() => setNoResolve(!noResolve)}
+                    onCheckedChange={(v) => setNoResolve(v)}
                   />
-                </Item>
+                </div>
               )}
-              <Item>
+              <div className="px-adjust py-[5px]">
                 <Button
-                  fullWidth
-                  variant="contained"
-                  startIcon={<VerticalAlignTopRounded />}
+                  className="w-full"
                   onClick={() => {
                     try {
                       const raw = validateRule()
@@ -600,14 +596,13 @@ export const RulesEditorViewer = (props: Props) => {
                     }
                   }}
                 >
+                  <ArrowUpToLine className="size-4" />
                   {t('rules.modals.editor.form.actions.prependRule')}
                 </Button>
-              </Item>
-              <Item>
+              </div>
+              <div className="px-adjust py-[5px]">
                 <Button
-                  fullWidth
-                  variant="contained"
-                  startIcon={<VerticalAlignBottomRounded />}
+                  className="w-full"
                   onClick={() => {
                     try {
                       const raw = validateRule()
@@ -618,17 +613,13 @@ export const RulesEditorViewer = (props: Props) => {
                     }
                   }}
                 >
+                  <ArrowDownToLine className="size-4" />
                   {t('rules.modals.editor.form.actions.appendRule')}
                 </Button>
-              </Item>
-            </List>
+              </div>
+            </div>
 
-            <List
-              sx={{
-                width: '50%',
-                padding: '0 10px',
-              }}
-            >
+            <div className="w-1/2 px-2.5">
               <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
               <VirtualList
                 count={
@@ -640,14 +631,14 @@ export const RulesEditorViewer = (props: Props) => {
                 renderItem={renderItem}
                 style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
               />
-            </List>
+            </div>
           </>
         ) : (
           <MonacoEditor
             height="100%"
             language="yaml"
             value={currData}
-            theme={themeMode === 'light' ? 'light' : 'vs-dark'}
+            theme={resolvedTheme === 'dark' ? 'vs-dark' : 'light'}
             onMount={(editorInstance) => {
               editorRef.current = editorInstance
             }}
@@ -674,21 +665,7 @@ export const RulesEditorViewer = (props: Props) => {
             onChange={(value) => setCurrData(value ?? '')}
           />
         )}
-      </DialogContent>
-
-      <DialogActions>
-        <Button onClick={onClose} variant="outlined">
-          {t('shared.actions.cancel')}
-        </Button>
-
-        <Button onClick={handleSave} variant="contained">
-          {t('shared.actions.save')}
-        </Button>
-      </DialogActions>
-    </Dialog>
+      </div>
+    </BaseDialog>
   )
 }
-
-const Item = styled(ListItem)(() => ({
-  padding: '5px 2px',
-}))

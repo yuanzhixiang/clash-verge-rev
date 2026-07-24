@@ -1,18 +1,4 @@
-import {
-  ArrowBackRounded,
-  CloseRounded,
-  SearchRounded,
-} from '@mui/icons-material'
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Typography,
-  alpha,
-} from '@mui/material'
+import { ArrowLeft, Search, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { RuleProvider } from 'tauri-plugin-mihomo-api'
@@ -23,11 +9,18 @@ import {
   BaseSearchBox,
   VirtualList,
 } from '@/components/base'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { cn } from '@/lib/utils'
 import {
   getRuleProviderContent,
   type RuleProviderContent,
 } from '@/services/cmds'
-import { getShellThemeVars } from '@/utils/shell-theme'
 
 interface Props {
   open: boolean
@@ -102,192 +95,134 @@ export const RuleProviderDetailDialog = ({
   }, [content, match])
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth={false}
-      slotProps={{
-        paper: {
-          sx: ({ palette }) => ({
-            ...getShellThemeVars(palette),
-            width: 'min(820px, calc(100vw - 24px))',
-            height: 'min(720px, calc(100vh - 24px))',
-            m: 1.5,
-            overflow: 'hidden',
-            border: '1px solid var(--shell-border-strong) !important',
-            borderRadius: 'var(--radius-overlay)',
-            bgcolor: 'var(--shell-panel) !important',
-            backgroundImage: 'none',
-            boxShadow: 'var(--shell-shadow) !important',
-          }),
-        },
-      }}
-    >
-      <DialogTitle sx={{ px: { xs: 1.5, sm: 3 }, pt: 2.5, pb: 1.75 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <IconButton
-            size="small"
-            onClick={onClose}
-            aria-label={t('rules.page.provider.detail.back')}
-            title={t('rules.page.provider.detail.back')}
-            sx={{ color: 'text.secondary' }}
-          >
-            <ArrowBackRounded fontSize="small" />
-          </IconButton>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography
-              component="h2"
-              noWrap
-              title={providerName || undefined}
-              sx={{
-                fontSize: 20,
-                fontWeight: 650,
-                lineHeight: 1.25,
-                letterSpacing: '-0.025em',
-              }}
-            >
-              {providerName}
-            </Typography>
-            <Typography
-              color="text.secondary"
-              sx={{ mt: 0.25, fontSize: 11.5, lineHeight: 1.4 }}
-            >
-              {[provider?.format, provider?.behavior, provider?.ruleCount]
-                .filter((value) => value != null)
-                .join(' · ')}
-            </Typography>
-          </Box>
-          <IconButton
-            size="small"
-            onClick={onClose}
-            aria-label={t('shared.actions.close')}
-            title={t('shared.actions.close')}
-            sx={{ color: 'text.secondary' }}
-          >
-            <CloseRounded fontSize="small" />
-          </IconButton>
-        </Box>
-      </DialogTitle>
-
+    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent
-        sx={{
-          display: 'flex',
-          minHeight: 0,
-          flexDirection: 'column',
-          px: { xs: 1.5, sm: 3 },
-          pt: 0,
-          pb: 3,
+        showCloseButton={false}
+        className="grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden p-0 sm:max-w-none"
+        style={{
+          width: 'min(820px, calc(100vw - 24px))',
+          height: 'min(720px, calc(100vh - 24px))',
         }}
       >
-        {content?.status === 'ready' && (
-          <Box sx={{ flex: '0 0 auto', mb: 1.5 }}>
-            <BaseSearchBox
-              placeholder={t('rules.page.provider.detail.searchPlaceholder')}
-              startAdornment={
-                <SearchRounded aria-hidden sx={{ fontSize: 18 }} />
-              }
-              onSearch={(nextMatch) => setMatch(() => nextMatch)}
-            />
-          </Box>
-        )}
+        <DialogHeader className="space-y-0 px-3 pt-5 pb-3.5 sm:px-6">
+          <div className="flex items-center gap-component">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={onClose}
+              aria-label={t('rules.page.provider.detail.back')}
+              title={t('rules.page.provider.detail.back')}
+              className="text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)]"
+            >
+              <ArrowLeft />
+            </Button>
+            <div className="min-w-0 flex-1">
+              <DialogTitle
+                title={providerName || undefined}
+                className="truncate text-[20px] font-[650] leading-[1.25] tracking-[-0.025em]"
+              >
+                {providerName}
+              </DialogTitle>
+              <p className="mt-0.5 text-[11.5px] leading-[1.4] text-[var(--color-text-secondary)]">
+                {[provider?.format, provider?.behavior, provider?.ruleCount]
+                  .filter((value) => value != null)
+                  .join(' · ')}
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={onClose}
+              aria-label={t('shared.actions.close')}
+              title={t('shared.actions.close')}
+              className="text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)]"
+            >
+              <X />
+            </Button>
+          </div>
+        </DialogHeader>
 
-        <Box
-          sx={{
-            display: 'flex',
-            minHeight: 0,
-            flex: 1,
-            overflow: 'hidden',
-            border: '1px solid var(--shell-border)',
-            borderRadius: 'var(--radius-container)',
-          }}
-        >
-          {loading && (
-            <Box sx={{ m: 'auto' }}>
-              <BaseLoading />
-            </Box>
+        <div className="flex min-h-0 flex-col px-3 pb-6 sm:px-6">
+          {content?.status === 'ready' && (
+            <div className="mb-stack shrink-0">
+              <BaseSearchBox
+                placeholder={t('rules.page.provider.detail.searchPlaceholder')}
+                startAdornment={<Search aria-hidden className="size-[18px]" />}
+                onSearch={(nextMatch) => setMatch(() => nextMatch)}
+              />
+            </div>
           )}
 
-          {!loading && error && (
-            <BaseEmpty
-              text={t('rules.page.provider.detail.loadFailed')}
-              extra={
-                <Button
-                  size="small"
-                  onClick={() => void load(true)}
-                  sx={{ mt: 1, textTransform: 'none' }}
-                >
-                  {t('shared.actions.retry')}
-                </Button>
-              }
-            />
-          )}
-
-          {!loading && content?.status === 'unavailable' && (
-            <BaseEmpty text={t(unavailableKey(content.reason))} />
-          )}
-
-          {!loading &&
-            content?.status === 'ready' &&
-            filteredRules.length === 0 && (
-              <BaseEmpty text={t('rules.page.provider.detail.empty')} />
+          <div className="flex min-h-0 flex-1 overflow-hidden rounded-[var(--radius-container)] border border-[var(--color-border)]">
+            {loading && (
+              <div className="m-auto">
+                <BaseLoading />
+              </div>
             )}
 
-          {!loading &&
-            content?.status === 'ready' &&
-            filteredRules.length > 0 && (
-              <VirtualList
-                count={filteredRules.length}
-                estimateSize={34}
-                overscan={12}
-                getItemKey={(index) => filteredRules[index]?.index ?? index}
-                style={{ flex: 1, minHeight: 0 }}
-                renderItem={(index) => {
-                  const item = filteredRules[index]
-                  return (
-                    <Box
-                      sx={({ palette }) => ({
-                        display: 'grid',
-                        gridTemplateColumns: '54px minmax(0, 1fr)',
-                        minHeight: 34,
-                        alignItems: 'center',
-                        bgcolor:
-                          index % 2 === 0
-                            ? 'transparent'
-                            : alpha(palette.text.primary, 0.025),
-                        '&:hover': {
-                          bgcolor: alpha(palette.text.primary, 0.055),
-                        },
-                      })}
-                    >
-                      <Typography
-                        color="text.secondary"
-                        sx={{ px: 1.5, fontSize: 11, textAlign: 'right' }}
-                      >
-                        {(item?.index ?? index) + 1}
-                      </Typography>
-                      <Typography
-                        component="code"
-                        title={item?.rule}
-                        sx={{
-                          minWidth: 0,
-                          overflow: 'hidden',
-                          pr: 1.5,
-                          fontFamily:
-                            'ui-monospace, SFMono-Regular, Menlo, monospace',
-                          fontSize: 12,
-                          lineHeight: 1.5,
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {item?.rule}
-                      </Typography>
-                    </Box>
-                  )
-                }}
+            {!loading && error && (
+              <BaseEmpty
+                text={t('rules.page.provider.detail.loadFailed')}
+                extra={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void load(true)}
+                    className="mt-component"
+                  >
+                    {t('shared.actions.retry')}
+                  </Button>
+                }
               />
             )}
-        </Box>
+
+            {!loading && content?.status === 'unavailable' && (
+              <BaseEmpty text={t(unavailableKey(content.reason))} />
+            )}
+
+            {!loading &&
+              content?.status === 'ready' &&
+              filteredRules.length === 0 && (
+                <BaseEmpty text={t('rules.page.provider.detail.empty')} />
+              )}
+
+            {!loading &&
+              content?.status === 'ready' &&
+              filteredRules.length > 0 && (
+                <VirtualList
+                  count={filteredRules.length}
+                  estimateSize={34}
+                  overscan={12}
+                  getItemKey={(index) => filteredRules[index]?.index ?? index}
+                  style={{ flex: 1, minHeight: 0 }}
+                  renderItem={(index) => {
+                    const item = filteredRules[index]
+                    return (
+                      <div
+                        className={cn(
+                          'grid min-h-[34px] grid-cols-[54px_minmax(0,1fr)] items-center',
+                          index % 2 === 0
+                            ? 'bg-transparent'
+                            : 'bg-[color-mix(in_srgb,var(--color-text-primary)_2.5%,transparent)]',
+                          'hover:bg-[color-mix(in_srgb,var(--color-text-primary)_5.5%,transparent)]',
+                        )}
+                      >
+                        <span className="px-stack text-right text-[11px] text-[var(--color-text-secondary)]">
+                          {(item?.index ?? index) + 1}
+                        </span>
+                        <code
+                          title={item?.rule}
+                          className="min-w-0 truncate pr-stack font-mono text-[12px] leading-[1.5]"
+                        >
+                          {item?.rule}
+                        </code>
+                      </div>
+                    )
+                  }}
+                />
+              )}
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   )

@@ -1,20 +1,15 @@
-import { styled, Typography } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import { forwardRef, useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, DialogRef, Switch } from '@/components/base'
 import { useVerge } from '@/hooks/use-verge'
+import { cn } from '@/lib/utils'
 import { showNotice } from '@/services/notice-service'
 
 import { HotkeyInput } from './hotkey-input'
 
-const ItemWrapper = styled('div')`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-`
+const ITEM_CLASS = 'mb-component flex items-center justify-between'
 
 const HOTKEY_FUNC = [
   'open_or_close_dashboard',
@@ -111,25 +106,26 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
-      <ItemWrapper style={{ marginBottom: 16 }}>
-        <Typography>
+      <div className={cn(ITEM_CLASS, 'mb-inset')}>
+        <span className="text-[var(--color-text-primary)]">
           {t('settings.modals.hotkey.toggles.enableGlobal')}
-        </Typography>
+        </span>
         <Switch
-          edge="end"
           checked={enableGlobalHotkey}
-          onChange={(e) => setEnableGlobalHotkey(e.target.checked)}
+          onCheckedChange={setEnableGlobalHotkey}
         />
-      </ItemWrapper>
+      </div>
 
       {HOTKEY_FUNC.map((func) => (
-        <ItemWrapper key={func}>
-          <Typography>{t(HOTKEY_FUNC_LABELS[func])}</Typography>
+        <div className={ITEM_CLASS} key={func}>
+          <span className="text-[var(--color-text-primary)]">
+            {t(HOTKEY_FUNC_LABELS[func])}
+          </span>
           <HotkeyInput
             value={hotkeyMap[func] ?? []}
             onChange={(v) => setHotkeyMap((m) => ({ ...m, [func]: v }))}
           />
-        </ItemWrapper>
+        </div>
       ))}
     </BaseDialog>
   )

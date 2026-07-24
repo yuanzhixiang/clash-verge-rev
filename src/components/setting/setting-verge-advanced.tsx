@@ -1,5 +1,4 @@
-import { ContentCopyRounded } from '@mui/icons-material'
-import { Typography } from '@mui/material'
+import { Copy } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -84,7 +83,9 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
   const onToggleCli = useCallback(async () => {
     try {
       const shouldUninstall = cliStatus?.installed && cliStatus.versionMatches
-      const nextStatus = shouldUninstall ? await uninstallCli() : await installCli()
+      const nextStatus = shouldUninstall
+        ? await uninstallCli()
+        : await installCli()
       setCliStatus(nextStatus)
       showNotice.success(
         nextStatus.installed
@@ -123,7 +124,7 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
         extra={
           <TooltipIcon
             title={t('settings.components.verge.advanced.tooltips.backupInfo')}
-            sx={{ opacity: '0.7' }}
+            className="opacity-70"
           />
         }
       />
@@ -139,7 +140,7 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
         extra={
           <TooltipIcon
             title={t('settings.components.verge.advanced.tooltips.openConfDir')}
-            sx={{ opacity: '0.7' }}
+            className="opacity-70"
           />
         }
       />
@@ -165,7 +166,9 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
           cliStatus
             ? `${
                 cliStatus.installed
-                  ? t('settings.components.verge.advanced.fields.cliInstalledAt')
+                  ? t(
+                      'settings.components.verge.advanced.fields.cliInstalledAt',
+                    )
                   : t('settings.components.verge.advanced.fields.cliInstallDir')
               } ${cliStatus.installed ? cliStatus.path : cliStatus.installDir}`
             : undefined
@@ -187,7 +190,7 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
         extra={
           <TooltipIcon
             title={t('settings.components.verge.advanced.tooltips.liteMode')}
-            sx={{ opacity: '0.7' }}
+            className="opacity-70"
           />
         }
         onClick={() => liteModeRef.current?.open()}
@@ -202,25 +205,20 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
 
       <SettingItem
         label={t('settings.components.verge.advanced.fields.exportDiagnostics')}
-        extra={
-          <TooltipIcon
-            icon={ContentCopyRounded}
-            onClick={onExportDiagnosticInfo}
-          />
-        }
+        extra={<TooltipIcon icon={Copy} onClick={onExportDiagnosticInfo} />}
       ></SettingItem>
 
       <SettingItem
         label={t('settings.components.verge.advanced.fields.vergeVersion')}
         extra={
           <TooltipIcon
-            icon={ContentCopyRounded}
+            icon={Copy}
             onClick={copyVersion}
             title={t('settings.components.verge.advanced.actions.copyVersion')}
           />
         }
       >
-        <Typography sx={{ py: '7px', pr: 1 }}>v{version}</Typography>
+        <span className="pr-component">v{version}</span>
       </SettingItem>
     </SettingList>
   )

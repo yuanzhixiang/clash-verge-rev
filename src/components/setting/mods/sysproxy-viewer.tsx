@@ -1,18 +1,5 @@
-import { EditRounded } from '@mui/icons-material'
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Chip,
-  InputAdornment,
-  List,
-  ListItem,
-  ListItemText,
-  styled,
-  TextField,
-  Typography,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
+import { Pencil } from 'lucide-react'
 import {
   forwardRef,
   useEffect,
@@ -32,6 +19,9 @@ import {
   TooltipIcon,
 } from '@/components/base'
 import { EditorViewer } from '@/components/profile/editor-viewer'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useSystemProxyState } from '@/hooks/use-system-proxy-state'
 import { useVerge } from '@/hooks/use-verge'
 import { useClashConfigData, useSystemData } from '@/providers/app-data-context'
@@ -456,131 +446,111 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       loading={saving}
       disableOk={saving}
     >
-      <List>
+      <ul className="py-component">
         <BaseFieldset
           label={t('settings.modals.sysproxy.fieldsets.currentStatus')}
           padding="15px 10px"
         >
-          <FlexBox>
-            <Typography className="label">
+          <div className="mt-inline flex gap-component">
+            <span className="flex-none">
               {t('settings.modals.sysproxy.fields.enableStatus')}
-            </Typography>
-            <Typography className="value">
+            </span>
+            <span>
               {isProxyReallyEnabled
                 ? t('shared.statuses.enabled')
                 : t('shared.statuses.disabled')}
-            </Typography>
-          </FlexBox>
+            </span>
+          </div>
           {!value.pac && (
-            <FlexBox>
-              <Typography className="label">
+            <div className="mt-inline flex gap-component">
+              <span className="flex-none">
                 {t('settings.modals.sysproxy.fields.serverAddr')}
-              </Typography>
-              <Typography className="value">{getSystemProxyAddress}</Typography>
-            </FlexBox>
+              </span>
+              <span>{getSystemProxyAddress}</span>
+            </div>
           )}
           {value.pac && (
-            <FlexBox>
-              <Typography className="label">
+            <div className="mt-inline flex gap-component">
+              <span className="flex-none">
                 {t('settings.modals.sysproxy.fields.pacUrl')}
-              </Typography>
-              <Typography className="value">
-                {getCurrentPacUrl || '-'}
-              </Typography>
-            </FlexBox>
+              </span>
+              <span>{getCurrentPacUrl || '-'}</span>
+            </div>
           )}
         </BaseFieldset>
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.sysproxy.fields.proxyHost')}
-          />
-          <Autocomplete
-            size="small"
-            sx={{ width: 150 }}
-            options={hostOptions}
-            value={value.proxy_host}
-            freeSolo
-            renderInput={(params) => (
-              <TextField {...params} placeholder="127.0.0.1" size="small" />
-            )}
-            onChange={(_, newValue) => {
-              setValue((v) => ({
-                ...v,
-                proxy_host: newValue || '127.0.0.1',
-              }))
-            }}
-            onInputChange={(_, newInputValue) => {
-              setValue((v) => ({
-                ...v,
-                proxy_host: newInputValue || '127.0.0.1',
-              }))
-            }}
-          />
-        </ListItem>
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.sysproxy.fields.usePacMode')}
-          />
+        <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+          <span>{t('settings.modals.sysproxy.fields.proxyHost')}</span>
+          <div className="w-[150px]">
+            <Input
+              list="sysproxy-proxy-host-options"
+              placeholder="127.0.0.1"
+              value={value.proxy_host}
+              onChange={(e) =>
+                setValue((v) => ({
+                  ...v,
+                  proxy_host: e.target.value || '127.0.0.1',
+                }))
+              }
+            />
+            <datalist id="sysproxy-proxy-host-options">
+              {hostOptions.map((opt) => (
+                <option key={opt} value={opt} />
+              ))}
+            </datalist>
+          </div>
+        </li>
+        <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+          <span>{t('settings.modals.sysproxy.fields.usePacMode')}</span>
           <Switch
-            edge="end"
             disabled={!enabled}
             checked={value.pac}
-            onChange={(_, e) => setValue((v) => ({ ...v, pac: e }))}
+            onCheckedChange={(e) => setValue((v) => ({ ...v, pac: e }))}
           />
-        </ListItem>
+        </li>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.sysproxy.fields.proxyGuard')}
-            sx={{ maxWidth: 'fit-content' }}
-          />
-          <TooltipIcon
-            title={t('settings.modals.sysproxy.tooltips.proxyGuard')}
-            sx={{ opacity: '0.7' }}
-          />
+        <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+          <div className="flex items-center gap-inline">
+            <span>{t('settings.modals.sysproxy.fields.proxyGuard')}</span>
+            <TooltipIcon
+              title={t('settings.modals.sysproxy.tooltips.proxyGuard')}
+              className="opacity-70"
+            />
+          </div>
           <Switch
-            edge="end"
             disabled={!enabled}
             checked={value.guard}
-            onChange={(_, e) => setValue((v) => ({ ...v, guard: e }))}
-            sx={{ marginLeft: 'auto' }}
+            onCheckedChange={(e) => setValue((v) => ({ ...v, guard: e }))}
           />
-        </ListItem>
+        </li>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.sysproxy.fields.guardDuration')}
-          />
-          <TextField
-            disabled={!enabled}
-            size="small"
-            value={value.duration}
-            sx={{ width: 100 }}
-            slotProps={{
-              input: {
-                endAdornment: <InputAdornment position="end">s</InputAdornment>,
-              },
-            }}
-            onChange={(e) => {
-              setValue((v) => ({
-                ...v,
-                duration: +e.target.value.replace(/\D/, ''),
-              }))
-            }}
-          />
-        </ListItem>
-        {!value.pac && (
-          <ListItem sx={{ padding: '5px 2px' }}>
-            <ListItemText
-              primary={t(
-                'settings.modals.sysproxy.fields.alwaysUseDefaultBypass',
-              )}
+        <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+          <span>{t('settings.modals.sysproxy.fields.guardDuration')}</span>
+          <div className="relative w-[100px]">
+            <Input
+              disabled={!enabled}
+              value={value.duration}
+              className="pr-7"
+              onChange={(e) => {
+                setValue((v) => ({
+                  ...v,
+                  duration: +e.target.value.replace(/\D/, ''),
+                }))
+              }}
             />
+            <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-body text-[var(--color-text-secondary)]">
+              s
+            </span>
+          </div>
+        </li>
+        {!value.pac && (
+          <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+            <span>
+              {t('settings.modals.sysproxy.fields.alwaysUseDefaultBypass')}
+            </span>
             <Switch
-              edge="end"
               disabled={!enabled}
               checked={value.use_default}
-              onChange={(_, e) => {
+              onCheckedChange={(e) => {
                 if (!e && !value.bypass) {
                   const nextBypass = defaultBypass()
                   setValue((v) => ({
@@ -594,23 +564,22 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                 setValue((v) => ({ ...v, use_default: e }))
               }}
             />
-          </ListItem>
+          </li>
         )}
 
         {!value.pac && (
-          <ListItem sx={{ padding: '5px 2px' }}>
-            <ListItemText
-              primary={t('settings.modals.sysproxy.fields.enableBypassCheck')}
-            />
+          <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+            <span>
+              {t('settings.modals.sysproxy.fields.enableBypassCheck')}
+            </span>
             <Switch
-              edge="end"
               disabled={!enabled}
               checked={value.enable_bypass_check}
-              onChange={(_, e) =>
+              onCheckedChange={(e) =>
                 setValue((v) => ({ ...v, enable_bypass_check: e }))
               }
             />
-          </ListItem>
+          </li>
         )}
 
         {!value.pac && !value.use_default && (
@@ -630,44 +599,40 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               setValue((v) => ({ ...v, bypass: nextValue }))
             }}
             renderHeader={(modeToggle) => (
-              <ListItem sx={{ padding: '5px 2px' }}>
-                <ListItemText
-                  primary={t('settings.modals.sysproxy.fields.proxyBypass')}
-                />
+              <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+                <span>{t('settings.modals.sysproxy.fields.proxyBypass')}</span>
                 {modeToggle ? (
-                  <Box sx={{ marginLeft: 'auto' }}>{modeToggle}</Box>
+                  <div className="ml-auto">{modeToggle}</div>
                 ) : null}
-              </ListItem>
+              </li>
             )}
           />
         )}
 
         {!value.pac && value.use_default && (
           <>
-            <ListItemText
-              primary={t('settings.modals.sysproxy.fields.bypass')}
-            />
-            <Box sx={{ padding: '0 2px 5px' }}>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            <div className="px-adjust py-[5px]">
+              {t('settings.modals.sysproxy.fields.bypass')}
+            </div>
+            <div className="px-adjust pb-[5px]">
+              <div className="flex flex-wrap gap-component">
                 {splitBypass(defaultBypass()).map((item) => (
-                  <Chip key={item} label={item} size="small" />
+                  <Badge key={item} variant="secondary">
+                    {item}
+                  </Badge>
                 ))}
-              </Box>
-            </Box>
+              </div>
+            </div>
           </>
         )}
 
         {value.pac && (
-          <ListItem sx={{ padding: '5px 2px', alignItems: 'start' }}>
-            <ListItemText
-              primary={t('settings.modals.sysproxy.fields.pacScriptContent')}
-              sx={{ padding: '3px 0' }}
-            />
-            <Button
-              startIcon={<EditRounded />}
-              variant="outlined"
-              onClick={openPacEditor}
-            >
+          <li className="flex items-start justify-between gap-component px-adjust py-[5px]">
+            <span className="py-[3px]">
+              {t('settings.modals.sysproxy.fields.pacScriptContent')}
+            </span>
+            <Button variant="outline" onClick={openPacEditor}>
+              <Pencil className="size-4" />
               {t('settings.modals.sysproxy.actions.editPac')}
             </Button>
             {editorOpen && (
@@ -683,19 +648,9 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                 onClose={() => setEditorOpen(false)}
               />
             )}
-          </ListItem>
+          </li>
         )}
-      </List>
+      </ul>
     </BaseDialog>
   )
 })
-
-const FlexBox = styled('div')`
-  display: flex;
-  margin-top: 4px;
-
-  .label {
-    flex: none;
-    //width: 85px;
-  }
-`

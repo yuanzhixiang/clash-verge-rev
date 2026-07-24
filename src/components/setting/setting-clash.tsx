@@ -1,12 +1,19 @@
-import { LanRounded, SettingsRounded } from '@mui/icons-material'
-import { MenuItem, Select, TextField, Typography } from '@mui/material'
 import { invoke } from '@tauri-apps/api/core'
 import { useLockFn } from 'ahooks'
+import { Network, Settings } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { updateGeo, type LogLevel } from 'tauri-plugin-mihomo-api'
 
 import { DialogRef, Switch, TooltipIcon } from '@/components/base'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useClash } from '@/hooks/use-clash'
 import { useClashLog } from '@/hooks/use-clash-log'
 import { useVerge } from '@/hooks/use-verge'
@@ -109,8 +116,8 @@ const SettingClash = ({ onError }: Props) => {
         extra={
           <TooltipIcon
             title={t('settings.sections.clash.form.tooltips.networkInterface')}
-            color={'inherit'}
-            icon={LanRounded}
+            className="text-current"
+            icon={Network}
             onClick={() => {
               networkRef.current?.open()
             }}
@@ -125,23 +132,19 @@ const SettingClash = ({ onError }: Props) => {
           onChange={(e) => onChangeData({ 'allow-lan': e })}
           onGuard={(e) => patchClash({ 'allow-lan': e })}
         >
-          <Switch edge="end" />
+          <Switch />
         </GuardState>
       </SettingItem>
 
       <SettingItem
         label={t('settings.sections.clash.form.fields.dnsOverwrite')}
         extra={
-          <TooltipIcon
-            icon={SettingsRounded}
-            onClick={() => dnsRef.current?.open()}
-          />
+          <TooltipIcon icon={Settings} onClick={() => dnsRef.current?.open()} />
         }
       >
         <Switch
-          edge="end"
           checked={dnsSettingsEnabled}
-          onChange={(_, checked) => handleDnsToggle(checked)}
+          onCheckedChange={(checked) => handleDnsToggle(checked)}
         />
       </SettingItem>
 
@@ -152,7 +155,7 @@ const SettingClash = ({ onError }: Props) => {
             title={t(
               'settings.sections.clash.form.tooltips.quicFallbackReject',
             )}
-            sx={{ opacity: '0.7' }}
+            className="opacity-70"
           />
         }
       >
@@ -164,7 +167,7 @@ const SettingClash = ({ onError }: Props) => {
           onChange={(e) => onChangeVerge({ enable_quic_fallback_reject: e })}
           onGuard={(e) => patchVerge({ enable_quic_fallback_reject: e })}
         >
-          <Switch edge="end" />
+          <Switch />
         </GuardState>
       </SettingItem>
 
@@ -177,7 +180,7 @@ const SettingClash = ({ onError }: Props) => {
           onChange={(e) => onChangeData({ ipv6: e })}
           onGuard={(e) => patchClash({ ipv6: e })}
         >
-          <Switch edge="end" />
+          <Switch />
         </GuardState>
       </SettingItem>
 
@@ -186,7 +189,7 @@ const SettingClash = ({ onError }: Props) => {
         extra={
           <TooltipIcon
             title={t('settings.sections.clash.form.tooltips.unifiedDelay')}
-            sx={{ opacity: '0.7' }}
+            className="opacity-70"
           />
         }
       >
@@ -198,7 +201,7 @@ const SettingClash = ({ onError }: Props) => {
           onChange={(e) => onChangeData({ 'unified-delay': e })}
           onGuard={(e) => patchClash({ 'unified-delay': e })}
         >
-          <Switch edge="end" />
+          <Switch />
         </GuardState>
       </SettingItem>
 
@@ -207,14 +210,14 @@ const SettingClash = ({ onError }: Props) => {
         extra={
           <TooltipIcon
             title={t('settings.sections.clash.form.tooltips.logLevel')}
-            sx={{ opacity: '0.7' }}
+            className="opacity-70"
           />
         }
       >
         <GuardState
           value={logLevel === 'warn' ? 'warning' : (logLevel ?? 'info')}
+          onChangeProps="onValueChange"
           onCatch={onError}
-          onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ 'log-level': e })}
           onGuard={(e) => {
             setClashLog((pre) => ({
@@ -224,33 +227,37 @@ const SettingClash = ({ onError }: Props) => {
             return patchClash({ 'log-level': e })
           }}
         >
-          <Select size="small" sx={{ width: 100, '> div': { py: '7.5px' } }}>
-            <MenuItem value="debug">
-              {t('settings.sections.clash.form.options.logLevel.debug')}
-            </MenuItem>
-            <MenuItem value="info">
-              {t('settings.sections.clash.form.options.logLevel.info')}
-            </MenuItem>
-            <MenuItem value="warning">
-              {t('settings.sections.clash.form.options.logLevel.warning')}
-            </MenuItem>
-            <MenuItem value="error">
-              {t('settings.sections.clash.form.options.logLevel.error')}
-            </MenuItem>
-            <MenuItem value="silent">
-              {t('settings.sections.clash.form.options.logLevel.silent')}
-            </MenuItem>
+          <Select>
+            <SelectTrigger size="sm" className="w-[100px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="debug">
+                {t('settings.sections.clash.form.options.logLevel.debug')}
+              </SelectItem>
+              <SelectItem value="info">
+                {t('settings.sections.clash.form.options.logLevel.info')}
+              </SelectItem>
+              <SelectItem value="warning">
+                {t('settings.sections.clash.form.options.logLevel.warning')}
+              </SelectItem>
+              <SelectItem value="error">
+                {t('settings.sections.clash.form.options.logLevel.error')}
+              </SelectItem>
+              <SelectItem value="silent">
+                {t('settings.sections.clash.form.options.logLevel.silent')}
+              </SelectItem>
+            </SelectContent>
           </Select>
         </GuardState>
       </SettingItem>
 
       <SettingItem label={t('settings.sections.clash.form.fields.portConfig')}>
-        <TextField
+        <Input
           autoComplete="new-password"
-          disabled={false}
-          size="small"
+          readOnly
           value={verge_mixed_port ?? 7897}
-          sx={{ width: 100, input: { py: '7.5px', cursor: 'pointer' } }}
+          className="h-8 w-[100px] cursor-pointer"
           onClick={(e) => {
             portRef.current?.open()
             ;(e.target as HTMLElement).blur()
@@ -263,7 +270,7 @@ const SettingClash = ({ onError }: Props) => {
         extra={
           <TooltipIcon
             title={t('settings.sections.externalCors.tooltips.open')}
-            icon={SettingsRounded}
+            icon={Settings}
             onClick={(e) => {
               e.stopPropagation()
               corsRef.current?.open()
@@ -284,12 +291,12 @@ const SettingClash = ({ onError }: Props) => {
         label={t('settings.sections.clash.form.fields.clashCore')}
         extra={
           <TooltipIcon
-            icon={SettingsRounded}
+            icon={Settings}
             onClick={() => coreRef.current?.open()}
           />
         }
       >
-        <Typography sx={{ py: '7px', pr: 1 }}>{version}</Typography>
+        <span className="pr-component">{version}</span>
       </SettingItem>
 
       {isWIN && (
@@ -299,7 +306,7 @@ const SettingClash = ({ onError }: Props) => {
           extra={
             <TooltipIcon
               title={t('settings.sections.clash.form.tooltips.openUwpTool')}
-              sx={{ opacity: '0.7' }}
+              className="opacity-70"
             />
           }
         />

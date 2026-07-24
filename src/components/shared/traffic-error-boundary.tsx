@@ -1,11 +1,8 @@
-import {
-  ErrorOutlineRounded,
-  RefreshRounded,
-  BugReportRounded,
-} from '@mui/icons-material'
-import { Box, Typography, Button, Alert, Collapse } from '@mui/material'
+import { Bug, CircleAlert, RefreshCw } from 'lucide-react'
 import React, { Component, ErrorInfo, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+
+import { Button } from '@/components/ui/button'
 
 interface Props {
   children: ReactNode
@@ -158,126 +155,73 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
   const { t } = useTranslation()
 
   return (
-    <Box
-      sx={{
-        p: 2,
-        minHeight: 200,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        border: '1px dashed',
-        borderColor: 'error.main',
-        borderRadius: 'var(--radius-container)',
-        bgcolor: 'error.light',
-        color: 'error.contrastText',
-      }}
-    >
-      <ErrorOutlineRounded sx={{ fontSize: 48, mb: 2, color: 'error.main' }} />
+    <div className="flex min-h-[200px] flex-col items-center justify-center rounded-[var(--radius-container)] border border-dashed border-[var(--color-danger)] bg-[var(--color-danger-subtle)] p-inset text-[var(--color-danger)]">
+      <CircleAlert className="mb-inset size-12 text-[var(--color-danger)]" />
 
-      <Typography variant="h6" gutterBottom>
+      <h3 className="mb-component text-h3 font-semibold">
         {t('shared.feedback.errors.trafficStats')}
-      </Typography>
+      </h3>
 
-      <Typography
-        variant="body2"
-        color="text.secondary"
-        sx={{ mb: 2, textAlign: 'center' }}
-      >
+      <p className="mb-inset text-center text-body text-[var(--color-text-secondary)]">
         {t('shared.feedback.errors.trafficStatsDescription')}
-      </Typography>
+      </p>
 
-      <Alert severity="error" sx={{ mb: 2, maxWidth: 400 }}>
-        <Typography variant="body2">
+      <div className="mb-inset w-full max-w-[400px] rounded-[var(--radius-compact)] border border-[color-mix(in_srgb,var(--color-danger)_25%,transparent)] bg-[var(--color-danger-subtle)] p-component">
+        <p className="text-body">
           <strong>Error:</strong>{' '}
           {error instanceof Error ? error.message : 'Unknown error'}
-        </Typography>
+        </p>
         {retryCount > 0 && (
-          <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
+          <p className="mt-component block text-caption">
             {t('shared.labels.retryAttempts')}: {retryCount}/{maxRetries}
-          </Typography>
+          </p>
         )}
-      </Alert>
+      </div>
 
-      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+      <div className="mb-inset flex gap-component">
         {canRetry && (
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<RefreshRounded />}
-            onClick={onRetry}
-            size="small"
-          >
+          <Button size="sm" onClick={onRetry}>
+            <RefreshCw />
             {t('shared.actions.retry')}
           </Button>
         )}
 
-        <Button variant="outlined" onClick={onRefresh} size="small">
+        <Button variant="outline" size="sm" onClick={onRefresh}>
           {t('shared.actions.refreshPage')}
         </Button>
 
-        <Button
-          variant="text"
-          startIcon={<BugReportRounded />}
-          onClick={onToggleDetails}
-          size="small"
-        >
+        <Button variant="ghost" size="sm" onClick={onToggleDetails}>
+          <Bug />
           {showDetails
             ? t('shared.actions.hideDetails')
             : t('shared.actions.showDetails')}
         </Button>
-      </Box>
+      </div>
 
-      <Collapse in={showDetails} sx={{ width: '100%', maxWidth: 600 }}>
-        <Box
-          sx={{
-            p: 2,
-            bgcolor: 'background.paper',
-            borderRadius: 'var(--radius-compact)',
-            border: '1px solid',
-            borderColor: 'divider',
-          }}
-        >
-          <Typography variant="subtitle2" gutterBottom>
-            Error Details:
-          </Typography>
-          <Typography
-            variant="caption"
-            component="pre"
-            sx={{
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-              fontFamily: 'monospace',
-              fontSize: '0.75rem',
-              color: 'text.secondary',
-            }}
-          >
-            {error?.stack}
-          </Typography>
+      {showDetails && (
+        <div className="w-full max-w-[600px] animate-in fade-in duration-[var(--duration-base)]">
+          <div className="rounded-[var(--radius-compact)] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-inset text-[var(--color-text-primary)]">
+            <p className="mb-component text-label font-semibold">
+              Error Details:
+            </p>
+            <pre className="whitespace-pre-wrap break-words font-mono text-caption text-[var(--color-text-secondary)]">
+              {error?.stack}
+            </pre>
 
-          {errorInfo?.componentStack && (
-            <>
-              <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-                Component Stack:
-              </Typography>
-              <Typography
-                variant="caption"
-                component="pre"
-                sx={{
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
-                  fontFamily: 'monospace',
-                  fontSize: '0.75rem',
-                  color: 'text.secondary',
-                }}
-              >
-                {errorInfo.componentStack}
-              </Typography>
-            </>
-          )}
-        </Box>
-      </Collapse>
-    </Box>
+            {errorInfo?.componentStack && (
+              <>
+                <p className="mt-inset mb-component text-label font-semibold">
+                  Component Stack:
+                </p>
+                <pre className="whitespace-pre-wrap break-words font-mono text-caption text-[var(--color-text-secondary)]">
+                  {errorInfo.componentStack}
+                </pre>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -291,21 +235,10 @@ export const LightweightTrafficErrorBoundary: React.FC<{
   return (
     <TrafficErrorBoundary
       fallbackComponent={
-        <Box
-          sx={{
-            p: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: 60,
-            bgcolor: 'error.light',
-            borderRadius: 'var(--radius-compact)',
-            color: 'error.contrastText',
-          }}
-        >
-          <ErrorOutlineRounded sx={{ mr: 1, fontSize: 20 }} />
-          <Typography variant="caption">Traffic data unavailable</Typography>
-        </Box>
+        <div className="flex min-h-[60px] items-center justify-center rounded-[var(--radius-compact)] bg-[var(--color-danger-subtle)] p-component text-[var(--color-danger)]">
+          <CircleAlert className="mr-component size-5" />
+          <span className="text-caption">Traffic data unavailable</span>
+        </div>
       }
     >
       {children}

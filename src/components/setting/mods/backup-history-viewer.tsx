@@ -1,29 +1,15 @@
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined'
-import DownloadRounded from '@mui/icons-material/DownloadRounded'
-import RefreshRounded from '@mui/icons-material/RefreshRounded'
-import RestoreRounded from '@mui/icons-material/RestoreRounded'
-import {
-  Box,
-  Button,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  ListSubheader,
-  Stack,
-  Tab,
-  Tabs,
-  Typography,
-} from '@mui/material'
 import { save } from '@tauri-apps/plugin-dialog'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import relativeTime from 'dayjs/plugin/relativeTime'
+import { Download, History, RefreshCw, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, BaseLoadingOverlay } from '@/components/base'
+import { Button } from '@/components/ui/button'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useVerge } from '@/hooks/use-verge'
 import {
   deleteLocalBackup,
@@ -303,140 +289,114 @@ export const BackupHistoryViewer = ({
       onCancel={onClose}
       onClose={onClose}
     >
-      <Box sx={{ position: 'relative', minHeight: 320 }}>
+      <div className="relative min-h-80">
         <BaseLoadingOverlay isLoading={isBusy} />
-        <Stack spacing={2}>
-          <Stack
-            direction="row"
-            sx={{ alignItems: 'center', justifyContent: 'space-between' }}
-          >
+        <div className="flex flex-col gap-inset">
+          <div className="flex items-center justify-between">
             <Tabs
               value={source}
-              onChange={(_, val) => {
+              onValueChange={(val) => {
                 if (isBusy) return
                 onSourceChange(val as BackupSource)
                 onPageChange(0)
               }}
-              textColor="primary"
-              indicatorColor="primary"
             >
-              <Tab
-                value="local"
-                label={t('settings.modals.backup.tabs.local')}
-                disabled={isBusy}
-                sx={{ px: 2 }}
-              />
-              <Tab
-                value="webdav"
-                label={t('settings.modals.backup.tabs.webdav')}
-                disabled={isBusy}
-                sx={{ px: 2 }}
-              />
+              <TabsList>
+                <TabsTrigger value="local" disabled={isBusy}>
+                  {t('settings.modals.backup.tabs.local')}
+                </TabsTrigger>
+                <TabsTrigger value="webdav" disabled={isBusy}>
+                  {t('settings.modals.backup.tabs.webdav')}
+                </TabsTrigger>
+              </TabsList>
             </Tabs>
-            <IconButton size="small" onClick={handleRefresh} disabled={isBusy}>
-              <RefreshRounded fontSize="small" />
-            </IconButton>
-          </Stack>
-          <Typography variant="body2" color="text.secondary">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={handleRefresh}
+              disabled={isBusy}
+            >
+              <RefreshCw className="size-4" />
+            </Button>
+          </div>
+          <p className="text-sm text-[var(--color-text-secondary)]">
             {summary}
-          </Typography>
+          </p>
 
-          <List
-            disablePadding
-            subheader={
-              <ListSubheader disableSticky>
-                {t('settings.modals.backup.history.title')}
-              </ListSubheader>
-            }
-          >
+          <div>
+            <div className="py-compact text-xs uppercase text-[var(--color-text-muted)]">
+              {t('settings.modals.backup.history.title')}
+            </div>
             {pagedRows.length === 0 ? (
-              <ListItem>
-                <ListItemText
-                  primary={t('settings.modals.backup.history.empty') || ''}
-                />
-              </ListItem>
+              <div className="py-component">
+                <p className="text-sm text-[var(--color-text-primary)]">
+                  {t('settings.modals.backup.history.empty') || ''}
+                </p>
+              </div>
             ) : (
               pagedRows.map((row) => (
-                <ListItem key={`${row.platform}-${row.filename}`} divider>
-                  <ListItemText
-                    primary={
-                      <Typography
-                        variant="body2"
-                        sx={{ wordBreak: 'break-all', fontWeight: 500 }}
-                      >
-                        {row.filename}
-                      </Typography>
-                    }
-                    secondary={
-                      <Stack
-                        direction="row"
-                        spacing={1.5}
-                        sx={{
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                        }}
-                      >
-                        <Typography variant="caption" color="text.secondary">
-                          {`${row.platform} · ${row.display_time}`}
-                        </Typography>
-                        <Stack
-                          direction="row"
-                          spacing={0.5}
-                          sx={{ alignItems: 'center' }}
+                <div
+                  key={`${row.platform}-${row.filename}`}
+                  className="border-b border-[var(--color-border)] py-component"
+                >
+                  <p className="text-sm font-medium break-all text-[var(--color-text-primary)]">
+                    {row.filename}
+                  </p>
+                  <div className="mt-inline flex items-center justify-between gap-stack">
+                    <span className="text-xs text-[var(--color-text-secondary)]">
+                      {`${row.platform} · ${row.display_time}`}
+                    </span>
+                    <div className="flex items-center gap-inline">
+                      {isLocal && (
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          disabled={isBusy}
+                          onClick={() => handleExport(row.filename)}
                         >
-                          {isLocal && (
-                            <IconButton
-                              size="small"
-                              disabled={isBusy}
-                              onClick={() => handleExport(row.filename)}
-                            >
-                              <DownloadRounded fontSize="small" />
-                            </IconButton>
-                          )}
-                          <IconButton
-                            size="small"
-                            disabled={isBusy}
-                            onClick={() => handleDelete(row.filename)}
-                          >
-                            <DeleteOutlined fontSize="small" />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            disabled={isBusy}
-                            onClick={() => handleRestore(row.filename)}
-                          >
-                            <RestoreRounded fontSize="small" />
-                          </IconButton>
-                        </Stack>
-                      </Stack>
-                    }
-                  />
-                </ListItem>
+                          <Download className="size-4" />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        disabled={isBusy}
+                        onClick={() => handleDelete(row.filename)}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        disabled={isBusy}
+                        onClick={() => handleRestore(row.filename)}
+                      >
+                        <History className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               ))
             )}
-          </List>
+          </div>
 
           {pageCount > 1 && (
-            <Stack
-              direction="row"
-              spacing={1}
-              sx={{ justifyContent: 'flex-end', alignItems: 'center' }}
-            >
-              <Typography variant="caption">
+            <div className="flex items-center justify-end gap-stack">
+              <span className="text-xs text-[var(--color-text-secondary)]">
                 {currentPage + 1} / {pageCount}
-              </Typography>
-              <Stack direction="row" spacing={1}>
+              </span>
+              <div className="flex gap-stack">
                 <Button
-                  size="small"
-                  variant="text"
+                  variant="ghost"
+                  size="sm"
                   disabled={isBusy || currentPage === 0}
                   onClick={() => onPageChange(Math.max(0, currentPage - 1))}
                 >
                   {t('shared.actions.previous')}
                 </Button>
                 <Button
-                  size="small"
-                  variant="text"
+                  variant="ghost"
+                  size="sm"
                   disabled={isBusy || currentPage >= pageCount - 1}
                   onClick={() =>
                     onPageChange(Math.min(pageCount - 1, currentPage + 1))
@@ -444,11 +404,11 @@ export const BackupHistoryViewer = ({
                 >
                   {t('shared.actions.next')}
                 </Button>
-              </Stack>
-            </Stack>
+              </div>
+            </div>
           )}
-        </Stack>
-      </Box>
+        </div>
+      </div>
       <BaseDialog
         open={pendingConfirmation !== null}
         title={confirmTitle}
@@ -460,17 +420,13 @@ export const BackupHistoryViewer = ({
         onClose={closeConfirmDialog}
         onOk={handleConfirmAction}
       >
-        <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+        <p className="text-sm break-words text-[var(--color-text-primary)]">
           {confirmMessage}
-        </Typography>
+        </p>
         {pendingConfirmation?.filename && (
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: 'block', mt: 1, wordBreak: 'break-all' }}
-          >
+          <span className="mt-stack block text-xs break-all text-[var(--color-text-secondary)]">
             {pendingConfirmation.filename}
-          </Typography>
+          </span>
         )}
       </BaseDialog>
     </BaseDialog>

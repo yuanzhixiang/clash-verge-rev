@@ -1,26 +1,17 @@
-import {
-  ComputerRounded,
-  TroubleshootRounded,
-  HelpOutlineRounded,
-  SvgIconComponent,
-} from '@mui/icons-material'
-import {
-  Box,
-  Typography,
-  Stack,
-  Paper,
-  Tooltip,
-  alpha,
-  useTheme,
-  Fade,
-} from '@mui/material'
+import { CircleHelp, Monitor, ScanSearch, type LucideIcon } from 'lucide-react'
 import { useState, useMemo, memo, FC } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import ProxyControlSwitches from '@/components/shared/proxy-control-switches'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useSystemProxyState } from '@/hooks/use-system-proxy-state'
 import { useSystemState } from '@/hooks/use-system-state'
 import { useVerge } from '@/hooks/use-verge'
+import { cn } from '@/lib/utils'
 import { showNotice } from '@/services/notice-service'
 
 const LOCAL_STORAGE_TAB_KEY = 'clash-verge-proxy-active-tab'
@@ -28,7 +19,7 @@ const LOCAL_STORAGE_TAB_KEY = 'clash-verge-proxy-active-tab'
 interface TabButtonProps {
   isActive: boolean
   onClick: () => void
-  icon: SvgIconComponent
+  icon: LucideIcon
   label: string
   hasIndicator?: boolean
 }
@@ -36,60 +27,33 @@ interface TabButtonProps {
 // Tab组件
 const TabButton: FC<TabButtonProps> = memo(
   ({ isActive, onClick, icon: Icon, label, hasIndicator = false }) => (
-    <Paper
-      elevation={isActive ? 2 : 0}
+    <button
+      type="button"
       onClick={onClick}
-      sx={{
-        cursor: 'pointer',
-        px: 2,
-        py: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 1,
-        bgcolor: isActive ? 'primary.main' : 'background.paper',
-        color: isActive ? 'primary.contrastText' : 'text.primary',
-        borderRadius: 'var(--radius-container)',
-        flex: 1,
-        maxWidth: 160,
-        transition: 'all 0.2s ease-in-out',
-        position: 'relative',
-        '&:hover': {
-          transform: 'translateY(-1px)',
-          boxShadow: 1,
-        },
-        '&:after': isActive
-          ? {
-              content: '""',
-              position: 'absolute',
-              bottom: -9,
-              left: '50%',
-              width: 2,
-              height: 9,
-              bgcolor: 'primary.main',
-              transform: 'translateX(-50%)',
-            }
-          : {},
-      }}
+      className={cn(
+        'relative flex max-w-40 flex-1 cursor-pointer items-center justify-center gap-component rounded-[var(--radius-container)] px-inset py-component transition-all duration-[var(--duration-base)] hover:-translate-y-px',
+        isActive
+          ? "bg-[var(--color-accent)] text-[var(--color-text-on-accent)] shadow-[var(--shadow-card)] after:absolute after:-bottom-2.5 after:left-1/2 after:h-2.5 after:w-0.5 after:-translate-x-1/2 after:bg-[var(--color-accent)] after:content-['']"
+          : 'bg-[var(--color-bg-card)] text-[var(--color-text-primary)] hover:shadow-[var(--shadow-card)]',
+      )}
     >
-      <Icon fontSize="small" />
-      <Typography variant="body2" sx={{ fontWeight: isActive ? 600 : 400 }}>
+      <Icon className="size-5" />
+      <span
+        className={cn('text-body', isActive ? 'font-semibold' : 'font-normal')}
+      >
         {label}
-      </Typography>
+      </span>
       {hasIndicator && (
-        <Box
-          sx={{
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            bgcolor: isActive ? '#fff' : 'success.main',
-            position: 'absolute',
-            top: 8,
-            right: 8,
-          }}
+        <span
+          className={cn(
+            'absolute top-component right-component size-2 rounded-full',
+            isActive
+              ? 'bg-[var(--color-text-on-accent)]'
+              : 'bg-[var(--color-success)]',
+          )}
         />
       )}
-    </Paper>
+    </button>
   ),
 )
 
@@ -101,42 +65,22 @@ interface TabDescriptionProps {
 // 描述文本组件
 const TabDescription: FC<TabDescriptionProps> = memo(
   ({ description, tooltipTitle }) => (
-    <Fade in={true} timeout={200}>
-      <Typography
-        variant="caption"
-        component="div"
-        sx={{
-          width: '95%',
-          textAlign: 'center',
-          color: 'text.secondary',
-          p: 0.8,
-          borderRadius: 'var(--radius-compact)',
-          borderColor: 'primary.main',
-          borderWidth: 1,
-          borderStyle: 'solid',
-          backgroundColor: 'background.paper',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 0.5,
-          wordBreak: 'break-word',
-          hyphens: 'auto',
-        }}
-      >
-        {description}
-        <Tooltip title={tooltipTitle}>
-          <HelpOutlineRounded
-            sx={{ fontSize: 14, opacity: 0.7, flexShrink: 0 }}
-          />
-        </Tooltip>
-      </Typography>
-    </Fade>
+    <p className="flex w-[95%] animate-in items-center justify-center gap-inline rounded-[var(--radius-compact)] border border-[var(--color-accent)] bg-[var(--color-bg-card)] p-compact text-center text-caption break-words text-[var(--color-text-secondary)] duration-200 fade-in hyphens-auto">
+      {description}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex">
+            <CircleHelp className="size-3.5 shrink-0 opacity-70" />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{tooltipTitle}</TooltipContent>
+      </Tooltip>
+    </p>
   ),
 )
 
 export const ProxyTunCard: FC = () => {
   const { t } = useTranslation()
-  const theme = useTheme()
   const [activeTab, setActiveTab] = useState<string>(
     () => localStorage.getItem(LOCAL_STORAGE_TAB_KEY) || 'system',
   )
@@ -183,57 +127,32 @@ export const ProxyTunCard: FC = () => {
   ])
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          position: 'relative',
-          zIndex: 2,
-        }}
-      >
+    <div className="flex w-full flex-col">
+      <div className="relative z-[2] flex justify-center gap-component">
         <TabButton
           isActive={activeTab === 'system'}
           onClick={() => handleTabChange('system')}
-          icon={ComputerRounded}
+          icon={Monitor}
           label={t('settings.sections.system.toggles.systemProxy')}
           hasIndicator={systemProxyConfigState}
         />
         <TabButton
           isActive={activeTab === 'tun'}
           onClick={() => handleTabChange('tun')}
-          icon={TroubleshootRounded}
+          icon={ScanSearch}
           label={t('settings.sections.system.toggles.tunMode')}
           hasIndicator={enable_tun_mode && isTunModeAvailable}
         />
-      </Stack>
+      </div>
 
-      <Box
-        sx={{
-          width: '100%',
-          my: 1,
-          position: 'relative',
-          display: 'flex',
-          justifyContent: 'center',
-          overflow: 'visible',
-        }}
-      >
+      <div className="relative my-component flex w-full justify-center overflow-visible">
         <TabDescription
           description={tabDescription.text}
           tooltipTitle={tabDescription.tooltip}
         />
-      </Box>
+      </div>
 
-      <Box
-        sx={{
-          mt: 0,
-          p: 1,
-          bgcolor: alpha(theme.palette.primary.main, 0.04),
-          borderRadius: 'var(--radius-container)',
-        }}
-      >
+      <div className="mt-0 rounded-[var(--radius-container)] bg-[color-mix(in_srgb,var(--color-accent)_4%,transparent)] p-component">
         <ProxyControlSwitches
           onError={handleError}
           label={
@@ -243,7 +162,7 @@ export const ProxyTunCard: FC = () => {
           }
           noRightPadding={true}
         />
-      </Box>
-    </Box>
+      </div>
+    </div>
   )
 }

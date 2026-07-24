@@ -1,36 +1,39 @@
-import { Button, ButtonGroup } from '@mui/material'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 interface Props {
   value?: string
   onChange?: (value: string) => void
 }
 
+const MODES = [
+  { key: 'system', label: 'System' },
+  { key: 'gvisor', label: 'gVisor' },
+  { key: 'mixed', label: 'Mixed' },
+] as const
+
 export const StackModeSwitch = (props: Props) => {
   const { value, onChange } = props
 
   return (
-    <ButtonGroup size="small" sx={{ my: '4px' }}>
-      <Button
-        variant={value?.toLowerCase() === 'system' ? 'contained' : 'outlined'}
-        onClick={() => onChange?.('system')}
-        sx={{ textTransform: 'capitalize' }}
-      >
-        System
-      </Button>
-      <Button
-        variant={value?.toLowerCase() === 'gvisor' ? 'contained' : 'outlined'}
-        onClick={() => onChange?.('gvisor')}
-        sx={{ textTransform: 'capitalize' }}
-      >
-        gVisor
-      </Button>
-      <Button
-        variant={value?.toLowerCase() === 'mixed' ? 'contained' : 'outlined'}
-        onClick={() => onChange?.('mixed')}
-        sx={{ textTransform: 'capitalize' }}
-      >
-        Mixed
-      </Button>
-    </ButtonGroup>
+    <div className="my-inline inline-flex">
+      {MODES.map((mode, index) => (
+        <Button
+          key={mode.key}
+          type="button"
+          size="sm"
+          variant={value?.toLowerCase() === mode.key ? 'default' : 'outline'}
+          onClick={() => onChange?.(mode.key)}
+          className={cn(
+            'rounded-none capitalize',
+            index === 0 && 'rounded-l-[var(--radius-control)]',
+            index === MODES.length - 1 && 'rounded-r-[var(--radius-control)]',
+            index > 0 && '-ml-px',
+          )}
+        >
+          {mode.label}
+        </Button>
+      ))}
+    </div>
   )
 }

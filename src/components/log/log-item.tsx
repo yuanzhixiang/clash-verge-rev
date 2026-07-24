@@ -1,50 +1,18 @@
-import { styled, Box } from '@mui/material'
 import type { ReactNode } from 'react'
 
 import type { SearchState } from '@/components/base'
 
-const Item = styled(Box)(({ theme: { palette, typography } }) => ({
-  padding: '8px 0',
-  margin: '0 12px',
-  lineHeight: 1.35,
-  borderBottom: `1px solid ${palette.divider}`,
-  fontSize: '0.875rem',
-  fontFamily: typography.fontFamily,
-  userSelect: 'text',
-  '& .time': {
-    color: palette.text.secondary,
-  },
-  '& .type': {
-    display: 'inline-block',
-    marginLeft: 8,
-    textAlign: 'center',
-    borderRadius: 'var(--radius-container)',
-    textTransform: 'uppercase',
-    fontWeight: '600',
-  },
-  '& .type[data-type="error"], & .type[data-type="err"]': {
-    color: palette.error.main,
-  },
-  '& .type[data-type="warning"], & .type[data-type="warn"]': {
-    color: palette.warning.main,
-  },
-  '& .type[data-type="info"], & .type[data-type="inf"]': {
-    color: palette.info.main,
-  },
-  '& .data': {
-    color: palette.text.primary,
-    overflowWrap: 'anywhere',
-  },
-  '& .highlight': {
-    backgroundColor: palette.mode === 'dark' ? '#ffeb3b40' : '#ffeb3b90',
-    borderRadius: 'var(--radius-container)',
-    padding: '0 2px',
-  },
-}))
-
 interface Props {
   value: ILogItem
   searchState?: SearchState
+}
+
+const typeColorClass = (type: string): string => {
+  const key = type.toLowerCase()
+  if (key === 'error' || key === 'err') return 'text-[var(--color-danger)]'
+  if (key === 'warning' || key === 'warn') return 'text-[var(--color-warning)]'
+  if (key === 'info' || key === 'inf') return 'text-[var(--color-info)]'
+  return ''
 }
 
 const LogItem = ({ value, searchState }: Props) => {
@@ -87,7 +55,10 @@ const LogItem = ({ value, searchState }: Props) => {
         }
 
         elements.push(
-          <span key={`highlight-${start}`} className="highlight">
+          <span
+            key={`highlight-${start}`}
+            className="rounded-[var(--radius-container)] px-adjust bg-[#ffeb3b90] dark:bg-[#ffeb3b40]"
+          >
             {matchText}
           </span>,
         )
@@ -106,17 +77,23 @@ const LogItem = ({ value, searchState }: Props) => {
   }
 
   return (
-    <Item>
+    <div className="mx-stack select-text border-b border-[var(--color-border)] py-component text-body leading-[1.35]">
       <div>
-        <span className="time">{renderHighlightText(value.time || '')}</span>
-        <span className="type" data-type={value.type.toLowerCase()}>
+        <span className="text-[var(--color-text-secondary)]">
+          {renderHighlightText(value.time || '')}
+        </span>
+        <span
+          className={`ml-component inline-block rounded-[var(--radius-container)] text-center font-semibold uppercase ${typeColorClass(value.type)}`}
+        >
           {renderHighlightText(value.type)}
         </span>
       </div>
       <div>
-        <span className="data">{renderHighlightText(value.payload)}</span>
+        <span className="text-[var(--color-text-primary)] [overflow-wrap:anywhere]">
+          {renderHighlightText(value.payload)}
+        </span>
       </div>
-    </Item>
+    </div>
   )
 }
 

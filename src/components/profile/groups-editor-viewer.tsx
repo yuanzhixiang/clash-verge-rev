@@ -12,25 +12,6 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable'
-import {
-  VerticalAlignBottomRounded,
-  VerticalAlignTopRounded,
-} from '@mui/icons-material'
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  InputAdornment,
-  List,
-  ListItem,
-  ListItemText,
-  TextField,
-  styled,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
 import {
   cancelIdleCallback,
@@ -38,6 +19,14 @@ import {
 } from 'foxact/request-idle-callback'
 import yaml from 'js-yaml'
 import {
+  ArrowDownToLine,
+  ArrowUpToLine,
+  Check,
+  ChevronDown,
+} from 'lucide-react'
+import { useTheme } from 'next-themes'
+import {
+  type ReactNode,
   startTransition,
   useCallback,
   useEffect,
@@ -49,12 +38,29 @@ import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
 import {
+  BaseDialog,
   BaseSearchBox,
   MonacoEditor,
   Switch,
   VirtualList,
 } from '@/components/base'
 import { GroupItem } from '@/components/profile/group-item'
+import { Button } from '@/components/ui/button'
+import { DialogFooter } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 import {
   getNetworkInterfaces,
   readProfileFile,
@@ -65,7 +71,6 @@ import {
   type ProfileFormat,
   parseProfileContent,
 } from '@/services/profile-format'
-import { useThemeMode } from '@/services/states'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
 import type { MonacoEditorInstance } from '@/types/monaco'
 import getSystem from '@/utils/get-system'
@@ -79,6 +84,105 @@ interface Props {
   open: boolean
   onClose: () => void
   onSave?: (prev?: string, curr?: string) => void
+}
+
+const FIELD_WIDTH = 'w-[calc(100%-150px)] shrink-0'
+
+const Item = ({ children }: { children: ReactNode }) => (
+  <div className="flex items-center px-adjust py-[5px]">{children}</div>
+)
+
+const FieldLabel = ({ children }: { children: ReactNode }) => (
+  <div className="min-w-0 flex-1 truncate pr-component">{children}</div>
+)
+
+function MultiSelect({
+  options,
+  value,
+  onChange,
+  getOptionLabel,
+}: {
+  options: string[]
+  value: string[]
+  onChange: (value: string[]) => void
+  getOptionLabel?: (option: string) => string
+}) {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const label = getOptionLabel ?? ((option: string) => option)
+  const normalizedQuery = query.trim().toLowerCase()
+  const filtered = normalizedQuery
+    ? options.filter((option) =>
+        label(option).toLowerCase().includes(normalizedQuery),
+      )
+    : options
+  const toggle = (option: string) => {
+    onChange(
+      value.includes(option)
+        ? value.filter((item) => item !== option)
+        : [...value, option],
+    )
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            'flex h-9 items-center justify-between gap-inline rounded-[var(--radius-control)] border border-[var(--color-border-strong)] bg-transparent px-stack text-left text-sm outline-none focus-visible:border-[var(--color-focus-ring)]',
+            FIELD_WIDTH,
+          )}
+        >
+          <span
+            className={cn(
+              'truncate',
+              value.length === 0 && 'text-[var(--color-text-muted)]',
+            )}
+          >
+            {value.length > 0 ? value.map(label).join(', ') : ''}
+          </span>
+          <ChevronDown className="size-4 shrink-0 opacity-50" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        className="w-[var(--radix-popover-trigger-width)] p-0"
+      >
+        <div className="p-compact">
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="h-8"
+          />
+        </div>
+        <div className="max-h-60 overflow-y-auto p-compact pt-0">
+          {filtered.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => toggle(option)}
+              className="flex w-full items-center gap-component rounded-[var(--radius-compact)] px-compact py-inline text-left text-sm hover:bg-[var(--color-bg-hover)]"
+            >
+              <Check
+                className={cn(
+                  'size-4 shrink-0',
+                  value.includes(option) ? 'opacity-100' : 'opacity-0',
+                )}
+              />
+              <span className="truncate">{label(option)}</span>
+            </button>
+          ))}
+          {filtered.length === 0 && (
+            <div className="px-compact py-inline text-sm text-[var(--color-text-muted)]">
+              {t('shared.statuses.empty')}
+            </div>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
 }
 
 const builtinProxyPolicies = ['DIRECT', 'REJECT', 'REJECT-DROP', 'PASS']
@@ -171,7 +275,8 @@ export const GroupsEditorViewer = (props: Props) => {
         : value,
     [t],
   )
-  const themeMode = useThemeMode()
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
   const editorRef = useRef<MonacoEditorInstance | null>(null)
   const [prevData, setPrevData] = useState('')
   const [currData, setCurrData] = useState('')
@@ -536,86 +641,63 @@ export const GroupsEditorViewer = (props: Props) => {
   })
 
   return (
-    <Dialog
+    <BaseDialog
       open={open}
-      onClose={onClose}
-      maxWidth="xl"
-      fullWidth
+      title={
+        <div className="flex items-center justify-between pr-8">
+          {t('profiles.modals.groupsEditor.title')}
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => {
+              setVisualization((prev) => !prev)
+            }}
+          >
+            {visualization
+              ? t('shared.editorModes.advanced')
+              : t('shared.editorModes.visualization')}
+          </Button>
+        </div>
+      }
       disableEnforceFocus={!visualization}
+      disableFooter
+      contentSx={{ width: 'calc(100vw - 4rem)', maxWidth: 1400 }}
+      onClose={onClose}
     >
-      <DialogTitle>
-        {
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            {t('profiles.modals.groupsEditor.title')}
-            <Box>
-              <Button
-                variant="contained"
-                size="small"
-                onClick={() => {
-                  setVisualization((prev) => !prev)
-                }}
-              >
-                {visualization
-                  ? t('shared.editorModes.advanced')
-                  : t('shared.editorModes.visualization')}
-              </Button>
-            </Box>
-          </Box>
-        }
-      </DialogTitle>
-
-      <DialogContent
-        sx={{ display: 'flex', width: 'auto', height: 'calc(100vh - 185px)' }}
-      >
+      <div className="flex h-[calc(100vh-185px)]">
         {visualization ? (
           <>
-            <List
-              sx={{
-                width: '50%',
-                padding: '0 10px',
-              }}
-            >
-              <Box
-                sx={{
-                  height: 'calc(100% - 80px)',
-                  overflowY: 'auto',
-                }}
-              >
+            <div className="w-1/2 px-component">
+              <div className="h-[calc(100%-80px)] overflow-y-auto">
                 <Controller
                   name="type"
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t('profiles.modals.groupsEditor.fields.type')}
-                      />
-                      <Autocomplete
-                        size="small"
-                        sx={{ width: 'calc(100% - 150px)' }}
-                        options={[
-                          'select',
-                          'url-test',
-                          'fallback',
-                          'load-balance',
-                          'relay',
-                        ]}
+                      <FieldLabel>
+                        {t('profiles.modals.groupsEditor.fields.type')}
+                      </FieldLabel>
+                      <Select
                         value={field.value}
-                        getOptionLabel={translateStrategy}
-                        renderOption={(props, option) => {
-                          const { key, ...optionProps } = props
-                          return (
-                            <li
-                              key={key}
-                              {...optionProps}
-                              title={translateStrategy(option)}
-                            >
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className={FIELD_WIDTH}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[
+                            'select',
+                            'url-test',
+                            'fallback',
+                            'load-balance',
+                            'relay',
+                          ].map((option) => (
+                            <SelectItem key={option} value={option}>
                               {translateStrategy(option)}
-                            </li>
-                          )
-                        }}
-                        onChange={(_, value) => value && field.onChange(value)}
-                        renderInput={(params) => <TextField {...params} />}
-                      />
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </Item>
                   )}
                 />
@@ -624,16 +706,15 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t('profiles.modals.groupsEditor.fields.name')}
-                      />
-                      <TextField
+                      <FieldLabel>
+                        {t('profiles.modals.groupsEditor.fields.name')}
+                      </FieldLabel>
+                      <Input
                         autoComplete="new-password"
-                        size="small"
-                        sx={{ width: 'calc(100% - 150px)' }}
+                        className={FIELD_WIDTH}
+                        required
+                        aria-invalid={field.value === ''}
                         {...field}
-                        error={field.value === ''}
-                        required={true}
                       />
                     </Item>
                   )}
@@ -643,13 +724,12 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t('profiles.modals.groupsEditor.fields.icon')}
-                      />
-                      <TextField
+                      <FieldLabel>
+                        {t('profiles.modals.groupsEditor.fields.icon')}
+                      </FieldLabel>
+                      <Input
                         autoComplete="new-password"
-                        size="small"
-                        sx={{ width: 'calc(100% - 150px)' }}
+                        className={FIELD_WIDTH}
                         {...field}
                       />
                     </Item>
@@ -660,33 +740,13 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t(
-                          'profiles.modals.groupsEditor.fields.proxies',
-                        )}
-                      />
-                      <Autocomplete
-                        size="small"
-                        sx={{
-                          width: 'calc(100% - 150px)',
-                        }}
-                        multiple
+                      <FieldLabel>
+                        {t('profiles.modals.groupsEditor.fields.proxies')}
+                      </FieldLabel>
+                      <MultiSelect
                         options={proxyPolicyList}
-                        disableCloseOnSelect
-                        onChange={(_, value) => value && field.onChange(value)}
-                        renderInput={(params) => <TextField {...params} />}
-                        renderOption={(props, option) => {
-                          const { key, ...optionProps } = props
-                          return (
-                            <li
-                              key={key}
-                              {...optionProps}
-                              title={translatePolicy(option)}
-                            >
-                              {translatePolicy(option)}
-                            </li>
-                          )
-                        }}
+                        value={field.value ?? []}
+                        onChange={field.onChange}
                         getOptionLabel={translatePolicy}
                       />
                     </Item>
@@ -697,19 +757,13 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t(
-                          'profiles.modals.groupsEditor.fields.provider',
-                        )}
-                      />
-                      <Autocomplete
-                        size="small"
-                        sx={{ width: 'calc(100% - 150px)' }}
-                        multiple
+                      <FieldLabel>
+                        {t('profiles.modals.groupsEditor.fields.provider')}
+                      </FieldLabel>
+                      <MultiSelect
                         options={proxyProviderList}
-                        disableCloseOnSelect
-                        onChange={(_, value) => value && field.onChange(value)}
-                        renderInput={(params) => <TextField {...params} />}
+                        value={field.value ?? []}
+                        onChange={field.onChange}
                       />
                     </Item>
                   )}
@@ -719,16 +773,15 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t(
+                      <FieldLabel>
+                        {t(
                           'profiles.modals.groupsEditor.fields.healthCheckUrl',
                         )}
-                      />
-                      <TextField
+                      </FieldLabel>
+                      <Input
                         autoComplete="new-password"
                         placeholder="http://cp.cloudflare.com/generate_204"
-                        size="small"
-                        sx={{ width: 'calc(100% - 150px)' }}
+                        className={FIELD_WIDTH}
                         {...field}
                       />
                     </Item>
@@ -739,16 +792,15 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t(
+                      <FieldLabel>
+                        {t(
                           'profiles.modals.groupsEditor.fields.expectedStatus',
                         )}
-                      />
-                      <TextField
+                      </FieldLabel>
+                      <Input
                         autoComplete="new-password"
                         placeholder="*"
-                        size="small"
-                        sx={{ width: 'calc(100% - 150px)' }}
+                        className={FIELD_WIDTH}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value))
                         }}
@@ -761,30 +813,28 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t(
-                          'profiles.modals.groupsEditor.fields.interval',
+                      <FieldLabel>
+                        {t('profiles.modals.groupsEditor.fields.interval')}
+                      </FieldLabel>
+                      <div
+                        className={cn(
+                          'flex items-center gap-inline',
+                          FIELD_WIDTH,
                         )}
-                      />
-                      <TextField
-                        autoComplete="new-password"
-                        placeholder="300"
-                        type="number"
-                        size="small"
-                        sx={{ width: 'calc(100% - 150px)' }}
-                        onChange={(e) => {
-                          field.onChange(parseInt(e.target.value))
-                        }}
-                        slotProps={{
-                          input: {
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                {t('shared.units.seconds')}
-                              </InputAdornment>
-                            ),
-                          },
-                        }}
-                      />
+                      >
+                        <Input
+                          autoComplete="new-password"
+                          placeholder="300"
+                          type="number"
+                          className="min-w-0 flex-1"
+                          onChange={(e) => {
+                            field.onChange(parseInt(e.target.value))
+                          }}
+                        />
+                        <span className="shrink-0 text-sm text-[var(--color-text-muted)]">
+                          {t('shared.units.seconds')}
+                        </span>
+                      </div>
                     </Item>
                   )}
                 />
@@ -793,26 +843,26 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText primary={t('shared.labels.timeout')} />
-                      <TextField
-                        autoComplete="new-password"
-                        placeholder="5000"
-                        type="number"
-                        size="small"
-                        sx={{ width: 'calc(100% - 150px)' }}
-                        onChange={(e) => {
-                          field.onChange(parseInt(e.target.value))
-                        }}
-                        slotProps={{
-                          input: {
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                {t('shared.units.milliseconds')}
-                              </InputAdornment>
-                            ),
-                          },
-                        }}
-                      />
+                      <FieldLabel>{t('shared.labels.timeout')}</FieldLabel>
+                      <div
+                        className={cn(
+                          'flex items-center gap-inline',
+                          FIELD_WIDTH,
+                        )}
+                      >
+                        <Input
+                          autoComplete="new-password"
+                          placeholder="5000"
+                          type="number"
+                          className="min-w-0 flex-1"
+                          onChange={(e) => {
+                            field.onChange(parseInt(e.target.value))
+                          }}
+                        />
+                        <span className="shrink-0 text-sm text-[var(--color-text-muted)]">
+                          {t('shared.units.milliseconds')}
+                        </span>
+                      </div>
                     </Item>
                   )}
                 />
@@ -821,17 +871,16 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t(
+                      <FieldLabel>
+                        {t(
                           'profiles.modals.groupsEditor.fields.maxFailedTimes',
                         )}
-                      />
-                      <TextField
+                      </FieldLabel>
+                      <Input
                         autoComplete="new-password"
                         placeholder="5"
                         type="number"
-                        size="small"
-                        sx={{ width: 'calc(100% - 150px)' }}
+                        className={FIELD_WIDTH}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value))
                         }}
@@ -844,19 +893,30 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t(
-                          'profiles.modals.groupsEditor.fields.interfaceName',
-                        )}
-                      />
-                      <Autocomplete
-                        size="small"
-                        sx={{ width: 'calc(100% - 150px)' }}
-                        options={interfaceNameList}
-                        value={field.value}
-                        onChange={(_, value) => value && field.onChange(value)}
-                        renderInput={(params) => <TextField {...params} />}
-                      />
+                      <FieldLabel>
+                        {t('profiles.modals.groupsEditor.fields.interfaceName')}
+                      </FieldLabel>
+                      <Select
+                        value={field.value ?? ''}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className={FIELD_WIDTH}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from(
+                            new Set(
+                              [field.value, ...interfaceNameList].filter(
+                                (name): name is string => !!name,
+                              ),
+                            ),
+                          ).map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </Item>
                   )}
                 />
@@ -865,16 +925,13 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t(
-                          'profiles.modals.groupsEditor.fields.routingMark',
-                        )}
-                      />
-                      <TextField
+                      <FieldLabel>
+                        {t('profiles.modals.groupsEditor.fields.routingMark')}
+                      </FieldLabel>
+                      <Input
                         autoComplete="new-password"
                         type="number"
-                        size="small"
-                        sx={{ width: 'calc(100% - 150px)' }}
+                        className={FIELD_WIDTH}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value))
                         }}
@@ -887,15 +944,12 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t(
-                          'profiles.modals.groupsEditor.fields.filter',
-                        )}
-                      />
-                      <TextField
+                      <FieldLabel>
+                        {t('profiles.modals.groupsEditor.fields.filter')}
+                      </FieldLabel>
+                      <Input
                         autoComplete="new-password"
-                        size="small"
-                        sx={{ width: 'calc(100% - 150px)' }}
+                        className={FIELD_WIDTH}
                         {...field}
                       />
                     </Item>
@@ -906,15 +960,12 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t(
-                          'profiles.modals.groupsEditor.fields.excludeFilter',
-                        )}
-                      />
-                      <TextField
+                      <FieldLabel>
+                        {t('profiles.modals.groupsEditor.fields.excludeFilter')}
+                      </FieldLabel>
+                      <Input
                         autoComplete="new-password"
-                        size="small"
-                        sx={{ width: 'calc(100% - 150px)' }}
+                        className={FIELD_WIDTH}
                         {...field}
                       />
                     </Item>
@@ -925,13 +976,10 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t(
-                          'profiles.modals.groupsEditor.fields.excludeType',
-                        )}
-                      />
-                      <Autocomplete
-                        multiple
+                      <FieldLabel>
+                        {t('profiles.modals.groupsEditor.fields.excludeType')}
+                      </FieldLabel>
+                      <MultiSelect
                         options={[
                           'Direct',
                           'Reject',
@@ -962,14 +1010,10 @@ export const GroupsEditorViewer = (props: Props) => {
                           'LoadBalance',
                           'Ssh',
                         ]}
-                        size="small"
-                        disableCloseOnSelect
-                        sx={{ width: 'calc(100% - 150px)' }}
-                        value={field.value?.split('|')}
-                        onChange={(_, value) => {
+                        value={field.value ? field.value.split('|') : []}
+                        onChange={(value) => {
                           field.onChange(value.join('|'))
                         }}
-                        renderInput={(params) => <TextField {...params} />}
                       />
                     </Item>
                   )}
@@ -979,12 +1023,15 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t(
-                          'profiles.modals.groupsEditor.fields.includeAll',
-                        )}
+                      <FieldLabel>
+                        {t('profiles.modals.groupsEditor.fields.includeAll')}
+                      </FieldLabel>
+                      <Switch
+                        checked={!!field.value}
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        onCheckedChange={field.onChange}
                       />
-                      <Switch checked={field.value} {...field} />
                     </Item>
                   )}
                 />
@@ -993,12 +1040,17 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t(
+                      <FieldLabel>
+                        {t(
                           'profiles.modals.groupsEditor.fields.includeAllProxies',
                         )}
+                      </FieldLabel>
+                      <Switch
+                        checked={!!field.value}
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        onCheckedChange={field.onChange}
                       />
-                      <Switch checked={field.value} {...field} />
                     </Item>
                   )}
                 />
@@ -1007,12 +1059,17 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t(
+                      <FieldLabel>
+                        {t(
                           'profiles.modals.groupsEditor.fields.includeAllProviders',
                         )}
+                      </FieldLabel>
+                      <Switch
+                        checked={!!field.value}
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        onCheckedChange={field.onChange}
                       />
-                      <Switch checked={field.value} {...field} />
                     </Item>
                   )}
                 />
@@ -1021,10 +1078,15 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t('profiles.modals.groupsEditor.toggles.lazy')}
+                      <FieldLabel>
+                        {t('profiles.modals.groupsEditor.toggles.lazy')}
+                      </FieldLabel>
+                      <Switch
+                        checked={!!field.value}
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        onCheckedChange={field.onChange}
                       />
-                      <Switch checked={field.value} {...field} />
                     </Item>
                   )}
                 />
@@ -1033,12 +1095,15 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t(
-                          'profiles.modals.groupsEditor.toggles.disableUdp',
-                        )}
+                      <FieldLabel>
+                        {t('profiles.modals.groupsEditor.toggles.disableUdp')}
+                      </FieldLabel>
+                      <Switch
+                        checked={!!field.value}
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        onCheckedChange={field.onChange}
                       />
-                      <Switch checked={field.value} {...field} />
                     </Item>
                   )}
                 />
@@ -1047,21 +1112,23 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t(
-                          'profiles.modals.groupsEditor.toggles.hidden',
-                        )}
+                      <FieldLabel>
+                        {t('profiles.modals.groupsEditor.toggles.hidden')}
+                      </FieldLabel>
+                      <Switch
+                        checked={!!field.value}
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        onCheckedChange={field.onChange}
                       />
-                      <Switch checked={field.value} {...field} />
                     </Item>
                   )}
                 />
-              </Box>
+              </div>
               <Item>
                 <Button
-                  fullWidth
-                  variant="contained"
-                  startIcon={<VerticalAlignTopRounded />}
+                  type="button"
+                  className="w-full"
                   onClick={() => {
                     try {
                       validateGroup()
@@ -1078,14 +1145,14 @@ export const GroupsEditorViewer = (props: Props) => {
                     }
                   }}
                 >
+                  <ArrowUpToLine className="size-4" />
                   {t('profiles.modals.groupsEditor.actions.prepend')}
                 </Button>
               </Item>
               <Item>
                 <Button
-                  fullWidth
-                  variant="contained"
-                  startIcon={<VerticalAlignBottomRounded />}
+                  type="button"
+                  className="w-full"
                   onClick={() => {
                     try {
                       validateGroup()
@@ -1102,17 +1169,13 @@ export const GroupsEditorViewer = (props: Props) => {
                     }
                   }}
                 >
+                  <ArrowDownToLine className="size-4" />
                   {t('profiles.modals.groupsEditor.actions.append')}
                 </Button>
               </Item>
-            </List>
+            </div>
 
-            <List
-              sx={{
-                width: '50%',
-                padding: '0 10px',
-              }}
-            >
+            <div className="w-1/2 px-component">
               <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
               <VirtualList
                 count={
@@ -1124,14 +1187,14 @@ export const GroupsEditorViewer = (props: Props) => {
                 renderItem={renderItem}
                 style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
               />
-            </List>
+            </div>
           </>
         ) : (
           <MonacoEditor
             height="100%"
             language="yaml"
             value={currData}
-            theme={themeMode === 'light' ? 'light' : 'vs-dark'}
+            theme={isDark ? 'vs-dark' : 'light'}
             onMount={(editorInstance) => {
               editorRef.current = editorInstance
             }}
@@ -1158,21 +1221,15 @@ export const GroupsEditorViewer = (props: Props) => {
             onChange={(value) => setCurrData(value ?? '')}
           />
         )}
-      </DialogContent>
+      </div>
 
-      <DialogActions>
-        <Button onClick={onClose} variant="outlined">
+      <DialogFooter>
+        <Button variant="outline" onClick={onClose}>
           {t('shared.actions.cancel')}
         </Button>
 
-        <Button onClick={handleSave} variant="contained">
-          {t('shared.actions.save')}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        <Button onClick={handleSave}>{t('shared.actions.save')}</Button>
+      </DialogFooter>
+    </BaseDialog>
   )
 }
-
-const Item = styled(ListItem)(() => ({
-  padding: '5px 2px',
-}))

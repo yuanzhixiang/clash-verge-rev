@@ -1,52 +1,19 @@
-import { alpha, Box, styled, Typography } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 
+import { cn } from '@/lib/utils'
 import type { RuntimeRule } from '@/types/rule'
 
-const Item = styled(Box)(({ theme }) => ({
-  display: 'grid',
-  gridTemplateColumns: 'var(--rules-grid-columns)',
-  alignItems: 'center',
-  boxSizing: 'border-box',
-  width: '100%',
-  height: 32,
-  color: theme.palette.text.primary,
-  cursor: 'default',
-  outline: 'none',
-  transition: 'background-color 120ms ease',
-  '&[data-striped="true"]': {
-    backgroundColor: alpha(theme.palette.text.primary, 0.022),
-  },
-  '&:hover': {
-    backgroundColor: alpha(theme.palette.text.primary, 0.06),
-  },
-  '&[data-selected="true"]': {
-    backgroundColor: alpha(theme.palette.text.primary, 0.105),
-  },
-  '&:focus-visible': {
-    outline: `2px solid ${theme.palette.primary.main}`,
-    outlineOffset: -2,
-  },
-}))
-
-const Cell = styled(Typography)({
-  minWidth: 0,
-  padding: '0 8px',
-  overflow: 'hidden',
-  fontSize: 13,
-  lineHeight: '32px',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-  userSelect: 'text',
-})
-
+// 命中策略哈希配色：仅使用语义 token（缺少 secondary/purple token，
+// 以 accent-strong 顶替原 MUI secondary 槽位，纯装饰性差异）。
 const POLICY_COLORS = [
-  'primary.main',
-  'secondary.main',
-  'info.main',
-  'warning.main',
-  'success.main',
+  'var(--color-accent)',
+  'var(--color-info)',
+  'var(--color-warning)',
+  'var(--color-success)',
+  'var(--color-accent-strong)',
 ]
+
+const cellBase = 'min-w-0 truncate select-text px-2 text-[13px] leading-8'
 
 interface Props {
   value: RuntimeRule
@@ -57,8 +24,8 @@ interface Props {
 }
 
 const parseColor = (text: string) => {
-  if (text === 'REJECT' || text === 'REJECT-DROP') return 'error.main'
-  if (text === 'DIRECT') return 'text.primary'
+  if (text === 'REJECT' || text === 'REJECT-DROP') return 'var(--color-danger)'
+  if (text === 'DIRECT') return 'var(--color-text-primary)'
 
   let sum = 0
   for (let i = 0; i < text.length; i++) {
@@ -80,7 +47,7 @@ const RuleItem = ({
   const usedLabel = used == null ? '—' : String(used)
 
   return (
-    <Item
+    <div
       role="row"
       tabIndex={0}
       aria-selected={selected}
@@ -101,33 +68,54 @@ const RuleItem = ({
           onSelect(value)
         }
       }}
+      className={cn(
+        'box-border grid h-8 w-full cursor-default items-center outline-none transition-colors',
+        'grid-cols-[var(--rules-grid-columns)] text-[var(--color-text-primary)]',
+        'data-[selected=false]:data-[striped=true]:bg-[color-mix(in_srgb,var(--color-text-primary)_2%,transparent)]',
+        'data-[selected=false]:hover:bg-[var(--color-bg-hover)]',
+        'data-[selected=true]:bg-[var(--color-bg-active)]',
+        'focus-visible:-outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]',
+      )}
     >
-      <Cell
+      <div
         role="cell"
-        color="text.secondary"
         title={String(value.index)}
-        sx={{ textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}
+        className={cn(
+          cellBase,
+          'text-center tabular-nums text-[var(--color-text-secondary)]',
+        )}
       >
         {value.index}
-      </Cell>
-      <Cell role="cell" title={value.type} sx={{ fontWeight: 560 }}>
+      </div>
+      <div
+        role="cell"
+        title={value.type}
+        className={cn(cellBase, 'font-[560]')}
+      >
         {value.type}
-      </Cell>
-      <Cell role="cell" title={payload}>
+      </div>
+      <div role="cell" title={payload} className={cellBase}>
         {payload}
-      </Cell>
-      <Cell role="cell" title={value.proxy} color={parseColor(value.proxy)}>
+      </div>
+      <div
+        role="cell"
+        title={value.proxy}
+        className={cellBase}
+        style={{ color: parseColor(value.proxy) }}
+      >
         {value.proxy}
-      </Cell>
-      <Cell
+      </div>
+      <div
         role="cell"
         title={usedLabel}
-        color="text.secondary"
-        sx={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}
+        className={cn(
+          cellBase,
+          'text-right tabular-nums text-[var(--color-text-secondary)]',
+        )}
       >
         {usedLabel}
-      </Cell>
-    </Item>
+      </div>
+    </div>
   )
 }
 

@@ -1,7 +1,8 @@
-import { Box, Button, Typography } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+
+import { Button } from '@/components/ui/button'
 
 interface Props {
   onChange: (file: File, value: string) => void
@@ -36,10 +37,10 @@ export const FileInput = (props: Props) => {
   })
 
   return (
-    <Box sx={{ mt: 2, mb: 1, display: 'flex', alignItems: 'center' }}>
+    <div className="mt-inset mb-component flex items-center">
       <Button
-        variant="outlined"
-        sx={{ flex: 'none' }}
+        variant="outline"
+        className="flex-none"
         onClick={() => inputRef.current?.click()}
       >
         {t('profiles.components.fileInput.chooseFile')}
@@ -49,13 +50,13 @@ export const FileInput = (props: Props) => {
         type="file"
         accept=".yaml,.yml"
         ref={inputRef}
-        style={{ display: 'none' }}
+        className="hidden"
         onChange={onFileInput}
       />
 
-      <Typography noWrap sx={{ ml: 1 }}>
+      <p className="ml-component min-w-0 truncate">
         {loading ? 'Loading...' : fileName}
-      </Typography>
-    </Box>
+      </p>
+    </div>
   )
 }

@@ -1,16 +1,12 @@
-import {
-  DirectionsRounded,
-  LanguageRounded,
-  MultipleStopRounded,
-} from '@mui/icons-material'
-import { Box, Paper, Stack, Typography } from '@mui/material'
 import { useLockFn } from 'ahooks'
+import { ArrowLeftRight, Globe, Signpost } from 'lucide-react'
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { type BaseConfig, closeAllConnections } from 'tauri-plugin-mihomo-api'
 
 import { useClashMode, useRuntimeConfig } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
+import { cn } from '@/lib/utils'
 import {
   useAppRefreshers,
   useClashConfigData,
@@ -51,9 +47,9 @@ const MODE_META: Record<
 }
 
 const MODE_ICONS: Record<ClashMode, ReactNode> = {
-  rule: <MultipleStopRounded fontSize="small" />,
-  global: <LanguageRounded fontSize="small" />,
-  direct: <DirectionsRounded fontSize="small" />,
+  rule: <ArrowLeftRight className="size-5" />,
+  global: <Globe className="size-5" />,
+  direct: <Signpost className="size-5" />,
 }
 
 export const ClashModeCard = () => {
@@ -122,108 +118,43 @@ export const ClashModeCard = () => {
     setOptimisticMode(null)
   })
 
-  // 按钮样式
-  const buttonStyles = (mode: ClashMode) => ({
-    cursor: 'pointer',
-    px: 2,
-    py: 1.2,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 1,
-    bgcolor: mode === currentMode ? 'primary.main' : 'background.paper',
-    color: mode === currentMode ? 'primary.contrastText' : 'text.primary',
-    borderRadius: 'var(--radius-control)',
-    transition: 'all 0.2s ease-in-out',
-    position: 'relative',
-    overflow: 'visible',
-    '&:hover': {
-      transform: 'translateY(-1px)',
-      boxShadow: 1,
-    },
-    '&:active': {
-      transform: 'translateY(1px)',
-    },
-    '&::after':
-      mode === currentMode
-        ? {
-            content: '""',
-            position: 'absolute',
-            bottom: -16,
-            left: '50%',
-            width: 2,
-            height: 16,
-            bgcolor: 'primary.main',
-            transform: 'translateX(-50%)',
-          }
-        : {},
-  })
-
-  // 描述样式
-  const descriptionStyles = {
-    width: '95%',
-    textAlign: 'center',
-    color: 'text.secondary',
-    p: 0.8,
-    borderRadius: 'var(--radius-compact)',
-    borderColor: 'primary.main',
-    borderWidth: 1,
-    borderStyle: 'solid',
-    backgroundColor: 'background.paper',
-    wordBreak: 'break-word',
-    hyphens: 'auto',
-  }
-
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+    <div className="flex w-full flex-col">
       {/* 模式选择按钮组 */}
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          py: 1,
-          position: 'relative',
-          zIndex: 2,
-        }}
-      >
-        {CLASH_MODES.map((mode) => (
-          <Paper
-            key={mode}
-            elevation={mode === currentMode ? 2 : 0}
-            onClick={() => onChangeMode(mode)}
-            sx={buttonStyles(mode)}
-          >
-            {MODE_ICONS[mode]}
-            <Typography
-              variant="body2"
-              sx={{
-                textTransform: 'capitalize',
-                fontWeight: mode === currentMode ? 600 : 400,
-              }}
+      <div className="relative z-[2] flex justify-center gap-component py-component">
+        {CLASH_MODES.map((mode) => {
+          const selected = mode === currentMode
+          return (
+            <div
+              key={mode}
+              onClick={() => onChangeMode(mode)}
+              className={cn(
+                'relative flex cursor-pointer items-center justify-center gap-component rounded-[var(--radius-control)] px-inset py-component transition-all duration-[var(--duration-base)] ease-in-out hover:-translate-y-px active:translate-y-px',
+                selected
+                  ? "bg-[var(--color-accent)] text-[var(--color-text-on-accent)] shadow-[var(--shadow-card)] after:absolute after:-bottom-4 after:left-1/2 after:h-4 after:w-0.5 after:-translate-x-1/2 after:bg-[var(--color-accent)] after:content-['']"
+                  : 'bg-[var(--color-bg-card)] text-[var(--color-text-primary)] hover:shadow-[var(--shadow-card)]',
+              )}
             >
-              {t(MODE_META[mode].label)}
-            </Typography>
-          </Paper>
-        ))}
-      </Stack>
+              {MODE_ICONS[mode]}
+              <span
+                className={cn(
+                  'text-body capitalize',
+                  selected ? 'font-semibold' : 'font-normal',
+                )}
+              >
+                {t(MODE_META[mode].label)}
+              </span>
+            </div>
+          )
+        })}
+      </div>
 
       {/* 说明文本区域 */}
-      <Box
-        sx={{
-          width: '100%',
-          my: 1,
-          position: 'relative',
-          display: 'flex',
-          justifyContent: 'center',
-          overflow: 'visible',
-        }}
-      >
-        <Typography variant="caption" component="div" sx={descriptionStyles}>
+      <div className="relative my-component flex w-full justify-center">
+        <div className="w-[95%] break-words hyphens-auto rounded-[var(--radius-compact)] border border-[var(--color-accent)] bg-[var(--color-bg-card)] p-compact text-center text-caption text-[var(--color-text-secondary)]">
           {modeDescription}
-        </Typography>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   )
 }

@@ -1,25 +1,16 @@
-import {
-  RestartAltRounded,
-  SwitchAccessShortcutRounded,
-} from '@mui/icons-material'
-import {
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  List,
-  ListItemButton,
-  ListItemText,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
+import { ArrowBigUpDash, Loader2, RotateCcw } from 'lucide-react'
 import type { Ref } from 'react'
 import { useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { closeAllConnections, upgradeCore } from 'tauri-plugin-mihomo-api'
 
 import { BaseDialog, DialogRef } from '@/components/base'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { useClash, useClashInfo } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
+import { cn } from '@/lib/utils'
 import { changeClashCore, restartCore } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 
@@ -117,34 +108,36 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
     <BaseDialog
       open={open}
       title={
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div className="flex items-center justify-between">
           {t('settings.sections.clash.form.fields.clashCore')}
-          <Box>
+          <div className="flex items-center">
             <Button
-              variant="contained"
-              size="small"
-              startIcon={<SwitchAccessShortcutRounded />}
-              loadingPosition="start"
-              loading={upgrading}
-              disabled={restarting || changingCore !== null}
-              sx={{ marginRight: '8px' }}
+              size="sm"
+              className="mr-component"
+              disabled={upgrading || restarting || changingCore !== null}
               onClick={onUpgrade}
             >
+              {upgrading ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <ArrowBigUpDash />
+              )}
               {t('shared.actions.upgrade')}
             </Button>
             <Button
-              variant="contained"
-              size="small"
-              startIcon={<RestartAltRounded />}
-              loadingPosition="start"
-              loading={restarting}
-              disabled={upgrading}
+              size="sm"
+              disabled={restarting || upgrading}
               onClick={onRestart}
             >
+              {restarting ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <RotateCcw />
+              )}
               {t('shared.actions.restart')}
             </Button>
-          </Box>
-        </Box>
+          </div>
+        </div>
       }
       contentSx={{
         pb: 0,
@@ -159,23 +152,34 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
     >
-      <List component="nav">
+      <nav className="flex flex-col gap-inline">
         {VALID_CORE.map((each) => (
-          <ListItemButton
+          <button
             key={each.core}
-            selected={each.core === clash_core}
+            type="button"
             onClick={() => onCoreChange(each.core)}
             disabled={changingCore !== null || restarting || upgrading}
-          >
-            <ListItemText primary={each.name} secondary={`/${each.core}`} />
-            {changingCore === each.core ? (
-              <CircularProgress size={20} sx={{ mr: 1 }} />
-            ) : (
-              <Chip label={t(each.chipKey)} size="small" />
+            className={cn(
+              'flex w-full items-center justify-between rounded-[var(--radius-control)] px-inset py-component text-left transition-colors hover:bg-[var(--color-bg-hover)] disabled:pointer-events-none disabled:opacity-50',
+              each.core === clash_core && 'bg-[var(--color-bg-active)]',
             )}
-          </ListItemButton>
+          >
+            <div>
+              <p className="text-sm text-[var(--color-text-primary)]">
+                {each.name}
+              </p>
+              <p className="text-xs text-[var(--color-text-secondary)]">
+                /{each.core}
+              </p>
+            </div>
+            {changingCore === each.core ? (
+              <Loader2 className="mr-component size-5 animate-spin" />
+            ) : (
+              <Badge variant="secondary">{t(each.chipKey)}</Badge>
+            )}
+          </button>
         ))}
-      </List>
+      </nav>
     </BaseDialog>
   )
 }

@@ -1,41 +1,27 @@
-import {
-  CloudUploadOutlined,
-  DnsOutlined,
-  EventOutlined,
-  LaunchOutlined,
-  SpeedOutlined,
-  StorageOutlined,
-  UpdateOutlined,
-} from '@mui/icons-material'
-import {
-  Box,
-  Button,
-  LinearProgress,
-  Link,
-  Stack,
-  Typography,
-  alpha,
-  keyframes,
-  useTheme,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
+import {
+  Calendar,
+  CloudUpload,
+  Database,
+  ExternalLink,
+  Gauge,
+  RefreshCw,
+  Server,
+} from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
+import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
+import { cn } from '@/lib/utils'
 import { useAppRefreshers } from '@/providers/app-data-context'
 import { openWebUrl, updateProfile } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import parseTraffic from '@/utils/parse-traffic'
 
 import { EnhancedCard } from './enhanced-card'
-
-// 定义旋转动画
-const round = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-`
 
 // 辅助函数解析URL和过期时间
 const parseUrl = (url?: string) => {
@@ -86,7 +72,6 @@ const ProfileDetails = ({
   updating: boolean
 }) => {
   const { t } = useTranslation()
-  const theme = useTheme()
 
   const usedTraffic = useMemo(() => {
     if (!current.extra) return 0
@@ -100,147 +85,96 @@ const ProfileDetails = ({
   }, [current.extra, usedTraffic])
 
   return (
-    <Box>
-      <Stack spacing={2}>
+    <div>
+      <div className="flex flex-col gap-inset">
         {current.url && (
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            <DnsOutlined fontSize="small" color="action" />
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              noWrap
-              sx={{ display: 'flex', alignItems: 'center' }}
-            >
-              <span style={{ flexShrink: 0 }}>{t('shared.labels.from')}: </span>
+          <div className="flex items-center gap-component">
+            <Server className="size-5 shrink-0 text-[var(--color-text-secondary)]" />
+            <div className="flex min-w-0 items-center overflow-hidden text-body text-[var(--color-text-secondary)] whitespace-nowrap">
+              <span className="shrink-0">{t('shared.labels.from')}: </span>
               {current.home ? (
-                <Link
-                  component="button"
+                <button
+                  type="button"
                   onClick={() => current.home && openWebUrl(current.home)}
-                  sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    minWidth: 0,
-                    maxWidth: 'calc(100% - 40px)',
-                    ml: 0.5,
-                    fontWeight: 'medium',
-                  }}
+                  className="ml-inline inline-flex min-w-0 max-w-[calc(100%-40px)] items-center font-medium text-[var(--color-accent)] hover:underline"
                   title={parseUrl(current.url)}
                 >
-                  <Typography
-                    component="span"
-                    sx={{
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      minWidth: 0,
-                      flex: 1,
-                    }}
-                  >
+                  <span className="min-w-0 flex-1 truncate">
                     {parseUrl(current.url)}
-                  </Typography>
-                  <LaunchOutlined
-                    fontSize="inherit"
-                    sx={{
-                      ml: 0.5,
-                      fontSize: '0.8rem',
-                      opacity: 0.7,
-                      flexShrink: 0,
-                    }}
-                  />
-                </Link>
+                  </span>
+                  <ExternalLink className="ml-inline size-3 shrink-0 opacity-70" />
+                </button>
               ) : (
-                <Typography
-                  component="span"
-                  sx={{
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    minWidth: 0,
-                    flex: 1,
-                    ml: 0.5,
-                    fontWeight: 'medium',
-                  }}
+                <span
+                  className="ml-inline min-w-0 flex-1 truncate font-medium"
                   title={parseUrl(current.url)}
                 >
                   {parseUrl(current.url)}
-                </Typography>
+                </span>
               )}
-            </Typography>
-          </Stack>
+            </div>
+          </div>
         )}
 
         {current.updated && (
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            <UpdateOutlined
-              fontSize="small"
-              color="action"
-              sx={{
-                cursor: 'pointer',
-                animation: updating ? `${round} 1.5s linear infinite` : 'none',
-              }}
+          <div className="flex items-center gap-component">
+            <RefreshCw
+              className={cn(
+                'size-5 shrink-0 cursor-pointer text-[var(--color-text-secondary)]',
+                updating && 'animate-[spin_1.5s_linear_infinite]',
+              )}
               onClick={onUpdateProfile}
             />
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ cursor: 'pointer' }}
+            <p
+              className="cursor-pointer text-body text-[var(--color-text-secondary)]"
               onClick={onUpdateProfile}
             >
               {t('shared.labels.updateTime')}:{' '}
-              <Box component="span" sx={{ fontWeight: 'medium' }}>
+              <span className="font-medium">
                 {dayjs(current.updated * 1000).format('YYYY-MM-DD HH:mm')}
-              </Box>
-            </Typography>
-          </Stack>
+              </span>
+            </p>
+          </div>
         )}
 
         {current.extra && (
           <>
-            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-              <SpeedOutlined fontSize="small" color="action" />
-              <Typography variant="body2" color="text.secondary">
+            <div className="flex items-center gap-component">
+              <Gauge className="size-5 shrink-0 text-[var(--color-text-secondary)]" />
+              <p className="text-body text-[var(--color-text-secondary)]">
                 {t('shared.labels.usedTotal')}:{' '}
-                <Box component="span" sx={{ fontWeight: 'medium' }}>
+                <span className="font-medium">
                   {parseTraffic(usedTraffic)} /{' '}
                   {parseTraffic(current.extra.total)}
-                </Box>
-              </Typography>
-            </Stack>
+                </span>
+              </p>
+            </div>
 
             {current.extra.expire > 0 && (
-              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                <EventOutlined fontSize="small" color="action" />
-                <Typography variant="body2" color="text.secondary">
+              <div className="flex items-center gap-component">
+                <Calendar className="size-5 shrink-0 text-[var(--color-text-secondary)]" />
+                <p className="text-body text-[var(--color-text-secondary)]">
                   {t('shared.labels.expireTime')}:{' '}
-                  <Box component="span" sx={{ fontWeight: 'medium' }}>
+                  <span className="font-medium">
                     {parseExpire(current.extra.expire)}
-                  </Box>
-                </Typography>
-              </Stack>
+                  </span>
+                </p>
+              </div>
             )}
 
-            <Box sx={{ mt: 1 }}>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mb: 0.5, display: 'block' }}
-              >
+            <div className="mt-component">
+              <span className="mb-inline block text-caption text-[var(--color-text-secondary)]">
                 {trafficPercentage}%
-              </Typography>
-              <LinearProgress
-                variant="determinate"
+              </span>
+              <Progress
                 value={trafficPercentage}
-                sx={{
-                  height: 8,
-                  borderRadius: 'var(--radius-compact)',
-                  backgroundColor: alpha(theme.palette.primary.main, 0.12),
-                }}
+                className="h-2 rounded-[var(--radius-compact)] bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)]"
               />
-            </Box>
+            </div>
           </>
         )}
-      </Stack>
-    </Box>
+      </div>
+    </div>
   )
 }
 
@@ -249,29 +183,18 @@ const EmptyProfile = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation()
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        py: 2.4,
-        cursor: 'pointer',
-        '&:hover': { bgcolor: 'action.hover' },
-        borderRadius: 'var(--radius-container)',
-      }}
+    <div
+      className="flex cursor-pointer flex-col items-center justify-center rounded-[var(--radius-container)] py-5 hover:bg-[var(--color-bg-hover)]"
       onClick={onClick}
     >
-      <CloudUploadOutlined
-        sx={{ fontSize: 60, color: 'primary.main', mb: 2 }}
-      />
-      <Typography variant="h6" gutterBottom>
+      <CloudUpload className="mb-inset size-15 text-[var(--color-accent)]" />
+      <h3 className="mb-component text-h2 font-medium">
         {t('profiles.page.actions.import')} {t('profiles.page.title')}
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
+      </h3>
+      <p className="text-body text-[var(--color-text-secondary)]">
         {t('profiles.components.card.labels.clickToImport')}
-      </Typography>
-    </Box>
+      </p>
+    </div>
   )
 }
 
@@ -315,39 +238,15 @@ export const HomeProfileCard = ({
     if (!current.home) return current.name
 
     return (
-      <Link
-        component="button"
-        variant="h6"
+      <button
+        type="button"
         onClick={() => current.home && openWebUrl(current.home)}
-        sx={{
-          color: 'inherit',
-          textDecoration: 'none',
-          display: 'flex',
-          alignItems: 'center',
-          minWidth: 0,
-          maxWidth: '100%',
-          fontWeight: 'medium',
-          fontSize: 18,
-          '& > span': {
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            flex: 1,
-          },
-        }}
+        className="flex min-w-0 max-w-full items-center text-lg font-medium text-inherit [&>span]:min-w-0 [&>span]:flex-1 [&>span]:truncate"
         title={current.name}
       >
         <span>{current.name}</span>
-        <LaunchOutlined
-          fontSize="inherit"
-          sx={{
-            ml: 0.5,
-            fontSize: '0.8rem',
-            opacity: 0.7,
-            flexShrink: 0,
-          }}
-        />
-      </Link>
+        <ExternalLink className="ml-inline size-3 shrink-0 opacity-70" />
+      </button>
     )
   }, [current, t])
 
@@ -357,13 +256,13 @@ export const HomeProfileCard = ({
 
     return (
       <Button
-        variant="outlined"
-        size="small"
+        variant="outline"
+        size="sm"
         onClick={goToProfiles}
-        endIcon={<StorageOutlined fontSize="small" />}
-        sx={{ borderRadius: 'var(--radius-control)' }}
+        className="rounded-[var(--radius-control)]"
       >
         {t('layout.components.navigation.tabs.profiles')}
+        <Database className="size-4" />
       </Button>
     )
   }, [current, goToProfiles, t])
@@ -371,7 +270,7 @@ export const HomeProfileCard = ({
   return (
     <EnhancedCard
       title={cardTitle}
-      icon={<CloudUploadOutlined />}
+      icon={<CloudUpload className="size-5" />}
       iconColor="info"
       action={cardAction}
     >

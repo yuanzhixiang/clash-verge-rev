@@ -1,4 +1,3 @@
-import { Box } from '@mui/material'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -76,7 +75,7 @@ export const BackupWebdavDialog = ({
       onCancel={onClose}
       onClose={onClose}
     >
-      <Box sx={{ position: 'relative' }}>
+      <div className="relative">
         <BaseLoadingOverlay isLoading={loading} />
         <BackupConfigViewer
           setLoading={handleLoading}
@@ -88,7 +87,7 @@ export const BackupWebdavDialog = ({
           onRefresh={refreshWebdav}
           onInit={refreshSilently}
         />
-      </Box>
+      </div>
     </BaseDialog>
   )
 }

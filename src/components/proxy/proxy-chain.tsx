@@ -15,25 +15,16 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import {
-  ArrowDownward,
-  Delete as DeleteIcon,
-  DragIndicator,
-  Link,
-  LinkOff,
-  WarningRounded,
-} from '@mui/icons-material'
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  IconButton,
-  Paper,
-  Typography,
-  useTheme,
-} from '@mui/material'
 import yaml from 'js-yaml'
+import {
+  ArrowDown,
+  GripVertical,
+  Info,
+  Link,
+  Trash2,
+  TriangleAlert,
+  Unlink,
+} from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -42,6 +33,9 @@ import {
 } from 'tauri-plugin-mihomo-api'
 
 import { TooltipIcon } from '@/components/base'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
 import { updateProxyChainConfigInRuntime } from '@/services/cmds'
 import { debugLog } from '@/utils/debug'
@@ -100,7 +94,6 @@ const SortableItem = ({
   isLast,
   onRemove,
 }: SortableItemProps) => {
-  const theme = useTheme()
   const { t } = useTranslation()
   const {
     attributes,
@@ -111,135 +104,97 @@ const SortableItem = ({
     isDragging,
   } = useSortable({ id: proxy.id })
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  }
-
   const roleLabel = isFirst
     ? t('proxies.page.chain.entryNode')
     : isLast
       ? t('proxies.page.chain.exitNode')
       : undefined
 
-  const roleColor = isFirst
-    ? theme.palette.success.main
+  const roleColorVar = isFirst
+    ? 'var(--color-success)'
     : isLast
-      ? theme.palette.warning.main
+      ? 'var(--color-warning)'
+      : undefined
+
+  const delayBg =
+    proxy.delay !== undefined
+      ? proxy.delay > 0 && proxy.delay < 200
+        ? 'var(--color-success)'
+        : proxy.delay > 0 && proxy.delay < 800
+          ? 'var(--color-warning)'
+          : 'var(--color-danger)'
       : undefined
 
   return (
-    <Box
+    <div
       ref={setNodeRef}
-      style={style}
-      sx={{
-        mb: 0,
-        display: 'flex',
-        alignItems: 'center',
-        p: 1,
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
         backgroundColor: isDragging
-          ? theme.palette.action.selected
-          : theme.palette.background.default,
-        borderRadius: 'var(--radius-compact)',
-        border: roleColor
-          ? `1.5px solid ${roleColor}`
-          : `1px solid ${theme.palette.divider}`,
-        boxShadow: isDragging ? theme.shadows[4] : theme.shadows[1],
-        transition: 'box-shadow 0.2s, background-color 0.2s',
+          ? 'var(--color-bg-active)'
+          : 'var(--color-bg-card)',
+        border: roleColorVar
+          ? `1.5px solid ${roleColorVar}`
+          : '1px solid var(--color-border)',
       }}
+      className={cn(
+        'mb-0 flex items-center rounded-[var(--radius-compact)] p-component transition-[box-shadow,background-color] duration-200',
+        isDragging
+          ? 'shadow-[var(--shadow-card-hover)]'
+          : 'shadow-[var(--shadow-card)]',
+      )}
     >
-      <Box
+      <div
         {...attributes}
         {...listeners}
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          mr: 1,
-          color: theme.palette.text.secondary,
-          cursor: 'grab',
-          '&:active': {
-            cursor: 'grabbing',
-          },
-        }}
+        className="mr-component flex cursor-grab items-center text-[var(--color-text-secondary)] active:cursor-grabbing"
       >
-        <DragIndicator />
-      </Box>
+        <GripVertical className="size-5" />
+      </div>
 
       {roleLabel ? (
-        <Chip
-          label={roleLabel}
-          size="small"
-          sx={{
-            mr: 1,
-            fontWeight: 700,
-            color: '#fff',
-            backgroundColor: roleColor,
-          }}
-        />
+        <Badge
+          className="mr-component font-bold text-[var(--color-text-on-accent)]"
+          style={{ backgroundColor: roleColorVar }}
+        >
+          {roleLabel}
+        </Badge>
       ) : (
-        <Chip
-          label={`${index + 1}`}
-          size="small"
-          color="primary"
-          sx={{ mr: 1, minWidth: 32 }}
-        />
+        <Badge className="mr-component min-w-8 justify-center">
+          {index + 1}
+        </Badge>
       )}
 
-      <Typography
-        variant="body2"
-        sx={{
-          flex: 1,
-          fontWeight: 500,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {proxy.name}
-      </Typography>
+      <p className="flex-1 truncate text-[14px] font-medium">{proxy.name}</p>
 
       {proxy.type && (
-        <Chip
-          label={proxy.type}
-          size="small"
-          variant="outlined"
-          sx={{ mr: 1 }}
-        />
+        <Badge variant="outline" className="mr-component">
+          {proxy.type}
+        </Badge>
       )}
 
       {proxy.delay !== undefined && (
-        <Chip
-          label={
-            proxy.delay > 0
-              ? `${proxy.delay}ms`
-              : t('shared.labels.timeout') || '超时'
-          }
-          size="small"
-          color={
-            proxy.delay > 0 && proxy.delay < 200
-              ? 'success'
-              : proxy.delay > 0 && proxy.delay < 800
-                ? 'warning'
-                : 'error'
-          }
-          sx={{ mr: 1, fontSize: '0.7rem', minWidth: 50 }}
-        />
+        <Badge
+          className="mr-component min-w-[50px] justify-center border-transparent text-[0.7rem] text-[var(--color-text-on-accent)]"
+          style={{ backgroundColor: delayBg }}
+        >
+          {proxy.delay > 0
+            ? `${proxy.delay}ms`
+            : t('shared.labels.timeout') || '超时'}
+        </Badge>
       )}
 
-      <IconButton
-        size="small"
+      <Button
+        variant="ghost"
+        size="icon-sm"
         onClick={() => onRemove(proxy.id)}
-        sx={{
-          color: theme.palette.error.main,
-          '&:hover': {
-            backgroundColor: theme.palette.error.light + '20',
-          },
-        }}
+        className="text-[var(--color-danger)] hover:bg-[var(--color-danger-subtle)]"
       >
-        <DeleteIcon fontSize="small" />
-      </IconButton>
-    </Box>
+        <Trash2 />
+      </Button>
+    </div>
   )
 }
 
@@ -251,7 +206,6 @@ export const ProxyChain = ({
   mode,
   selectedGroup,
 }: ProxyChainProps) => {
-  const theme = useTheme()
   const { t } = useTranslation()
   const chainWarning = t('proxies.page.chain.warning')
   const { proxies } = useProxiesData()
@@ -485,36 +439,23 @@ export const ProxyChain = ({
   }, [proxies?.records]) // 只依赖proxies.records
 
   return (
-    <Paper
-      elevation={1}
-      sx={{
-        minHeight: 360,
-        p: 2,
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          mb: 2,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-          <Typography variant="h6">{t('proxies.page.chain.header')}</Typography>
+    <div className="flex min-h-[360px] flex-col rounded-[var(--radius-card)] bg-[var(--color-bg-card)] p-inset shadow-[var(--shadow-card)]">
+      <div className="mb-inset flex items-center justify-between">
+        <div className="flex items-center gap-compact">
+          <h6 className="text-[1.25rem] font-medium">
+            {t('proxies.page.chain.header')}
+          </h6>
           <TooltipIcon
             title={chainWarning}
-            icon={WarningRounded}
-            color="warning"
-            sx={{ p: 0.25 }}
+            icon={TriangleAlert}
+            className="size-7 text-[var(--color-warning)]"
           />
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        </div>
+        <div className="flex items-center gap-component">
           {proxyChain.length > 0 && (
-            <IconButton
-              size="small"
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={() => {
                 updateProxyChainConfigInRuntime(null)
                 localStorage.removeItem('proxy-chain-group')
@@ -522,33 +463,28 @@ export const ProxyChain = ({
                 localStorage.removeItem('proxy-chain-items')
                 onUpdateChain([])
               }}
-              sx={{
-                color: theme.palette.error.main,
-                '&:hover': {
-                  backgroundColor: theme.palette.error.light + '20',
-                },
-              }}
+              className="text-[var(--color-danger)] hover:bg-[var(--color-danger-subtle)]"
               title={
                 t('proxies.page.actions.clearChainConfig') || '删除链式配置'
               }
             >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
+              <Trash2 />
+            </Button>
           )}
           <Button
-            size="small"
-            variant="contained"
-            startIcon={isConnected ? <LinkOff /> : <Link />}
+            size="sm"
             onClick={handleConnect}
             disabled={
               isConnecting ||
               proxyChain.length < 2 ||
               (mode !== 'global' && !selectedGroup)
             }
-            color={isConnected ? 'error' : 'success'}
-            sx={{
-              minWidth: 90,
-            }}
+            className={cn(
+              'min-w-[90px] text-[var(--color-text-on-accent)] hover:opacity-90',
+              isConnected
+                ? 'bg-[var(--color-danger)]'
+                : 'bg-[var(--color-success)]',
+            )}
             title={
               proxyChain.length < 2
                 ? t('proxies.page.chain.minimumNodes') ||
@@ -556,39 +492,43 @@ export const ProxyChain = ({
                 : undefined
             }
           >
+            {isConnected ? <Unlink /> : <Link />}
             {isConnecting
               ? t('proxies.page.actions.connecting') || '连接中...'
               : isConnected
                 ? t('proxies.page.actions.disconnect') || '断开'
                 : t('proxies.page.actions.connect') || '连接'}
           </Button>
-        </Box>
-      </Box>
+        </div>
+      </div>
 
-      <Alert
-        severity={proxyChain.length === 1 ? 'warning' : 'info'}
-        sx={{ mb: 2 }}
+      <div
+        className={cn(
+          'mb-inset flex items-center gap-component rounded-[var(--radius-compact)] px-inset py-compact text-[14px]',
+          proxyChain.length === 1
+            ? 'bg-[var(--color-warning-subtle)] text-[var(--color-warning)]'
+            : 'bg-[var(--color-info-subtle)] text-[var(--color-info)]',
+        )}
       >
-        {proxyChain.length === 1
-          ? t('proxies.page.chain.minimumNodesHint') ||
-            '链式代理至少需要2个节点，请再添加一个节点。'
-          : t('proxies.page.chain.instruction') ||
-            '按顺序点击节点添加到代理链中'}
-      </Alert>
+        {proxyChain.length === 1 ? (
+          <TriangleAlert className="size-5 shrink-0" />
+        ) : (
+          <Info className="size-5 shrink-0" />
+        )}
+        <span>
+          {proxyChain.length === 1
+            ? t('proxies.page.chain.minimumNodesHint') ||
+              '链式代理至少需要2个节点，请再添加一个节点。'
+            : t('proxies.page.chain.instruction') ||
+              '按顺序点击节点添加到代理链中'}
+        </span>
+      </div>
 
-      <Box sx={{ minHeight: 160, flex: 1 }}>
+      <div className="min-h-[160px] flex-1">
         {proxyChain.length === 0 ? (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              color: theme.palette.text.secondary,
-            }}
-          >
-            <Typography>{t('proxies.page.chain.empty')}</Typography>
-          </Box>
+          <div className="flex h-full items-center justify-center text-[var(--color-text-secondary)]">
+            <p>{t('proxies.page.chain.empty')}</p>
+          </div>
         ) : (
           <DndContext
             sensors={sensors}
@@ -599,15 +539,9 @@ export const ProxyChain = ({
               items={proxyChain.map((proxy) => proxy.id)}
               strategy={verticalListSortingStrategy}
             >
-              <Box
-                sx={{
-                  borderRadius: 'var(--radius-compact)',
-                  minHeight: 60,
-                  p: 1,
-                }}
-              >
+              <div className="min-h-[60px] rounded-[var(--radius-compact)] p-component">
                 {proxyChain.map((proxy, index) => (
-                  <Box key={proxy.id}>
+                  <div key={proxy.id}>
                     <SortableItem
                       proxy={proxy}
                       index={index}
@@ -618,29 +552,17 @@ export const ProxyChain = ({
                       onRemove={handleRemoveProxy}
                     />
                     {index < proxyChain.length - 1 && (
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          justifyContent: 'center',
-                          py: 0.25,
-                        }}
-                      >
-                        <ArrowDownward
-                          sx={{
-                            fontSize: 20,
-                            color: theme.palette.primary.main,
-                            opacity: 0.7,
-                          }}
-                        />
-                      </Box>
+                      <div className="flex justify-center py-0.5">
+                        <ArrowDown className="size-5 text-[var(--color-accent)] opacity-70" />
+                      </div>
                     )}
-                  </Box>
+                  </div>
                 ))}
-              </Box>
+              </div>
             </SortableContext>
           </DndContext>
         )}
-      </Box>
-    </Paper>
+      </div>
+    </div>
   )
 }

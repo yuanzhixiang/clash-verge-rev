@@ -1,27 +1,17 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import {
-  CheckBoxOutlineBlankRounded,
-  CheckBoxRounded,
-  DragIndicatorRounded,
-  MoreHorizRounded,
-  RefreshRounded,
-} from '@mui/icons-material'
-import {
-  Box,
-  Chip,
-  CircularProgress,
-  IconButton,
-  keyframes,
-  LinearProgress,
-  Menu,
-  MenuItem,
-  Typography,
-} from '@mui/material'
 import { listen } from '@tauri-apps/api/event'
 import { open } from '@tauri-apps/plugin-shell'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
+import {
+  Ellipsis,
+  GripVertical,
+  Loader2,
+  RefreshCw,
+  Square,
+  SquareCheck,
+} from 'lucide-react'
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -29,7 +19,16 @@ import { BaseDialog } from '@/components/base'
 import { EditorViewer } from '@/components/profile/editor-viewer'
 import { GroupsEditorViewer } from '@/components/profile/groups-editor-viewer'
 import { RulesEditorViewer } from '@/components/profile/rules-editor-viewer'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useEditorDocument } from '@/hooks/use-editor-document'
+import { cn } from '@/lib/utils'
 import {
   convertProfileToConf,
   getNextUpdateTime,
@@ -48,10 +47,6 @@ import parseTraffic from '@/utils/parse-traffic'
 import { ProfileBox } from './profile-box'
 import { ProxiesEditorViewer } from './proxies-editor-viewer'
 import { QrViewer } from './qr-viewer'
-const round = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-`
 
 interface Props {
   id: string
@@ -95,7 +90,7 @@ export const ProfileItem = (props: Props) => {
   })
 
   const { t } = useTranslation()
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [position, setPosition] = useState({ left: 0, top: 0 })
   const loadingCache = useLoadingCache()
   const setLoadingCache = useSetLoadingCache()
@@ -342,57 +337,57 @@ export const ProfileItem = (props: Props) => {
   })
 
   const onOpenHome = () => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     open(itemData.home ?? '')
   }
 
   const onEditInfo = () => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     onEdit()
   }
 
   const onShareQrCode = () => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     setQrOpen(true)
   }
 
   const onEditFile = () => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     setFileOpen(true)
   }
 
   const onEditRules = () => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     setRulesOpen(true)
   }
 
   const onEditProxies = () => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     setProxiesOpen(true)
   }
 
   const onEditGroups = () => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     setGroupsOpen(true)
   }
 
   const onEditMerge = () => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     setMergeOpen(true)
   }
 
   const onEditScript = () => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     setScriptOpen(true)
   }
 
   const onForceSelect = () => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     onSelect(true)
   }
 
   const onOpenFile = useLockFn(async () => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     try {
       await viewProfile(itemData.uid)
     } catch (err) {
@@ -401,7 +396,7 @@ export const ProfileItem = (props: Props) => {
   })
 
   const onRevealFile = useLockFn(async () => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     try {
       await revealProfileFile(itemData.uid)
     } catch (err) {
@@ -410,7 +405,7 @@ export const ProfileItem = (props: Props) => {
   })
 
   const runConfConversion = useLockFn(async (force: boolean) => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     setConfOverwriteConfirmOpen(false)
     setLoading(true)
     try {
@@ -438,7 +433,7 @@ export const ProfileItem = (props: Props) => {
   })
 
   const onConvertToConf = () => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     if (itemData.conf_override) {
       setConfOverwriteConfirmOpen(true)
       return
@@ -450,7 +445,7 @@ export const ProfileItem = (props: Props) => {
   /// 1 使用订阅好的代理
   /// 2 至少使用一个代理，根据订阅，如果没订阅，默认使用系统代理
   const onUpdate = useLockFn(async (type: 0 | 1 | 2): Promise<void> => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     setLoading(true)
 
     // 根据类型设置初始更新选项
@@ -594,7 +589,7 @@ export const ProfileItem = (props: Props) => {
     {
       label: menuLabels.delete,
       handler: () => {
-        setAnchorEl(null)
+        setMenuOpen(false)
         if (batchMode) {
           // If in batch mode, just toggle selection instead of showing delete confirmation
           if (onSelectionChange) {
@@ -668,7 +663,7 @@ export const ProfileItem = (props: Props) => {
     {
       label: menuLabels.delete,
       handler: () => {
-        setAnchorEl(null)
+        setMenuOpen(false)
         if (batchMode) {
           // If in batch mode, just toggle selection instead of showing delete confirmation
           if (onSelectionChange) {
@@ -761,9 +756,9 @@ export const ProfileItem = (props: Props) => {
   })
 
   return (
-    <Box
-      sx={{
-        position: 'relative',
+    <div
+      className="relative"
+      style={{
         transform: CSS.Transform.toString(transform),
         transition,
         zIndex: isDragging ? 'calc(infinity)' : undefined,
@@ -783,252 +778,187 @@ export const ProfileItem = (props: Props) => {
         onContextMenu={(event) => {
           const { clientX, clientY } = event
           setPosition({ top: clientY, left: clientX })
-          setAnchorEl(event.currentTarget as HTMLElement)
+          setMenuOpen(true)
           event.preventDefault()
         }}
       >
         {activating && (
-          <Box
-            sx={{
-              position: 'absolute',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              top: 10,
-              left: 10,
-              right: 10,
-              bottom: 2,
-              zIndex: 10,
-              backdropFilter: 'blur(2px)',
-              backgroundColor: 'rgba(0, 0, 0, 0.1)',
-            }}
-          >
-            <CircularProgress
-              color="inherit"
-              size={20}
-              sx={{
-                animation: 'pulse 1.5s ease-in-out infinite',
-              }}
-            />
-          </Box>
+          <div className="absolute top-[10px] right-[10px] bottom-[2px] left-[10px] z-10 flex items-center justify-center bg-black/10 backdrop-blur-[2px]">
+            <Loader2 className="size-5 animate-spin" />
+          </div>
         )}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: 'auto auto minmax(0, 1fr) auto auto',
-            alignItems: 'center',
-            columnGap: 1,
-          }}
-        >
+        <div className="grid grid-cols-[auto_auto_minmax(0,1fr)_auto_auto] items-center gap-x-component">
           {batchMode && (
-            <IconButton
-              size="small"
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={(event) => {
                 event.stopPropagation()
                 onSelectionChange?.()
               }}
             >
               {isSelected ? (
-                <CheckBoxRounded color="primary" />
+                <SquareCheck className="size-5 text-[var(--color-accent)]" />
               ) : (
-                <CheckBoxOutlineBlankRounded />
+                <Square className="size-5" />
               )}
-            </IconButton>
+            </Button>
           )}
 
-          <Box
+          <div
             ref={setNodeRef}
-            sx={{ display: 'flex', color: 'text.secondary', cursor: 'grab' }}
+            className="flex cursor-grab text-[var(--color-text-secondary)]"
             {...attributes}
             {...listeners}
           >
-            <DragIndicatorRounded fontSize="small" />
-          </Box>
+            <GripVertical className="size-5" />
+          </div>
 
-          <Box sx={{ minWidth: 0 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                minWidth: 0,
-                alignItems: 'center',
-                gap: 0.75,
-              }}
-            >
-              <Typography
-                component="h2"
-                noWrap
+          <div className="min-w-0">
+            <div className="flex min-w-0 items-center gap-compact">
+              <h2
                 title={`${name}${effectiveFile ? `\n${effectiveFile}` : ''}`}
-                sx={{
-                  minWidth: 0,
-                  fontSize: 14,
-                  fontWeight: 550,
-                  lineHeight: 1.35,
-                }}
+                className="min-w-0 truncate text-sm leading-[1.35] font-[550]"
               >
                 {name}
-              </Typography>
+              </h2>
               {itemData.conf_override && (
-                <Chip
-                  label="CONF Override"
-                  size="small"
-                  variant="outlined"
-                  sx={{ height: 20, flex: '0 0 auto', fontSize: 10 }}
-                />
+                <Badge
+                  variant="outline"
+                  className="h-5 shrink-0 text-[10px] font-normal"
+                >
+                  CONF Override
+                </Badge>
               )}
-            </Box>
-            <Typography
-              color="text.secondary"
-              noWrap
+            </div>
+            <p
               title={secondaryInfo || undefined}
-              sx={{
-                mt: 0.25,
-                fontFamily: effectiveFile
-                  ? 'ui-monospace, SFMono-Regular, Menlo, monospace'
-                  : undefined,
-                fontSize: 11.5,
-                lineHeight: 1.4,
-              }}
+              className={cn(
+                'mt-adjust truncate text-[11.5px] leading-[1.4] text-[var(--color-text-secondary)]',
+                effectiveFile && 'font-mono',
+              )}
             >
               {secondaryInfo}
-            </Typography>
-          </Box>
+            </p>
+          </div>
 
-          <Box
-            sx={{
-              minWidth: 150,
-              textAlign: 'right',
-              color: 'text.secondary',
-              '@media (max-width: 680px)': { display: 'none' },
-            }}
-          >
+          <div className="min-w-[150px] text-right text-[var(--color-text-secondary)] max-[680px]:hidden">
             {hasExtra && (
-              <Typography sx={{ fontSize: 11.5, lineHeight: 1.4 }}>
+              <p className="text-[11.5px] leading-[1.4]">
                 {parseTraffic(upload + download)} / {parseTraffic(total)} ·{' '}
                 {expire}
-              </Typography>
+              </p>
             )}
             {hasUrl ? (
-              <Typography
-                component="button"
+              <button
+                type="button"
                 title={
                   showNextUpdate
                     ? t('profiles.components.profileItem.tooltips.showLast')
                     : `${t('shared.labels.updateTime')}: ${parseExpire(updated)}\n${t('profiles.components.profileItem.tooltips.showNext')}`
                 }
                 onClick={toggleUpdateTimeDisplay}
-                sx={{
-                  m: 0,
-                  p: 0,
-                  border: 0,
-                  bgcolor: 'transparent',
-                  color: 'inherit',
-                  font: 'inherit',
-                  fontSize: 11.5,
-                  cursor: 'pointer',
-                }}
+                className="cursor-pointer border-0 bg-transparent p-0 text-[11.5px] text-inherit [font-family:inherit]"
               >
                 {showNextUpdate
                   ? nextUpdateTime
                   : updated > 0
                     ? dayjs(updated * 1000).fromNow()
                     : parseExpire(updated)}
-              </Typography>
+              </button>
             ) : (
-              <Typography sx={{ fontSize: 11.5 }}>
-                {parseExpire(updated)}
-              </Typography>
+              <p className="text-[11.5px]">{parseExpire(updated)}</p>
             )}
-          </Box>
+          </div>
 
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <div className="flex items-center">
             {hasUrl && (
-              <IconButton
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
                 title={t('shared.actions.refresh')}
-                size="small"
                 disabled={loading}
-                sx={{
-                  color: 'text.secondary',
-                  animation: loading ? `1s linear infinite ${round}` : 'none',
-                }}
+                className="text-[var(--color-text-secondary)]"
                 onClick={(event) => {
                   event.stopPropagation()
                   if (!activating && !loading) onUpdate(1)
                 }}
               >
-                <RefreshRounded fontSize="small" />
-              </IconButton>
+                <RefreshCw
+                  className={cn('size-5', loading && 'animate-spin')}
+                />
+              </Button>
             )}
-            <IconButton
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
               title={t('shared.actions.showDetails')}
-              size="small"
               disabled={loading}
-              sx={{ color: 'text.secondary' }}
+              className="text-[var(--color-text-secondary)]"
               onClick={(event) => {
                 event.stopPropagation()
                 const rect = event.currentTarget.getBoundingClientRect()
                 setPosition({ top: rect.bottom, left: rect.right })
-                setAnchorEl(event.currentTarget)
+                setMenuOpen(true)
               }}
             >
               {loading && !hasUrl ? (
-                <CircularProgress color="inherit" size={16} />
+                <Loader2 className="size-4 animate-spin" />
               ) : (
-                <MoreHorizRounded fontSize="small" />
+                <Ellipsis className="size-5" />
               )}
-            </IconButton>
-          </Box>
-        </Box>
-        <LinearProgress
-          variant="determinate"
-          value={progress}
-          sx={{
-            position: 'absolute',
-            right: 0,
-            bottom: 0,
-            left: 0,
-            height: 2,
-            opacity: total > 0 ? 0.7 : 0,
-          }}
-        />
+            </Button>
+          </div>
+        </div>
+        <div
+          className="absolute inset-x-0 bottom-0 h-[2px] overflow-hidden bg-[var(--color-accent-subtle)]"
+          style={{ opacity: total > 0 ? 0.7 : 0 }}
+        >
+          <div
+            className="h-full bg-[var(--color-accent)]"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       </ProfileBox>
 
-      <Menu
-        open={!!anchorEl}
-        anchorEl={anchorEl}
-        onClose={() => setAnchorEl(null)}
-        anchorPosition={position}
-        anchorReference="anchorPosition"
-        transitionDuration={225}
-        slotProps={{ list: { sx: { py: 0.5 } } }}
-        onContextMenu={(e) => {
-          setAnchorEl(null)
-          e.preventDefault()
-        }}
-      >
-        {(hasUrl ? urlModeMenu : fileModeMenu).map((item) => (
-          <MenuItem
-            key={item.label}
-            onClick={item.handler}
-            disabled={item.disabled}
-            sx={[
-              {
-                minWidth: 120,
-              },
-              (theme) => {
-                return {
-                  color:
-                    item.label === menuLabels.delete
-                      ? theme.palette.error.main
-                      : undefined,
-                }
-              },
-            ]}
-            dense
-          >
-            {t(item.label)}
-          </MenuItem>
-        ))}
-      </Menu>
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+        <DropdownMenuTrigger asChild>
+          <span
+            aria-hidden
+            className="pointer-events-none fixed"
+            style={{
+              top: position.top,
+              left: position.left,
+              width: 0,
+              height: 0,
+            }}
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          className="min-w-[120px]"
+          onContextMenu={(e) => {
+            setMenuOpen(false)
+            e.preventDefault()
+          }}
+        >
+          {(hasUrl ? urlModeMenu : fileModeMenu).map((item) => (
+            <DropdownMenuItem
+              key={item.label}
+              disabled={item.disabled}
+              variant={
+                item.label === menuLabels.delete ? 'destructive' : 'default'
+              }
+              onSelect={() => item.handler()}
+            >
+              {t(item.label)}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
       {fileOpen && (
         <EditorViewer
           open={true}
@@ -1115,11 +1045,11 @@ export const ProfileItem = (props: Props) => {
         onClose={() => setConfOverwriteConfirmOpen(false)}
         onOk={() => void runConfConversion(true)}
       >
-        <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+        <p className="text-sm break-words">
           {t('profiles.modals.confirmConfOverwrite.message', {
             file: effectiveFile,
           })}
-        </Typography>
+        </p>
       </BaseDialog>
 
       <BaseDialog
@@ -1135,9 +1065,9 @@ export const ProfileItem = (props: Props) => {
           setConfirmOpen(false)
         }}
       >
-        <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+        <p className="text-sm break-words">
           {t('profiles.modals.confirmDelete.message')}
-        </Typography>
+        </p>
       </BaseDialog>
       {qrOpen && itemData.url && (
         <QrViewer
@@ -1146,7 +1076,7 @@ export const ProfileItem = (props: Props) => {
           onClose={() => setQrOpen(false)}
         />
       )}
-    </Box>
+    </div>
   )
 }
 

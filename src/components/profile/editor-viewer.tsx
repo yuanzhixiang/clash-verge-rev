@@ -1,21 +1,13 @@
-import {
-  CloseFullscreenRounded,
-  ContentPasteRounded,
-  FormatPaintRounded,
-  OpenInFullRounded,
-  RestartAltRounded,
-} from '@mui/icons-material'
-import {
-  Button,
-  ButtonGroup,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-} from '@mui/material'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useLockFn } from 'ahooks'
+import {
+  ClipboardPaste,
+  Maximize2,
+  Minimize,
+  Paintbrush,
+  RotateCcw,
+} from 'lucide-react'
+import { useTheme } from 'next-themes'
 import {
   type ReactNode,
   useCallback,
@@ -26,9 +18,10 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseLoadingOverlay, MonacoEditor } from '@/components/base'
+import { BaseDialog, BaseLoadingOverlay, MonacoEditor } from '@/components/base'
+import { Button } from '@/components/ui/button'
+import { DialogFooter } from '@/components/ui/dialog'
 import { showNotice } from '@/services/notice-service'
-import { useThemeMode } from '@/services/states'
 import type { MonacoEditorInstance, MonacoMarker } from '@/types/monaco'
 import debounce from '@/utils/debounce'
 import getSystem from '@/utils/get-system'
@@ -69,7 +62,8 @@ export const EditorViewer = ({
   onValidate,
 }: EditorViewerProps) => {
   const { t } = useTranslation()
-  const themeMode = useThemeMode()
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
   const appWindow = useMemo(() => getCurrentWebviewWindow(), [])
   const [isMaximized, setIsMaximized] = useState(false)
   const editorRef = useRef<MonacoEditorInstance | null>(null)
@@ -195,25 +189,16 @@ export const EditorViewer = ({
   }, [])
 
   return (
-    <Dialog
+    <BaseDialog
       open={open}
-      onClose={handleClose}
-      maxWidth="xl"
-      fullWidth
+      title={resolvedTitle}
       disableEnforceFocus
+      disableFooter
+      contentSx={{ width: 'calc(100vw - 4rem)', maxWidth: 1400 }}
+      onClose={handleClose}
     >
-      <DialogTitle>{resolvedTitle}</DialogTitle>
-
-      <DialogContent
-        sx={{
-          width: 'auto',
-          height: 'calc(100vh - 185px)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}
-      >
-        <div style={{ position: 'relative', flex: '1 1 auto', minHeight: 0 }}>
+      <div className="relative flex h-[calc(100vh-185px)] flex-col overflow-hidden">
+        <div className="relative min-h-0 flex-1">
           <BaseLoadingOverlay isLoading={loading} />
           {!loading && (
             <MonacoEditor
@@ -221,7 +206,7 @@ export const EditorViewer = ({
               path={path}
               value={value}
               language={language}
-              theme={themeMode === 'light' ? 'light' : 'vs-dark'}
+              theme={isDark ? 'vs-dark' : 'light'}
               loading={null}
               saveViewState
               keepCurrentModel={false}
@@ -263,37 +248,39 @@ export const EditorViewer = ({
           )}
         </div>
 
-        <ButtonGroup
-          variant="contained"
-          sx={{ position: 'absolute', left: '14px', bottom: '8px' }}
-        >
-          <IconButton
-            size="medium"
-            color="inherit"
-            sx={{ display: readOnly ? 'none' : '' }}
-            title={t('profiles.page.importForm.actions.paste')}
-            disabled={loading}
-            onClick={() => {
-              void handlePaste()
-            }}
-          >
-            <ContentPasteRounded fontSize="inherit" />
-          </IconButton>
-          <IconButton
-            size="medium"
-            color="inherit"
-            sx={{ display: readOnly ? 'none' : '' }}
-            title={t('profiles.modals.editor.actions.format')}
-            disabled={loading}
-            onClick={() => {
-              void handleFormat()
-            }}
-          >
-            <FormatPaintRounded fontSize="inherit" />
-          </IconButton>
-          <IconButton
-            size="medium"
-            color="inherit"
+        <div className="absolute bottom-component left-[14px] flex items-center rounded-[var(--radius-control)] bg-[var(--color-bg-card)] shadow-[var(--shadow-dropdown)]">
+          {!readOnly && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              title={t('profiles.page.importForm.actions.paste')}
+              disabled={loading}
+              onClick={() => {
+                void handlePaste()
+              }}
+            >
+              <ClipboardPaste className="size-5" />
+            </Button>
+          )}
+          {!readOnly && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              title={t('profiles.modals.editor.actions.format')}
+              disabled={loading}
+              onClick={() => {
+                void handleFormat()
+              }}
+            >
+              <Paintbrush className="size-5" />
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
             title={t(
               isMaximized ? 'shared.window.minimize' : 'shared.window.maximize',
             )}
@@ -301,38 +288,41 @@ export const EditorViewer = ({
               void handleToggleMaximize()
             }}
           >
-            {isMaximized ? <CloseFullscreenRounded /> : <OpenInFullRounded />}
-          </IconButton>
-        </ButtonGroup>
-      </DialogContent>
+            {isMaximized ? (
+              <Minimize className="size-5" />
+            ) : (
+              <Maximize2 className="size-5" />
+            )}
+          </Button>
+        </div>
+      </div>
 
-      <DialogActions>
+      <DialogFooter>
         {!readOnly && onResetToDefault && (
           <Button
-            onClick={onResetToDefault}
-            variant="outlined"
-            color="warning"
-            startIcon={<RestartAltRounded />}
+            variant="outline"
+            className="border-[var(--color-warning)] text-[var(--color-warning)] hover:bg-[var(--color-warning-subtle)] hover:text-[var(--color-warning)]"
             disabled={loading}
+            onClick={onResetToDefault}
           >
+            <RotateCcw className="size-4" />
             {t('shared.actions.resetToDefault')}
           </Button>
         )}
-        <Button onClick={handleClose} variant="outlined">
+        <Button variant="outline" onClick={handleClose}>
           {t(readOnly ? 'shared.actions.close' : 'shared.actions.cancel')}
         </Button>
         {!readOnly && (
           <Button
+            disabled={disableSave}
             onClick={() => {
               void handleSave()
             }}
-            variant="contained"
-            disabled={disableSave}
           >
             {t('shared.actions.save')}
           </Button>
         )}
-      </DialogActions>
-    </Dialog>
+      </DialogFooter>
+    </BaseDialog>
   )
 }

@@ -1,33 +1,31 @@
-import { alpha, Box, styled } from '@mui/material'
+import type { ComponentProps } from 'react'
 
-export const ProfileBox = styled(Box)(
-  ({ theme, 'aria-selected': selected }) => {
-    const { text } = theme.palette
+import { cn } from '@/lib/utils'
 
-    return {
-      position: 'relative',
-      display: 'block',
-      width: '100%',
-      minHeight: 64,
-      cursor: 'pointer',
-      textAlign: 'left',
-      padding: '11px 14px',
-      boxSizing: 'border-box',
-      borderBottom: '1px solid var(--shell-border)',
-      borderRadius: 0,
-      backgroundColor: selected ? alpha(text.primary, 0.065) : 'transparent',
-      color: text.secondary,
-      transition: 'background-color 160ms ease',
-      '&:hover': {
-        backgroundColor: selected
-          ? alpha(text.primary, 0.075)
-          : alpha(text.primary, 0.04),
-      },
-      '&:focus-visible': {
-        outline: '2px solid var(--shell-focus)',
-        outlineOffset: -2,
-      },
-      '& h2': { color: text.primary },
-    }
-  },
-)
+type ProfileBoxProps = Omit<ComponentProps<'div'>, 'aria-selected'> & {
+  'aria-selected'?: boolean
+}
+
+export const ProfileBox = ({
+  className,
+  'aria-selected': selected,
+  ...props
+}: ProfileBoxProps) => {
+  return (
+    <div
+      aria-selected={selected}
+      className={cn(
+        'relative box-border block min-h-16 w-full cursor-pointer px-[14px] py-[11px] text-left',
+        'border-b border-[var(--color-border)] text-[var(--color-text-secondary)]',
+        'transition-colors duration-[var(--duration-base)]',
+        'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--color-focus-ring)]',
+        '[&_h2]:text-[var(--color-text-primary)]',
+        selected
+          ? 'bg-[color-mix(in_srgb,var(--color-text-primary)_6.5%,transparent)] hover:bg-[color-mix(in_srgb,var(--color-text-primary)_7.5%,transparent)]'
+          : 'hover:bg-[color-mix(in_srgb,var(--color-text-primary)_4%,transparent)]',
+        className,
+      )}
+      {...props}
+    />
+  )
+}

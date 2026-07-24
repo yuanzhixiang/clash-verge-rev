@@ -1,19 +1,11 @@
 import {
-  ArrowDownwardRounded,
-  ArrowUpwardRounded,
-  CloudDownloadRounded,
-  CloudUploadRounded,
-  LinkRounded,
-  MemoryRounded,
-} from '@mui/icons-material'
-import {
-  Grid,
-  PaletteColor,
-  Paper,
-  Typography,
-  alpha,
-  useTheme,
-} from '@mui/material'
+  ArrowDown,
+  ArrowUp,
+  CloudDownload,
+  CloudUpload,
+  Link,
+  MemoryStick,
+} from 'lucide-react'
 import { ReactNode, memo, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -23,6 +15,7 @@ import { useMemoryData } from '@/hooks/use-memory-data'
 import { useTrafficData } from '@/hooks/use-traffic-data'
 import { useVerge } from '@/hooks/use-verge'
 import { useVisibility } from '@/hooks/use-visibility'
+import { cn } from '@/lib/utils'
 import parseTraffic from '@/utils/parse-traffic'
 
 import {
@@ -30,13 +23,66 @@ import {
   type EnhancedCanvasTrafficGraphRef,
 } from './enhanced-canvas-traffic-graph'
 
+type StatColor =
+  | 'primary'
+  | 'secondary'
+  | 'error'
+  | 'warning'
+  | 'info'
+  | 'success'
+
 interface StatCardProps {
   icon: ReactNode
   title: string
   value: string | number
   unit: string
-  color: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success'
+  color: StatColor
   onClick?: () => void
+}
+
+// 卡片底色/描边（原 alpha(colorValue, .05/.15)）
+const STAT_CARD_BASE: Record<StatColor, string> = {
+  primary:
+    'bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)] border-[color-mix(in_srgb,var(--color-accent)_15%,transparent)]',
+  secondary:
+    'bg-[color-mix(in_srgb,var(--color-secondary)_5%,transparent)] border-[color-mix(in_srgb,var(--color-secondary)_15%,transparent)]',
+  error:
+    'bg-[color-mix(in_srgb,var(--color-danger)_5%,transparent)] border-[color-mix(in_srgb,var(--color-danger)_15%,transparent)]',
+  warning:
+    'bg-[color-mix(in_srgb,var(--color-warning)_5%,transparent)] border-[color-mix(in_srgb,var(--color-warning)_15%,transparent)]',
+  info: 'bg-[color-mix(in_srgb,var(--color-info)_5%,transparent)] border-[color-mix(in_srgb,var(--color-info)_15%,transparent)]',
+  success:
+    'bg-[color-mix(in_srgb,var(--color-success)_5%,transparent)] border-[color-mix(in_srgb,var(--color-success)_15%,transparent)]',
+}
+
+// 卡片 hover 底色/描边（仅可点击时，原 alpha(colorValue, .1/.3) + 阴影）
+const STAT_CARD_HOVER: Record<StatColor, string> = {
+  primary:
+    'hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] hover:border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)] hover:shadow-[var(--shadow-card)]',
+  secondary:
+    'hover:bg-[color-mix(in_srgb,var(--color-secondary)_10%,transparent)] hover:border-[color-mix(in_srgb,var(--color-secondary)_30%,transparent)] hover:shadow-[var(--shadow-card)]',
+  error:
+    'hover:bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)] hover:border-[color-mix(in_srgb,var(--color-danger)_30%,transparent)] hover:shadow-[var(--shadow-card)]',
+  warning:
+    'hover:bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] hover:border-[color-mix(in_srgb,var(--color-warning)_30%,transparent)] hover:shadow-[var(--shadow-card)]',
+  info: 'hover:bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] hover:border-[color-mix(in_srgb,var(--color-info)_30%,transparent)] hover:shadow-[var(--shadow-card)]',
+  success:
+    'hover:bg-[color-mix(in_srgb,var(--color-success)_10%,transparent)] hover:border-[color-mix(in_srgb,var(--color-success)_30%,transparent)] hover:shadow-[var(--shadow-card)]',
+}
+
+// 图标圆底/图标色（原 alpha(colorValue, .1) + 主色）
+const STAT_ICON: Record<StatColor, string> = {
+  primary:
+    'text-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]',
+  secondary:
+    'text-[var(--color-secondary)] bg-[color-mix(in_srgb,var(--color-secondary)_10%,transparent)]',
+  error:
+    'text-[var(--color-danger)] bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)]',
+  warning:
+    'text-[var(--color-warning)] bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]',
+  info: 'text-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)]',
+  success:
+    'text-[var(--color-success)] bg-[color-mix(in_srgb,var(--color-success)_10%,transparent)]',
 }
 
 // 全局变量类型定义
@@ -53,84 +99,43 @@ declare global {
 // 统计卡片组件 - 使用memo优化
 const CompactStatCard = memo(
   ({ icon, title, value, unit, color, onClick }: StatCardProps) => {
-    const theme = useTheme()
-
-    // 获取调色板颜色 - 使用useMemo避免重复计算
-    const colorValue = useMemo(() => {
-      const palette = theme.palette
-      if (
-        color in palette &&
-        palette[color as keyof typeof palette] &&
-        'main' in (palette[color as keyof typeof palette] as PaletteColor)
-      ) {
-        return (palette[color as keyof typeof palette] as PaletteColor).main
-      }
-      return palette.primary.main
-    }, [theme.palette, color])
+    const clickable = Boolean(onClick)
 
     return (
-      <Paper
-        elevation={0}
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          borderRadius: 'var(--radius-container)',
-          bgcolor: alpha(colorValue, 0.05),
-          border: `1px solid ${alpha(colorValue, 0.15)}`,
-          padding: '8px',
-          transition: 'all 0.2s ease-in-out',
-          cursor: onClick ? 'pointer' : 'default',
-          '&:hover': onClick
-            ? {
-                bgcolor: alpha(colorValue, 0.1),
-                border: `1px solid ${alpha(colorValue, 0.3)}`,
-                boxShadow: `0 4px 8px rgba(0,0,0,0.05)`,
-              }
-            : {},
-        }}
+      <div
         onClick={onClick}
+        className={cn(
+          'flex items-center rounded-[var(--radius-card)] border p-component transition-all duration-[var(--duration-base)]',
+          STAT_CARD_BASE[color],
+          clickable ? 'cursor-pointer' : 'cursor-default',
+          clickable && STAT_CARD_HOVER[color],
+        )}
       >
         {/* 图标容器 */}
-        <Grid
-          component="div"
-          sx={{
-            mr: 1,
-            ml: '2px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 32,
-            height: 32,
-            borderRadius: '50%',
-            bgcolor: alpha(colorValue, 0.1),
-            color: colorValue,
-          }}
+        <div
+          className={cn(
+            'mr-component ml-adjust flex size-8 shrink-0 items-center justify-center rounded-full',
+            STAT_ICON[color],
+          )}
         >
           {icon}
-        </Grid>
+        </div>
 
         {/* 文本内容 */}
-        <Grid component="div" sx={{ flexGrow: 1, minWidth: 0 }}>
-          <Typography variant="caption" color="text.secondary" noWrap>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-caption text-[var(--color-text-secondary)]">
             {title}
-          </Typography>
-          <Grid
-            component="div"
-            sx={{ display: 'flex', alignItems: 'baseline' }}
-          >
-            <Typography
-              variant="body1"
-              noWrap
-              sx={{ mr: 0.5, fontWeight: 'bold' }}
-            >
+          </div>
+          <div className="flex items-baseline">
+            <span className="mr-inline truncate text-body-lg font-bold text-[var(--color-text-primary)]">
               {value}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
+            </span>
+            <span className="text-caption text-[var(--color-text-secondary)]">
               {unit}
-            </Typography>
-          </Grid>
-        </Grid>
-      </Paper>
+            </span>
+          </div>
+        </div>
+      </div>
     )
   },
 )
@@ -140,7 +145,6 @@ CompactStatCard.displayName = 'CompactStatCard'
 
 export const EnhancedTrafficStats = () => {
   const { t } = useTranslation()
-  const theme = useTheme()
   const { verge } = useVerge()
   const trafficRef = useRef<EnhancedCanvasTrafficGraphRef>(null)
   const pageVisible = useVisibility()
@@ -193,57 +197,50 @@ export const EnhancedTrafficStats = () => {
     if (!trafficGraph || !pageVisible) return null
 
     return (
-      <Paper
-        elevation={0}
-        sx={{
-          height: 130,
-          cursor: 'pointer',
-          border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
-          borderRadius: 'var(--radius-container)',
-          overflow: 'hidden',
-        }}
+      <div
+        className="h-[130px] cursor-pointer overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-border)]"
         onClick={() => trafficRef.current?.toggleStyle()}
       >
-        <div style={{ height: '100%', position: 'relative' }}>
+        <div className="relative h-full">
           <EnhancedCanvasTrafficGraph ref={trafficRef} />
         </div>
-      </Paper>
+      </div>
     )
-  }, [trafficGraph, pageVisible, theme.palette.divider])
+  }, [trafficGraph, pageVisible])
 
   // 使用useMemo计算统计卡片配置
   const statCards = useMemo(() => {
     const cards: StatCardProps[] = [
       {
-        icon: <ArrowUpwardRounded fontSize="small" />,
+        icon: <ArrowUp className="size-5" />,
         title: t('home.components.traffic.metrics.uploadSpeed'),
         value: parsedData.up,
         unit: `${parsedData.upUnit}/s`,
         color: 'secondary' as const,
       },
       {
-        icon: <ArrowDownwardRounded fontSize="small" />,
+        icon: <ArrowDown className="size-5" />,
         title: t('home.components.traffic.metrics.downloadSpeed'),
         value: parsedData.down,
         unit: `${parsedData.downUnit}/s`,
         color: 'primary' as const,
       },
       {
-        icon: <LinkRounded fontSize="small" />,
+        icon: <Link className="size-5" />,
         title: t('home.components.traffic.metrics.activeConnections'),
         value: parsedData.connectionsCount,
         unit: '',
         color: 'success' as const,
       },
       {
-        icon: <CloudUploadRounded fontSize="small" />,
+        icon: <CloudUpload className="size-5" />,
         title: t('shared.labels.uploaded'),
         value: parsedData.uploadTotal,
         unit: parsedData.uploadTotalUnit,
         color: 'secondary' as const,
       },
       {
-        icon: <CloudDownloadRounded fontSize="small" />,
+        icon: <CloudDownload className="size-5" />,
         title: t('shared.labels.downloaded'),
         value: parsedData.downloadTotal,
         unit: parsedData.downloadTotalUnit,
@@ -253,7 +250,7 @@ export const EnhancedTrafficStats = () => {
 
     if (displayMemory) {
       cards.push({
-        icon: <MemoryRounded fontSize="small" />,
+        icon: <MemoryStick className="size-5" />,
         title: t('home.components.traffic.metrics.memoryUsage'),
         value: parsedData.inuse,
         unit: parsedData.inuseUnit,
@@ -270,20 +267,15 @@ export const EnhancedTrafficStats = () => {
         console.error('[EnhancedTrafficStats] 组件错误:', error, errorInfo)
       }}
     >
-      <Grid container spacing={1} columns={{ xs: 8, sm: 8, md: 12 }}>
+      <div className="grid grid-cols-2 gap-component md:grid-cols-3">
         {trafficGraph && (
-          <Grid size={12}>
-            {/* 流量图表区域 */}
-            {trafficGraphComponent}
-          </Grid>
+          <div className="col-span-full">{trafficGraphComponent}</div>
         )}
         {/* 统计卡片区域 */}
         {statCards.map((card) => (
-          <Grid key={card.title} size={4}>
-            <CompactStatCard {...card} />
-          </Grid>
+          <CompactStatCard key={card.title} {...card} />
         ))}
-      </Grid>
+      </div>
     </TrafficErrorBoundary>
   )
 }

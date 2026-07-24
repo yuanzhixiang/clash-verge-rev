@@ -1,60 +1,21 @@
-import { AddRounded, SpeedRounded } from '@mui/icons-material'
-import { Box, ButtonBase, Typography, alpha } from '@mui/material'
+import { Gauge, Plus } from 'lucide-react'
 
 import { BaseLoading } from '@/components/base'
 import { useProxyDelayState } from '@/hooks/use-proxy-delay-state'
+import { cn } from '@/lib/utils'
 import delayManager from '@/services/delay'
 
-const cardSx = {
-  position: 'relative',
-  display: 'flex',
-  minWidth: 0,
-  minHeight: 92,
-  flexDirection: 'column',
-  alignItems: 'stretch',
-  justifyContent: 'space-between',
-  overflow: 'hidden',
-  borderRadius: 'var(--radius-container)',
-  bgcolor: 'var(--shell-panel-muted)',
-  px: 1.5,
-  py: 1.25,
-  textAlign: 'left',
-  transition: 'background-color 160ms ease, transform 160ms ease',
-  '&:hover': {
-    bgcolor: 'var(--shell-nav-hover)',
-    transform: 'translateY(-1px)',
-  },
-  '&:focus-visible': {
-    outline: '2px solid var(--shell-focus) !important',
-    outlineOffset: 2,
-  },
-} as const
+// delayManager.formatDelayColor 返回 MUI palette 字符串，映射到语义 token。
+const DELAY_COLOR_VAR: Record<string, string> = {
+  'error.main': 'var(--color-danger)',
+  'warning.main': 'var(--color-warning)',
+  'primary.main': 'var(--color-accent)',
+  'success.main': 'var(--color-success)',
+}
+const delayColorVar = (key: string): string | undefined => DELAY_COLOR_VAR[key]
 
-const groupCardSx = {
-  position: 'relative',
-  display: 'flex',
-  width: '100%',
-  minWidth: 0,
-  minHeight: 92,
-  flexDirection: 'column',
-  alignItems: 'stretch',
-  justifyContent: 'space-between',
-  overflow: 'hidden',
-  borderRadius: 'var(--radius-container)',
-  bgcolor: 'var(--shell-panel-muted)',
-  px: 1.5,
-  py: 1.25,
-  textAlign: 'left',
-  transition: 'background-color 160ms ease, transform 160ms ease',
-  '&:hover': {
-    bgcolor: 'var(--shell-nav-hover)',
-    transform: 'translateY(-1px)',
-  },
-  '&:focus-visible': {
-    outline: '2px solid var(--shell-focus) !important',
-    outlineOffset: 2,
-  },
-} as const
+const CARD_BASE =
+  'group relative flex min-h-[92px] min-w-0 cursor-pointer appearance-none flex-col items-stretch justify-between overflow-hidden rounded-[var(--radius-container)] border-0 bg-[var(--color-bg-subtle)] px-3 py-2.5 text-left transition-[background-color,transform] duration-[160ms] ease-out hover:-translate-y-px hover:bg-[var(--color-bg-hover)] focus-visible:[outline:2px_solid_var(--color-focus-ring)] focus-visible:[outline-offset:2px]'
 
 interface DelayLabelProps {
   proxy: IProxyItem
@@ -74,27 +35,24 @@ export const PolicyDelayLabel = ({
 
   if (isPreset) return null
 
+  const delayColor =
+    delayValue >= 0
+      ? delayColorVar(delayManager.formatDelayColor(delayValue, timeout))
+      : undefined
+
   return (
-    <ButtonBase
+    <button
+      type="button"
       onClick={(event) => {
         event.stopPropagation()
         void onDelay(proxy.provider)
       }}
       aria-label={`${testLabel}: ${proxy.name}`}
       title={`${testLabel}: ${proxy.name}`}
-      sx={{
-        minWidth: 0,
-        minHeight: 24,
-        justifyContent: 'flex-start',
-        borderRadius: 'var(--radius-compact)',
-        color:
-          delayValue >= 0
-            ? delayManager.formatDelayColor(delayValue, timeout)
-            : 'text.secondary',
-        fontSize: 12,
-        lineHeight: 1.2,
-        '&:hover': { color: 'primary.main' },
-      }}
+      style={
+        delayColor ? ({ '--dl': delayColor } as React.CSSProperties) : undefined
+      }
+      className="inline-flex min-h-[24px] min-w-0 cursor-pointer appearance-none items-center justify-start border-0 bg-transparent p-0 text-[12px] leading-[1.2] text-[var(--dl,var(--color-text-secondary))] hover:text-[var(--color-accent)]"
     >
       {delayValue === -2 ? (
         <BaseLoading />
@@ -102,11 +60,11 @@ export const PolicyDelayLabel = ({
         delayManager.formatDelay(delayValue, timeout)
       ) : (
         <>
-          <SpeedRounded sx={{ mr: 0.5, fontSize: 15 }} />
+          <Gauge className="mr-1 size-[15px]" />
           {testLabel}
         </>
       )}
-    </ButtonBase>
+    </button>
   )
 }
 
@@ -129,8 +87,14 @@ export const PolicyProxyCard = ({
     'policy-standalone',
   )
 
+  const delayColor =
+    delayValue >= 0
+      ? delayColorVar(delayManager.formatDelayColor(delayValue, timeout))
+      : undefined
+
   return (
-    <ButtonBase
+    <button
+      type="button"
       onClick={() => void onDelay(proxy.provider)}
       onContextMenu={(event) => {
         if (!onContextMenu) return
@@ -139,66 +103,34 @@ export const PolicyProxyCard = ({
       }}
       aria-label={`${testLabel}: ${proxy.name}`}
       title={`${testLabel}: ${proxy.name}`}
-      sx={cardSx}
+      className={CARD_BASE}
     >
-      <Box sx={{ width: '100%', minWidth: 0 }}>
-        <Typography
-          noWrap
+      <div className="w-full min-w-0">
+        <p
           title={proxy.type}
-          sx={({ palette }) => ({
-            mb: 0.5,
-            color: alpha(
-              palette.text.primary,
-              palette.mode === 'dark' ? 0.47 : 0.32,
-            ),
-            fontSize: 11.5,
-            lineHeight: 1.25,
-          })}
+          className="mb-0.5 truncate text-[11.5px] leading-[1.25] text-[var(--color-text-muted)]"
         >
           {proxy.type}
-        </Typography>
-        <Typography
-          noWrap
-          title={proxy.name}
-          sx={{ fontSize: 15, fontWeight: 600, lineHeight: 1.3 }}
-        >
+        </p>
+        <p className="truncate text-[15px] font-semibold leading-[1.3]">
           {proxy.name}
-        </Typography>
-      </Box>
-      <Box
-        sx={{
-          display: 'flex',
-          width: '100%',
-          minWidth: 0,
-          minHeight: 24,
-          alignItems: 'center',
-        }}
-      >
+        </p>
+      </div>
+      <div className="flex min-h-[24px] w-full min-w-0 items-center">
         {delayValue === -2 ? (
           <BaseLoading />
         ) : (
-          <Typography
-            noWrap
-            sx={({ palette }) => ({
-              color:
-                delayValue >= 0
-                  ? delayManager.formatDelayColor(delayValue, timeout)
-                  : alpha(
-                      palette.text.primary,
-                      palette.mode === 'dark' ? 0.47 : 0.32,
-                    ),
-              fontSize: 12,
-              fontWeight: 500,
-              lineHeight: 1.3,
-            })}
+          <p
+            className="truncate text-[12px] font-medium leading-[1.3] text-[var(--color-text-muted)]"
+            style={delayColor ? { color: delayColor } : undefined}
           >
             {delayValue >= 0
               ? delayManager.formatDelay(delayValue, timeout)
               : testLabel}
-          </Typography>
+          </p>
         )}
-      </Box>
-    </ButtonBase>
+      </div>
+    </button>
   )
 }
 
@@ -209,31 +141,15 @@ interface AddCardProps {
 
 /** 网格末尾的虚线 "+" 新增卡片（仅 Local profile 显示）。 */
 export const PolicyAddCard = ({ label, onClick }: AddCardProps) => (
-  <ButtonBase
+  <button
+    type="button"
     onClick={onClick}
     aria-label={label}
     title={label}
-    sx={{
-      display: 'flex',
-      minHeight: 92,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: 'var(--radius-container)',
-      border: '1.5px dashed var(--shell-border-strong)',
-      color: 'text.secondary',
-      transition: 'background-color 160ms ease, transform 160ms ease',
-      '&:hover': {
-        bgcolor: 'var(--shell-nav-hover)',
-        transform: 'translateY(-1px)',
-      },
-      '&:focus-visible': {
-        outline: '2px solid var(--shell-focus) !important',
-        outlineOffset: 2,
-      },
-    }}
+    className="flex min-h-[92px] cursor-pointer appearance-none items-center justify-center rounded-[var(--radius-container)] border-[1.5px] border-dashed border-[var(--color-border-strong)] bg-transparent text-[var(--color-text-secondary)] transition-[background-color,transform] duration-[160ms] ease-out hover:-translate-y-px hover:bg-[var(--color-bg-hover)] focus-visible:[outline:2px_solid_var(--color-focus-ring)] focus-visible:[outline-offset:2px]"
   >
-    <AddRounded sx={{ fontSize: 22 }} />
-  </ButtonBase>
+    <Plus className="size-[22px]" />
+  </button>
 )
 
 interface GroupCardProps {
@@ -253,7 +169,8 @@ export const PolicyGroupCard = ({
   readonly,
   onOpenMenu,
 }: GroupCardProps) => (
-  <ButtonBase
+  <button
+    type="button"
     onContextMenu={(event) => {
       event.preventDefault()
       onOpenMenu(event.currentTarget, {
@@ -273,67 +190,34 @@ export const PolicyGroupCard = ({
     }}
     aria-haspopup="dialog"
     aria-expanded={open}
-    sx={[groupCardSx, open && { bgcolor: 'var(--shell-nav-selected)' }]}
+    className={cn(CARD_BASE, 'w-full', open && 'bg-[var(--color-bg-active)]')}
   >
-    <Box sx={{ minWidth: 0 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-        <Typography
-          noWrap
+    <div className="min-w-0">
+      <div className="flex items-center gap-compact">
+        <p
           title={group.type}
-          sx={({ palette }) => ({
-            minWidth: 0,
-            color: alpha(
-              palette.text.primary,
-              palette.mode === 'dark' ? 0.47 : 0.32,
-            ),
-            fontSize: 11.5,
-            lineHeight: 1.25,
-          })}
+          className="min-w-0 truncate text-[11.5px] leading-[1.25] text-[var(--color-text-muted)]"
         >
           {group.type}
-        </Typography>
+        </p>
         {readonly && (
-          <Typography
-            component="span"
-            sx={({ palette }) => ({
-              color: alpha(
-                palette.text.primary,
-                palette.mode === 'dark' ? 0.47 : 0.32,
-              ),
-              fontSize: 10.5,
-              lineHeight: 1.2,
-            })}
-          >
+          <span className="text-[10.5px] leading-[1.2] text-[var(--color-text-muted)]">
             · Auto
-          </Typography>
+          </span>
         )}
-      </Box>
-      <Typography
-        noWrap
-        title={group.name}
-        sx={{ mt: 0.5, fontSize: 15, fontWeight: 600, lineHeight: 1.3 }}
-      >
+      </div>
+      <p className="mt-0.5 truncate text-[15px] font-semibold leading-[1.3]">
         {group.name}
-      </Typography>
-    </Box>
+      </p>
+    </div>
 
-    <Box sx={{ display: 'flex', minWidth: 0, alignItems: 'center' }}>
-      <Typography
-        noWrap
+    <div className="flex min-w-0 items-center">
+      <p
         title={group.now}
-        sx={({ palette }) => ({
-          minWidth: 0,
-          color: alpha(
-            palette.text.primary,
-            palette.mode === 'dark' ? 0.47 : 0.32,
-          ),
-          fontSize: 12,
-          fontWeight: 500,
-          lineHeight: 1.3,
-        })}
+        className="min-w-0 truncate text-[12px] font-medium leading-[1.3] text-[var(--color-text-muted)]"
       >
         {group.now || '—'}
-      </Typography>
-    </Box>
-  </ButtonBase>
+      </p>
+    </div>
+  </button>
 )

@@ -1,8 +1,8 @@
-import { DeveloperBoardOutlined } from '@mui/icons-material'
-import { Divider, Stack, Typography } from '@mui/material'
-import { useMemo } from 'react'
+import { CircuitBoard } from 'lucide-react'
+import { type ReactNode, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { Separator } from '@/components/ui/separator'
 import { useClash } from '@/hooks/use-clash'
 import {
   useClashConfigData,
@@ -36,53 +36,45 @@ export const ClashInfoCard = () => {
   const cardContent = useMemo(() => {
     if (!clashConfig) return null
 
+    const rows: Array<{ label: string; value: ReactNode }> = [
+      {
+        label: t('home.components.clashInfo.fields.coreVersion'),
+        value: clashVersion || '-',
+      },
+      {
+        label: t('home.components.clashInfo.fields.systemProxyAddress'),
+        value: systemProxyAddress,
+      },
+      {
+        label: t('home.components.clashInfo.fields.mixedPort'),
+        value: clashConfig.mixedPort || '-',
+      },
+      {
+        label: t('home.components.clashInfo.fields.uptime'),
+        value: formattedUptime,
+      },
+      {
+        label: t('home.components.clashInfo.fields.rulesCount'),
+        value: rules.length,
+      },
+    ]
+
     return (
-      <Stack spacing={1.5}>
-        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-          <Typography variant="body2" color="text.secondary">
-            {t('home.components.clashInfo.fields.coreVersion')}
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-            {clashVersion || '-'}
-          </Typography>
-        </Stack>
-        <Divider />
-        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-          <Typography variant="body2" color="text.secondary">
-            {t('home.components.clashInfo.fields.systemProxyAddress')}
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-            {systemProxyAddress}
-          </Typography>
-        </Stack>
-        <Divider />
-        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-          <Typography variant="body2" color="text.secondary">
-            {t('home.components.clashInfo.fields.mixedPort')}
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-            {clashConfig.mixedPort || '-'}
-          </Typography>
-        </Stack>
-        <Divider />
-        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-          <Typography variant="body2" color="text.secondary">
-            {t('home.components.clashInfo.fields.uptime')}
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-            {formattedUptime}
-          </Typography>
-        </Stack>
-        <Divider />
-        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-          <Typography variant="body2" color="text.secondary">
-            {t('home.components.clashInfo.fields.rulesCount')}
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-            {rules.length}
-          </Typography>
-        </Stack>
-      </Stack>
+      <div className="flex flex-col gap-stack">
+        {rows.map((row, index) => (
+          <div key={row.label}>
+            <div className="flex items-center justify-between">
+              <span className="text-body text-[var(--color-text-secondary)]">
+                {row.label}
+              </span>
+              <span className="text-body font-medium text-[var(--color-text-primary)]">
+                {row.value}
+              </span>
+            </div>
+            {index < rows.length - 1 && <Separator className="mt-stack" />}
+          </div>
+        ))}
+      </div>
     )
   }, [
     clashConfig,
@@ -96,7 +88,7 @@ export const ClashInfoCard = () => {
   return (
     <EnhancedCard
       title={t('home.components.clashInfo.title')}
-      icon={<DeveloperBoardOutlined />}
+      icon={<CircuitBoard className="size-5" />}
       iconColor="warning"
       action={null}
     >

@@ -1,9 +1,10 @@
-import { CheckCircleOutlineRounded } from '@mui/icons-material'
-import { alpha, Box, ListItemButton, styled, Typography } from '@mui/material'
+import { CircleCheck } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseLoading } from '@/components/base'
 import { useProxyDelayState } from '@/hooks/use-proxy-delay-state'
+import { cn } from '@/lib/utils'
 import delayManager from '@/services/delay'
 
 interface Props {
@@ -12,6 +13,41 @@ interface Props {
   selected: boolean
   showType?: boolean
   onClick?: (name: string) => void
+}
+
+// 延迟 / Check 小组件
+function Widget({
+  className,
+  style,
+  onClick,
+  children,
+}: {
+  className?: string
+  style?: React.CSSProperties
+  onClick?: (e: React.MouseEvent) => void
+  children: ReactNode
+}) {
+  return (
+    <div
+      onClick={onClick}
+      style={style}
+      className={cn(
+        'rounded-[var(--radius-compact)] px-inline py-adjust text-body',
+        className,
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+// 描边标签
+function TypeBox({ children }: { children: ReactNode }) {
+  return (
+    <span className="mr-inline mt-auto inline-block rounded-[var(--radius-container)] border border-[var(--color-text-secondary)] px-inline text-[10px] leading-[1.5] text-[var(--color-text-secondary)]">
+      {children}
+    </span>
+  )
 }
 
 // 多列布局
@@ -26,133 +62,47 @@ export const ProxyItemMini = (props: Props) => {
     group.name,
   )
 
-  return (
-    <ListItemButton
-      dense
-      selected={selected}
-      onClick={() => onClick?.(proxy.name)}
-      sx={[
-        {
-          height: 56,
-          borderRadius: 'var(--radius-control)',
-          pl: 1.5,
-          pr: 1,
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        },
-        ({ palette: { mode, primary } }) => {
-          const bgcolor = mode === 'light' ? '#ffffff' : '#24252f'
-          const showDelay = delayValue > 0
-          const selectColor = mode === 'light' ? primary.main : primary.light
+  const showDelay = delayValue > 0
 
-          return {
-            '&:hover .the-check': { display: !showDelay ? 'block' : 'none' },
-            '&:hover .the-delay': { display: showDelay ? 'block' : 'none' },
-            '&:hover .the-icon': { display: 'none' },
-            '& .the-pin, & .the-unpin': {
-              position: 'absolute',
-              fontSize: '12px',
-              top: '-5px',
-              right: '-5px',
-            },
-            '& .the-unpin': { filter: 'grayscale(1)' },
-            '&.Mui-selected': {
-              width: `calc(100% + 3px)`,
-              marginLeft: `-3px`,
-              borderLeft: `3px solid ${selectColor}`,
-              bgcolor:
-                mode === 'light'
-                  ? alpha(primary.main, 0.15)
-                  : alpha(primary.main, 0.35),
-            },
-            backgroundColor: bgcolor,
-          }
-        },
-      ]}
+  return (
+    <div
+      onClick={() => onClick?.(proxy.name)}
+      className={cn(
+        'group relative flex h-14 cursor-pointer items-center justify-between rounded-[var(--radius-control)] bg-[var(--color-bg-card)] pr-component pl-stack',
+        selected &&
+          '-ml-[3px] w-[calc(100%+3px)] border-l-[3px] border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_15%,transparent)] dark:bg-[color-mix(in_srgb,var(--color-accent)_35%,transparent)]',
+      )}
     >
-      <Box
+      <div
         title={`${proxy.name}\n${proxy.now ?? ''}`}
-        sx={{ overflow: 'hidden' }}
+        className="overflow-hidden"
       >
-        <Typography
-          variant="body2"
-          component="div"
-          color="text.primary"
-          sx={{
-            display: 'block',
-            textOverflow: 'ellipsis',
-            wordBreak: 'break-all',
-            overflow: 'hidden',
-            whiteSpace: 'nowrap',
-          }}
-        >
+        <div className="block truncate break-all text-body text-[var(--color-text-primary)]">
           {proxy.name}
-        </Typography>
+        </div>
 
         {showType && (
-          <Box
-            sx={{
-              display: 'flex',
-              flexWrap: 'nowrap',
-              flex: 'none',
-              marginTop: '4px',
-            }}
-          >
+          <div className="mt-inline flex flex-none flex-nowrap">
             {proxy.now && (
-              <Typography
-                variant="body2"
-                component="div"
-                color="text.secondary"
-                sx={{
-                  display: 'block',
-                  textOverflow: 'ellipsis',
-                  wordBreak: 'break-all',
-                  overflow: 'hidden',
-                  whiteSpace: 'nowrap',
-                  marginRight: '8px',
-                }}
-              >
+              <div className="mr-component block truncate break-all text-body text-[var(--color-text-secondary)]">
                 {proxy.now}
-              </Typography>
+              </div>
             )}
-            {!!proxy.provider && (
-              <TypeBox color="text.secondary" component="span">
-                {proxy.provider}
-              </TypeBox>
-            )}
-            <TypeBox color="text.secondary" component="span">
-              {proxy.type}
-            </TypeBox>
-            {proxy.udp && (
-              <TypeBox color="text.secondary" component="span">
-                UDP
-              </TypeBox>
-            )}
-            {proxy.xudp && (
-              <TypeBox color="text.secondary" component="span">
-                XUDP
-              </TypeBox>
-            )}
-            {proxy.tfo && (
-              <TypeBox color="text.secondary" component="span">
-                TFO
-              </TypeBox>
-            )}
-            {proxy.mptcp && (
-              <TypeBox color="text.secondary" component="span">
-                MPTCP
-              </TypeBox>
-            )}
-            {proxy.smux && (
-              <TypeBox color="text.secondary" component="span">
-                SMUX
-              </TypeBox>
-            )}
-          </Box>
+            {!!proxy.provider && <TypeBox>{proxy.provider}</TypeBox>}
+            <TypeBox>{proxy.type}</TypeBox>
+            {proxy.udp && <TypeBox>UDP</TypeBox>}
+            {proxy.xudp && <TypeBox>XUDP</TypeBox>}
+            {proxy.tfo && <TypeBox>TFO</TypeBox>}
+            {proxy.mptcp && <TypeBox>MPTCP</TypeBox>}
+            {proxy.smux && <TypeBox>SMUX</TypeBox>}
+          </div>
         )}
-      </Box>
-      <Box
-        sx={{ ml: 0.5, color: 'primary.main', display: isPreset ? 'none' : '' }}
+      </div>
+      <div
+        className={cn(
+          'ml-inline text-[var(--color-accent)]',
+          isPreset && 'hidden',
+        )}
       >
         {delayValue === -2 && (
           <Widget>
@@ -161,16 +111,15 @@ export const ProxyItemMini = (props: Props) => {
         )}
         {delayValue !== -2 && (
           <Widget
-            className="the-check"
+            className={cn(
+              'hidden cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-accent)_15%,transparent)]',
+              !showDelay && 'group-hover:block',
+            )}
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
               onDelay()
             }}
-            sx={({ palette }) => ({
-              display: 'none', // hover 时显示
-              ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
-            })}
           >
             Check
           </Widget>
@@ -179,16 +128,18 @@ export const ProxyItemMini = (props: Props) => {
         {delayValue >= 0 && (
           // 显示延迟
           <Widget
-            className="the-delay"
+            className={cn(
+              'cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-accent)_15%,transparent)]',
+              !showDelay && 'group-hover:hidden',
+            )}
+            style={{
+              color: delayManager.formatDelayColor(delayValue, timeout),
+            }}
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
               onDelay(proxy.provider)
             }}
-            sx={({ palette }) => ({
-              color: delayManager.formatDelayColor(delayValue, timeout),
-              ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
-            })}
           >
             {delayManager.formatDelay(delayValue, timeout)}
           </Widget>
@@ -198,16 +149,16 @@ export const ProxyItemMini = (props: Props) => {
           delayValue < 0 &&
           selected && (
             // 展示已选择的 icon
-            <CheckCircleOutlineRounded
-              className="the-icon"
-              sx={{ fontSize: 16, mr: 0.5, display: 'block' }}
-            />
+            <CircleCheck className="mr-inline block size-4 group-hover:hidden" />
           )}
-      </Box>
+      </div>
       {group.fixed && group.fixed === proxy.name && (
         // 展示 fixed 状态
         <span
-          className={proxy.name === group.now ? 'the-pin' : 'the-unpin'}
+          className={cn(
+            'absolute -top-[5px] -right-[5px] text-xs',
+            proxy.name !== group.now && 'grayscale',
+          )}
           title={
             group.type === 'URLTest'
               ? t('proxies.page.labels.delayCheckReset')
@@ -217,29 +168,6 @@ export const ProxyItemMini = (props: Props) => {
           📌
         </span>
       )}
-    </ListItemButton>
+    </div>
   )
 }
-
-const Widget = styled(Box)(({ theme: { typography } }) => ({
-  padding: '2px 4px',
-  fontSize: 14,
-  fontFamily: typography.fontFamily,
-  borderRadius: 'var(--radius-compact)',
-}))
-
-const TypeBox = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'component',
-})<{ component?: React.ElementType }>(({ theme: { typography } }) => ({
-  display: 'inline-block',
-  border: '1px solid #ccc',
-  borderColor: 'text.secondary',
-  color: 'text.secondary',
-  borderRadius: 'var(--radius-container)',
-  fontSize: 10,
-  fontFamily: typography.fontFamily,
-  marginRight: '4px',
-  marginTop: 'auto',
-  padding: '0 4px',
-  lineHeight: 1.5,
-}))

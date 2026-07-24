@@ -1,8 +1,6 @@
-import { KeyboardArrowDownRounded } from '@mui/icons-material'
-import { Box, Button, IconButton, Typography, useTheme } from '@mui/material'
-import { alpha } from '@mui/material/styles'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
+import { ChevronDown } from 'lucide-react'
 import {
   Fragment,
   useCallback,
@@ -13,6 +11,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { closeConnection } from 'tauri-plugin-mihomo-api'
 
+import { Button } from '@/components/ui/button'
 import parseTraffic from '@/utils/parse-traffic'
 
 import { ConnectionRouteTimeline } from './connection-route'
@@ -63,17 +62,9 @@ export function ConnectionDetail({
   if (!open || !detail) return null
 
   return (
-    <Box
-      sx={{
-        position: 'absolute',
-        left: { xs: 8, sm: 12 },
-        right: { xs: 8, sm: 12 },
-        bottom: { xs: 8, sm: 10 },
-        zIndex: 5,
-      }}
-    >
+    <div className="absolute right-component bottom-component left-component z-[5] sm:right-stack sm:bottom-2.5 sm:left-stack">
       <InnerConnectionDetail data={detail} closed={closed} onClose={onClose} />
-    </Box>
+    </div>
   )
 }
 
@@ -86,7 +77,6 @@ interface InnerProps {
 const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
   const { t } = useTranslation()
   const { metadata } = data
-  const theme = useTheme()
   const chains = formatConnectionChainPath(data.chains)
   const chainPath = getConnectionChainPath(data.chains)
   const rule = getConnectionRule(data)
@@ -164,186 +154,81 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
 
   const onDelete = useLockFn(async () => closeConnection(data.id))
   const detailColumn = (items: typeof leftInformation) => (
-    <Box
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(128px, max-content) minmax(0, 1fr)',
-        columnGap: 2,
-        rowGap: 1,
-        minWidth: 0,
-      }}
-    >
+    <div className="grid min-w-0 grid-cols-[minmax(128px,max-content)_minmax(0,1fr)] gap-x-inset gap-y-component">
       {items.map((each) => (
         <Fragment key={each.label}>
-          <Box
-            component="span"
-            sx={{
-              color: theme.palette.text.secondary,
-              fontSize: 12.5,
-              fontWeight: 700,
-              lineHeight: 1.35,
-            }}
-          >
+          <span className="text-[12.5px] font-bold leading-[1.35] text-[var(--color-text-secondary)]">
             {each.label}
-          </Box>
-          <Box
-            component="span"
-            sx={{
-              minWidth: 0,
-              color: theme.palette.text.primary,
-              fontSize: 13,
-              lineHeight: 1.35,
-              overflowWrap: 'anywhere',
-            }}
-          >
+          </span>
+          <span className="min-w-0 text-[13px] leading-[1.35] text-[var(--color-text-primary)] [overflow-wrap:anywhere]">
             {each.value}
-          </Box>
+          </span>
         </Fragment>
       ))}
-    </Box>
+    </div>
   )
 
   return (
-    <Box
-      sx={{
-        boxSizing: 'border-box',
-        width: '100%',
-        maxHeight: '48vh',
-        overflow: 'auto',
-        p: { xs: 1.5, sm: 2 },
-        userSelect: 'text',
-        color: theme.palette.text.primary,
-        backgroundColor: alpha(theme.palette.background.paper, 0.98),
-        border: `1px solid ${alpha(theme.palette.primary.main, 0.22)}`,
-        borderRadius: 'var(--radius-container)',
-        boxShadow: theme.shadows[6],
-      }}
-    >
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1.5,
-          mb: 1.5,
-          minWidth: 0,
-        }}
-      >
-        <Typography
-          component="div"
+    <div className="box-border max-h-[48vh] w-full select-text overflow-auto rounded-[var(--radius-container)] border border-[color-mix(in_srgb,var(--color-accent)_22%,transparent)] bg-[color-mix(in_srgb,var(--color-bg-card)_98%,transparent)] p-stack text-[var(--color-text-primary)] shadow-[var(--shadow-modal)] sm:p-inset">
+      <div className="mb-stack flex min-w-0 items-center gap-stack">
+        <div
           title={host}
-          sx={{
-            minWidth: 0,
-            color: theme.palette.text.primary,
-            fontSize: 15,
-            fontWeight: 700,
-            lineHeight: 1.3,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
+          className="min-w-0 truncate text-[15px] font-bold leading-[1.3] text-[var(--color-text-primary)]"
         >
           {host}
-        </Typography>
-        <Box
-          component="span"
-          sx={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 0.75,
-            flex: '0 0 auto',
-            color: theme.palette.text.secondary,
-            fontSize: 12.5,
-          }}
-        >
-          <Box
-            component="span"
-            sx={{
-              width: 6,
-              height: 6,
-              borderRadius: '50%',
-              backgroundColor: closed
-                ? theme.palette.text.disabled
-                : theme.palette.success.main,
-            }}
+        </div>
+        <span className="inline-flex shrink-0 items-center gap-compact text-[12.5px] text-[var(--color-text-secondary)]">
+          <span
+            className={`size-1.5 rounded-full ${
+              closed
+                ? 'bg-[var(--color-text-disabled)]'
+                : 'bg-[var(--color-success)]'
+            }`}
           />
           {closed ? 'Closed' : 'Live'}
-        </Box>
-        <Box
-          component="span"
-          sx={{
-            flex: '0 0 auto',
-            color: theme.palette.text.secondary,
-            fontSize: 12.5,
-          }}
-        >
+        </span>
+        <span className="shrink-0 text-[12.5px] text-[var(--color-text-secondary)]">
           {dayjs(data.start).fromNow()}
-        </Box>
-        <Box
-          component="span"
-          sx={{
-            flex: '0 0 auto',
-            color: theme.palette.text.secondary,
-            fontSize: 12.5,
-          }}
-        >
+        </span>
+        <span className="shrink-0 text-[12.5px] text-[var(--color-text-secondary)]">
           Type: {getConnectionTypeLabel(data)}
-        </Box>
-        <Box sx={{ flex: 1 }} />
+        </span>
+        <div className="flex-1" />
         {!closed && (
           <Button
-            size="small"
-            variant="outlined"
+            size="sm"
+            variant="outline"
             title={t('connections.components.actions.closeConnection')}
             onClick={() => {
               onDelete()
               onClose?.()
             }}
-            sx={{ flex: '0 0 auto', height: 30 }}
+            className="h-[30px] shrink-0"
           >
             {t('connections.components.actions.closeConnection')}
           </Button>
         )}
-        <IconButton
-          size="small"
+        <Button
+          variant="ghost"
+          size="icon-sm"
           aria-label="Close detail"
           onClick={onClose}
-          sx={{ flex: '0 0 auto' }}
+          className="shrink-0"
         >
-          <KeyboardArrowDownRounded fontSize="small" />
-        </IconButton>
-      </Box>
-      <Typography
-        component="div"
-        sx={{
-          mb: 1,
-          color: theme.palette.text.primary,
-          fontSize: 13,
-          fontWeight: 700,
-          lineHeight: 1.3,
-        }}
-      >
+          <ChevronDown className="size-5" />
+        </Button>
+      </div>
+      <div className="mb-component text-[13px] font-bold leading-[1.3] text-[var(--color-text-primary)]">
         {t('connections.components.route.title')}
-      </Typography>
+      </div>
       <ConnectionRouteTimeline steps={routeSteps} />
 
-      <Box
-        sx={{
-          mt: 2,
-          pt: 1.25,
-          borderTop: `1px solid ${theme.palette.divider}`,
-        }}
-      >
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-            gap: { xs: 1, md: 3 },
-          }}
-        >
+      <div className="mt-inset border-t border-[var(--color-border)] pt-2.5">
+        <div className="grid grid-cols-1 gap-component md:grid-cols-2 md:gap-block">
           {detailColumn(leftInformation)}
           {detailColumn(rightInformation)}
-        </Box>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   )
 }

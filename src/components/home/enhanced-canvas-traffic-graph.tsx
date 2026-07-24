@@ -1,4 +1,4 @@
-import { Box, useTheme } from '@mui/material'
+import { useTheme } from 'next-themes'
 import type { Ref } from 'react'
 import {
   memo,
@@ -124,7 +124,7 @@ export const EnhancedCanvasTrafficGraph = memo(
   function EnhancedCanvasTrafficGraph({
     ref,
   }: EnhancedCanvasTrafficGraphProps) {
-    const theme = useTheme()
+    const { resolvedTheme } = useTheme()
     const { t } = useTranslation()
     const verge = useVerge()
     const pause_render_traffic_stats_on_blur =
@@ -178,17 +178,29 @@ export const EnhancedCanvasTrafficGraph = memo(
     const debounceTimeoutRef = useRef<number | null>(null)
     const [currentFPS, setCurrentFPS] = useState(GRAPH_CONFIG.targetFPS)
 
-    // 主题颜色配置
-    const colors = useMemo(
-      () => ({
-        up: theme.palette.secondary.main,
-        down: theme.palette.primary.main,
-        grid: theme.palette.divider,
-        text: theme.palette.text.secondary,
-        background: theme.palette.background.paper,
-      }),
-      [theme],
-    )
+    // 主题颜色配置：从语义 token 读取（随 next-themes 的 .dark 切换而重算）
+    const colors = useMemo(() => {
+      // resolvedTheme 仅作为重算触发器；实际取值来自当前 DOM 上已生效的 CSS 变量
+      void resolvedTheme
+      const fallback = {
+        up: '#fc9b76',
+        down: '#5e6ad2',
+        grid: 'rgba(31, 35, 40, 0.09)',
+        text: 'rgba(60, 60, 67, 0.6)',
+        background: '#ffffff',
+      }
+      if (typeof document === 'undefined') return fallback
+      const cs = getComputedStyle(document.documentElement)
+      const read = (name: string, fb: string) =>
+        cs.getPropertyValue(name).trim() || fb
+      return {
+        up: read('--color-secondary', fallback.up),
+        down: read('--color-accent', fallback.down),
+        grid: read('--color-border', fallback.grid),
+        text: read('--color-text-secondary', fallback.text),
+        background: read('--color-bg-card', fallback.background),
+      }
+    }, [resolvedTheme])
 
     // 更新显示数据（防抖处理）
     const updateDisplayData = useCallback((newData: ITrafficDataPoint[]) => {
@@ -1087,16 +1099,8 @@ export const EnhancedCanvasTrafficGraph = memo(
     }, [timeRange, t])
 
     return (
-      <Box
-        sx={{
-          width: '100%',
-          height: '100%',
-          position: 'relative',
-          bgcolor: 'action.hover',
-          borderRadius: 'var(--radius-compact)',
-          cursor: 'pointer',
-          overflow: 'hidden',
-        }}
+      <div
+        className="relative h-full w-full cursor-pointer overflow-hidden rounded-[var(--radius-compact)] bg-[var(--color-bg-hover)]"
         onClick={toggleStyle}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
@@ -1126,142 +1130,66 @@ export const EnhancedCanvasTrafficGraph = memo(
         )}
 
         {/* 控制层覆盖 */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            pointerEvents: 'none',
-          }}
-        >
+        <div className="pointer-events-none absolute inset-0">
           {/* 时间范围按钮 */}
-          <Box
-            component="div"
+          <div
             onClick={handleTimeRangeClick}
-            sx={{
-              position: 'absolute',
-              top: 6,
-              left: 40, // 向右移动，避免与Y轴最大值标签重叠
-              fontSize: '11px',
-              fontWeight: 'bold',
-              color: 'text.secondary',
-              cursor: 'pointer',
-              pointerEvents: 'all',
-              px: 1,
-              py: 0.5,
-              borderRadius: 'var(--radius-compact)',
-              bgcolor: 'rgba(0,0,0,0.05)',
-              '&:hover': {
-                bgcolor: 'rgba(0,0,0,0.1)',
-              },
-            }}
+            className="pointer-events-auto absolute left-10 top-1.5 cursor-pointer rounded-[var(--radius-compact)] bg-[var(--color-bg-hover)] px-component py-inline text-[11px] font-bold text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-active)]"
           >
             {getTimeRangeText()}
-          </Box>
+          </div>
 
           {/* 图例 */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 6,
-              right: 8,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 0.5,
-            }}
-          >
-            <Box
-              sx={{
-                fontSize: '11px',
-                fontWeight: 'bold',
-                color: colors.up,
-                textAlign: 'right',
-              }}
+          <div className="absolute right-2 top-1.5 flex flex-col gap-inline">
+            <div
+              className="text-right text-[11px] font-bold"
+              style={{ color: colors.up }}
             >
               {t('home.components.traffic.legends.upload')}
-            </Box>
-            <Box
-              sx={{
-                fontSize: '11px',
-                fontWeight: 'bold',
-                color: colors.down,
-                textAlign: 'right',
-              }}
+            </div>
+            <div
+              className="text-right text-[11px] font-bold"
+              style={{ color: colors.down }}
             >
               {t('home.components.traffic.legends.download')}
-            </Box>
-          </Box>
+            </div>
+          </div>
 
           {/* 样式指示器 */}
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 6,
-              right: 8,
-              fontSize: '10px',
-              color: 'text.disabled',
-              opacity: 0.7,
-            }}
-          >
+          <div className="absolute bottom-1.5 right-2 text-[10px] text-[var(--color-text-disabled)] opacity-70">
             {chartStyle === 'bezier' ? 'Smooth' : 'Linear'}
-          </Box>
+          </div>
 
           {/* 数据统计指示器（左下角） */}
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 6,
-              left: 8,
-              fontSize: '9px',
-              color: 'text.disabled',
-              opacity: 0.6,
-              lineHeight: 1.2,
-            }}
-          >
+          <div className="absolute bottom-1.5 left-2 text-[9px] leading-tight text-[var(--color-text-disabled)] opacity-60">
             Points: {displayData.length} | Compressed:{' '}
             {samplerStats.compressedBufferSize} | FPS: {currentFPS}
-          </Box>
+          </div>
 
           {/* 悬浮提示框 */}
           {tooltipData.visible && (
-            <Box
-              sx={{
-                position: 'absolute',
+            <div
+              className="pointer-events-none absolute z-[1000] whitespace-nowrap rounded-[var(--radius-compact)] border border-[var(--color-border)] bg-[var(--color-bg-card)] px-component py-inline text-[10px] leading-tight shadow-[var(--shadow-dropdown)]"
+              style={{
                 left: tooltipData.x + 8,
                 top: tooltipData.y - 8,
-                bgcolor: theme.palette.background.paper,
-                border: 1,
-                borderColor: 'divider',
-                borderRadius: 'var(--radius-compact)',
-                px: 1,
-                py: 0.5,
-                fontSize: '10px',
-                lineHeight: 1.2,
-                zIndex: 1000,
-                pointerEvents: 'none',
                 transform:
                   tooltipData.x > 200 ? 'translateX(-100%)' : 'translateX(0)',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                backdropFilter: 'none',
-                opacity: 1,
-                whiteSpace: 'nowrap',
               }}
             >
-              <Box sx={{ color: 'text.secondary', mb: 0.2 }}>
+              <div className="mb-0.5 text-[var(--color-text-secondary)]">
                 {tooltipData.timestamp}
-              </Box>
-              <Box sx={{ color: 'secondary.main', fontWeight: 500 }}>
+              </div>
+              <div className="font-medium" style={{ color: colors.up }}>
                 ↑ {tooltipData.upSpeed}
-              </Box>
-              <Box sx={{ color: 'primary.main', fontWeight: 500 }}>
+              </div>
+              <div className="font-medium" style={{ color: colors.down }}>
                 ↓ {tooltipData.downSpeed}
-              </Box>
-            </Box>
+              </div>
+            </div>
           )}
-        </Box>
-      </Box>
+        </div>
+      </div>
     )
   },
 )

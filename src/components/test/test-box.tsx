@@ -1,44 +1,32 @@
-import { alpha, Box, styled } from '@mui/material'
+import * as React from 'react'
 
-export const TestBox = styled(Box)(({ theme, 'aria-selected': selected }) => {
-  const { mode, primary, text } = theme.palette
-  const key = `${mode}-${!!selected}`
+import { cn } from '@/lib/utils'
 
-  const backgroundColor =
-    mode === 'light' ? alpha(primary.main, 0.05) : alpha(primary.main, 0.08)
+export type TestBoxProps = React.HTMLAttributes<HTMLDivElement> & {
+  'aria-selected'?: boolean
+}
 
-  const color = {
-    'light-true': text.secondary,
-    'light-false': text.secondary,
-    'dark-true': alpha(text.secondary, 0.65),
-    'dark-false': alpha(text.secondary, 0.65),
-  }[key]!
-
-  const h2color = {
-    'light-true': primary.main,
-    'light-false': text.primary,
-    'dark-true': primary.main,
-    'dark-false': text.primary,
-  }[key]!
-
-  return {
-    position: 'relative',
-    width: '100%',
-    display: 'block',
-    cursor: 'pointer',
-    textAlign: 'left',
-    borderRadius: 'var(--radius-container)',
-    boxShadow: theme.shadows[1],
-    padding: '8px 16px',
-    boxSizing: 'border-box',
-    backgroundColor,
-    color,
-    '& h2': { color: h2color },
-    transition: 'background-color 0.3s, box-shadow 0.3s',
-    '&:hover': {
-      backgroundColor:
-        mode === 'light' ? alpha(primary.main, 0.1) : alpha(primary.main, 0.15),
-      boxShadow: theme.shadows[2],
-    },
-  }
-})
+/**
+ * 测试卡片按钮基座：语义 token 化的可点击卡片。
+ * 选中态通过 `aria-selected` 控制 h2 主色高亮。
+ */
+export const TestBox = React.forwardRef<HTMLDivElement, TestBoxProps>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(
+        'relative box-border block w-full cursor-pointer px-inset py-component text-left',
+        'rounded-[var(--radius-container)] shadow-[var(--shadow-card)]',
+        'text-[var(--color-text-secondary)] dark:text-[color-mix(in_srgb,var(--color-text-secondary)_65%,transparent)]',
+        'bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)] dark:bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]',
+        'transition-[background-color,box-shadow] duration-[var(--duration-slow)]',
+        'hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] dark:hover:bg-[color-mix(in_srgb,var(--color-accent)_15%,transparent)]',
+        'hover:shadow-[var(--shadow-card-hover)]',
+        '[&_h2]:text-[var(--color-text-primary)] aria-selected:[&_h2]:text-[var(--color-accent)]',
+        className,
+      )}
+      {...props}
+    />
+  ),
+)
+TestBox.displayName = 'TestBox'

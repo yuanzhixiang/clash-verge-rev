@@ -1,9 +1,9 @@
+import { useTheme } from 'next-themes'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, MonacoEditor } from '@/components/base'
 import type { ProfileFormat } from '@/services/profile-format'
-import { useThemeMode } from '@/services/states'
 
 interface Props {
   open: boolean
@@ -30,7 +30,7 @@ export const PolicyYamlDialog = ({
   onSave,
 }: Props) => {
   const { t } = useTranslation()
-  const themeMode = useThemeMode()
+  const { resolvedTheme } = useTheme()
   const [text, setText] = useState(initialText)
 
   return (
@@ -54,7 +54,7 @@ export const PolicyYamlDialog = ({
         height="100%"
         language={format === 'conf' ? 'surge-conf' : 'yaml'}
         value={text}
-        theme={themeMode === 'light' ? 'light' : 'vs-dark'}
+        theme={resolvedTheme === 'dark' ? 'vs-dark' : 'light'}
         onChange={(value) => setText(value ?? '')}
         options={{
           tabSize: 2,

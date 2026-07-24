@@ -69,7 +69,7 @@ const SettingSystem = ({ onError }: Props) => {
             }
           }}
         >
-          <Switch edge="end" />
+          <Switch />
         </GuardState>
       </SettingItem>
 
@@ -78,7 +78,7 @@ const SettingSystem = ({ onError }: Props) => {
         extra={
           <TooltipIcon
             title={t('settings.sections.system.tooltips.silentStart')}
-            sx={{ opacity: '0.7' }}
+            className="opacity-70"
           />
         }
       >
@@ -90,7 +90,7 @@ const SettingSystem = ({ onError }: Props) => {
           onChange={(e) => onChangeData({ enable_silent_start: e })}
           onGuard={(e) => patchVerge({ enable_silent_start: e })}
         >
-          <Switch edge="end" />
+          <Switch />
         </GuardState>
       </SettingItem>
     </SettingList>

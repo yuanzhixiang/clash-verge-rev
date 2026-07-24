@@ -1,12 +1,16 @@
-import {
-  Autocomplete,
-  FormControlLabel,
-  Stack,
-  Switch,
-  TextField,
-} from '@mui/material'
 import type { ChangeEvent, ClipboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+
+import { Switch } from '@/components/base'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 import {
   PROXY_POLICY_LABEL_KEYS,
@@ -69,88 +73,112 @@ export const RuleFormFields = ({
     onChange({ ...value, content: normalizedDomain ?? content })
   }
 
+  const showContent = value.definition.required ?? true
+
   return (
-    <Stack spacing={1.75}>
-      <Autocomplete
-        disableClearable
-        size="small"
-        options={RULE_DEFINITIONS}
-        value={value.definition}
-        getOptionLabel={(option) =>
-          t(RULE_TYPE_LABEL_KEYS[option.name] ?? option.name)
-        }
-        onChange={(_, definition) =>
-          onChange({ ...value, definition, content: '', noResolve: false })
-        }
-        renderInput={(params) => (
-          <TextField
-            {...params}
+    <div className="flex flex-col gap-stack">
+      <div className="flex flex-col gap-inline">
+        <Label htmlFor="rule-type">
+          {t('rules.modals.editor.form.labels.type')}
+        </Label>
+        <Select
+          value={value.definition.name}
+          onValueChange={(name) => {
+            const definition =
+              RULE_DEFINITIONS.find((item) => item.name === name) ??
+              value.definition
+            onChange({ ...value, definition, content: '', noResolve: false })
+          }}
+        >
+          <SelectTrigger
+            id="rule-type"
             autoFocus={autoFocus}
-            label={t('rules.modals.editor.form.labels.type')}
-          />
-        )}
-      />
+            className="w-full"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {RULE_DEFINITIONS.map((definition) => (
+              <SelectItem key={definition.name} value={definition.name}>
+                {t(RULE_TYPE_LABEL_KEYS[definition.name] ?? definition.name)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-      {(value.definition.required ?? true) &&
-        (contentOptions ? (
-          <Autocomplete
-            freeSolo
-            size="small"
-            options={contentOptions}
-            value={value.content}
-            onChange={(_, content) =>
-              onChange({ ...value, content: content ?? '' })
-            }
-            onInputChange={(_, content) => onChange({ ...value, content })}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label={t('rules.modals.editor.form.labels.content')}
+      {showContent && (
+        <div className="flex flex-col gap-inline">
+          <Label htmlFor="rule-content">
+            {t('rules.modals.editor.form.labels.content')}
+          </Label>
+          {contentOptions ? (
+            <>
+              <Input
+                id="rule-content"
+                list="rule-content-options"
+                value={value.content}
                 placeholder={value.definition.example}
+                onChange={(event) =>
+                  onChange({ ...value, content: event.target.value })
+                }
               />
-            )}
-          />
-        ) : (
-          <TextField
-            size="small"
-            label={t('rules.modals.editor.form.labels.content')}
-            placeholder={value.definition.example}
-            value={value.content}
-            onPaste={handleContentPaste}
-            onChange={handleContentChange}
-          />
-        ))}
+              <datalist id="rule-content-options">
+                {contentOptions.map((option) => (
+                  <option key={option} value={option} />
+                ))}
+              </datalist>
+            </>
+          ) : (
+            <Input
+              id="rule-content"
+              value={value.content}
+              placeholder={value.definition.example}
+              onPaste={handleContentPaste}
+              onChange={handleContentChange}
+            />
+          )}
+        </div>
+      )}
 
-      <Autocomplete
-        freeSolo
-        size="small"
-        options={policyOptions}
-        value={value.policy}
-        getOptionLabel={(option) =>
-          t(PROXY_POLICY_LABEL_KEYS[option] ?? option)
-        }
-        onChange={(_, policy) => policy && onChange({ ...value, policy })}
-        onInputChange={(_, policy) => onChange({ ...value, policy })}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            label={t('rules.modals.editor.form.labels.proxyPolicy')}
-          />
-        )}
-      />
+      <div className="flex flex-col gap-inline">
+        <Label htmlFor="rule-policy">
+          {t('rules.modals.editor.form.labels.proxyPolicy')}
+        </Label>
+        <Input
+          id="rule-policy"
+          list="rule-policy-options"
+          value={value.policy}
+          onChange={(event) =>
+            onChange({ ...value, policy: event.target.value })
+          }
+        />
+        <datalist id="rule-policy-options">
+          {policyOptions.map((option) => {
+            const labelKey = PROXY_POLICY_LABEL_KEYS[option]
+            return (
+              <option
+                key={option}
+                value={option}
+                label={labelKey ? t(labelKey) : undefined}
+              />
+            )
+          })}
+        </datalist>
+      </div>
 
       {value.definition.noResolve && (
-        <FormControlLabel
-          control={
-            <Switch
-              size="small"
-              checked={value.noResolve}
-              onChange={(_, noResolve) => onChange({ ...value, noResolve })}
-            />
-          }
-          label={t('rules.modals.editor.form.toggles.noResolve')}
-        />
+        <label className="flex w-fit items-center gap-component">
+          <Switch
+            size="sm"
+            checked={value.noResolve}
+            onCheckedChange={(noResolve) => onChange({ ...value, noResolve })}
+          />
+          <span className="text-body text-[var(--color-text-secondary)]">
+            {t('rules.modals.editor.form.toggles.noResolve')}
+          </span>
+        </label>
       )}
-    </Stack>
+    </div>
   )
 }

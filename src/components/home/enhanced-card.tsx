@@ -1,5 +1,6 @@
-import { Box, Typography, alpha, useTheme } from '@mui/material'
-import React, { forwardRef, ReactNode } from 'react'
+import { forwardRef, type ReactNode, type Ref } from 'react'
+
+import { cn } from '@/lib/utils'
 
 // 自定义卡片组件接口
 interface EnhancedCardProps {
@@ -10,6 +11,24 @@ interface EnhancedCardProps {
   iconColor?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success'
   minHeight?: number | string
   noContentPadding?: boolean
+}
+
+// 图标底色/文字色随语义色变化（原 alpha(palette[iconColor].main, .12) + 主色文字）
+const ICON_COLOR_CLASS: Record<
+  NonNullable<EnhancedCardProps['iconColor']>,
+  string
+> = {
+  primary:
+    'text-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)]',
+  secondary:
+    'text-[var(--color-secondary)] bg-[color-mix(in_srgb,var(--color-secondary)_12%,transparent)]',
+  error:
+    'text-[var(--color-danger)] bg-[color-mix(in_srgb,var(--color-danger)_12%,transparent)]',
+  warning:
+    'text-[var(--color-warning)] bg-[color-mix(in_srgb,var(--color-warning)_12%,transparent)]',
+  info: 'text-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_12%,transparent)]',
+  success:
+    'text-[var(--color-success)] bg-[color-mix(in_srgb,var(--color-success)_12%,transparent)]',
 }
 
 // 自定义卡片组件
@@ -26,115 +45,46 @@ export const EnhancedCard = forwardRef<HTMLElement, EnhancedCardProps>(
     },
     ref,
   ) => {
-    const theme = useTheme()
-    // 统一的标题截断样式
-    const titleTruncateStyle = {
-      minWidth: 0,
-      maxWidth: '100%',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      whiteSpace: 'nowrap',
-      display: 'block',
-    }
-
     return (
-      <Box
-        sx={{
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          border: '1px solid var(--shell-border)',
-          borderRadius: 'var(--radius-container)',
-          backgroundColor: 'var(--shell-card)',
-          boxShadow:
-            theme.palette.mode === 'dark'
-              ? '0 10px 28px rgba(0, 0, 0, 0.16)'
-              : '0 10px 28px rgba(63, 78, 96, 0.07)',
-          transition:
-            'border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease',
-          '@media (hover: hover)': {
-            '&:hover': {
-              borderColor: 'var(--shell-border-strong)',
-              transform: 'translateY(-1px)',
-              boxShadow:
-                theme.palette.mode === 'dark'
-                  ? '0 14px 32px rgba(0, 0, 0, 0.2)'
-                  : '0 14px 32px rgba(63, 78, 96, 0.1)',
-            },
-          },
-        }}
-        ref={ref}
+      <div
+        ref={ref as Ref<HTMLDivElement>}
+        className="flex h-full flex-col overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-bg-card)] shadow-[var(--shadow-card)] transition-[border-color,transform,box-shadow] duration-[var(--duration-base)] hover:-translate-y-px hover:border-[var(--color-border-strong)] hover:shadow-[var(--shadow-card-hover)]"
       >
-        <Box
-          sx={{
-            px: 2.25,
-            py: 1.5,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderBottom: 1,
-            borderColor: 'divider',
-          }}
-        >
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              minWidth: 0,
-              flex: 1,
-              overflow: 'hidden',
-            }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: 'var(--radius-control)',
-                width: 36,
-                height: 36,
-                mr: 1.5,
-                flexShrink: 0,
-                backgroundColor: alpha(theme.palette[iconColor].main, 0.12),
-                color: theme.palette[iconColor].main,
-              }}
+        <div className="flex items-center justify-between border-b border-[var(--color-border)] px-inset py-stack">
+          <div className="flex min-w-0 flex-1 items-center overflow-hidden">
+            <div
+              className={cn(
+                'mr-stack flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-control)]',
+                ICON_COLOR_CLASS[iconColor],
+              )}
             >
               {icon}
-            </Box>
-            <Box sx={{ minWidth: 0, flex: 1 }}>
+            </div>
+            <div className="min-w-0 flex-1">
               {typeof title === 'string' ? (
-                <Typography
-                  variant="h6"
-                  sx={{
-                    ...titleTruncateStyle,
-                    fontWeight: 600,
-                    fontSize: 16,
-                    letterSpacing: '-0.015em',
-                  }}
+                <h3
                   title={title}
+                  className="block max-w-full truncate text-h3 font-semibold tracking-[-0.015em] text-[var(--color-text-primary)]"
                 >
                   {title}
-                </Typography>
+                </h3>
               ) : (
-                <Box sx={titleTruncateStyle}>{title}</Box>
+                <div className="block max-w-full truncate">{title}</div>
               )}
-            </Box>
-          </Box>
-          {action && <Box sx={{ ml: 2, flexShrink: 0 }}>{action}</Box>}
-        </Box>
-        <Box
-          sx={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            p: noContentPadding ? 0 : 2.25,
-            ...(minHeight && { minHeight }),
-          }}
+            </div>
+          </div>
+          {action && <div className="ml-inset shrink-0">{action}</div>}
+        </div>
+        <div
+          className={cn(
+            'flex flex-1 flex-col',
+            noContentPadding ? 'p-0' : 'p-inset',
+          )}
+          style={minHeight ? { minHeight } : undefined}
         >
           {children}
-        </Box>
-      </Box>
+        </div>
+      </div>
     )
   },
 )

@@ -1,6 +1,7 @@
-import { Box, Dialog, DialogContent, DialogTitle } from '@mui/material'
 import { QRCodeSVG } from 'qrcode.react'
 import { useTranslation } from 'react-i18next'
+
+import { BaseDialog } from '@/components/base'
 
 interface Props {
   open: boolean
@@ -14,21 +15,16 @@ export const QrViewer = (props: Props) => {
   const { t } = useTranslation()
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs">
-      <DialogTitle>{title ?? t('profiles.modals.qrViewer.title')}</DialogTitle>
-      <DialogContent sx={{ pb: 3 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            p: 2,
-            bgcolor: '#fff',
-            borderRadius: 'var(--radius-compact)',
-          }}
-        >
-          <QRCodeSVG value={value} size={256} level="M" />
-        </Box>
-      </DialogContent>
-    </Dialog>
+    <BaseDialog
+      open={open}
+      title={title ?? t('profiles.modals.qrViewer.title')}
+      disableFooter
+      contentSx={{ maxWidth: 360 }}
+      onClose={onClose}
+    >
+      <div className="flex justify-center rounded-[var(--radius-compact)] bg-white p-inset">
+        <QRCodeSVG value={value} size={256} level="M" />
+      </div>
+    </BaseDialog>
   )
 }

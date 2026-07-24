@@ -1,18 +1,9 @@
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Typography,
-} from '@mui/material'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { BaseDialog } from '@/components/base'
 import { showNotice } from '@/services/notice-service'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
-import { getShellThemeVars } from '@/utils/shell-theme'
 
 import { RuleConfigError, type ParsedRule, serializeRule } from './rule-config'
 import { RuleFormFields } from './rule-form-fields'
@@ -79,69 +70,25 @@ export const RuleEditDialog = ({
   }
 
   return (
-    <Dialog
+    <BaseDialog
       open={open}
+      title={t('rules.page.actions.edit.title')}
+      contentSx={{ width: 420 }}
+      okBtn={t('shared.actions.save')}
+      cancelBtn={t('shared.actions.cancel')}
+      loading={submitting}
+      onOk={handleSubmit}
+      onCancel={submitting ? undefined : onClose}
       onClose={submitting ? undefined : onClose}
-      maxWidth="xs"
-      fullWidth
-      slotProps={{
-        paper: {
-          sx: ({ palette }) => ({
-            ...getShellThemeVars(palette),
-            overflow: 'hidden',
-            border: '1px solid var(--shell-border-strong) !important',
-            borderRadius: 'var(--radius-overlay)',
-            bgcolor: 'var(--shell-panel) !important',
-            backgroundImage: 'none',
-            boxShadow: 'var(--shell-shadow) !important',
-          }),
-        },
-      }}
     >
-      <DialogTitle sx={{ px: 2.5, pt: 2.25, pb: 1 }}>
-        <Typography component="span" sx={{ fontSize: 18, fontWeight: 650 }}>
-          {t('rules.page.actions.edit.title')}
-        </Typography>
-      </DialogTitle>
-
-      <DialogContent sx={{ px: 2.5, py: 0 }}>
-        <Box sx={{ pt: 1.5, pb: 1.5 }}>
-          <RuleFormFields
-            autoFocus
-            value={form}
-            policyOptions={policyOptions}
-            ruleSetOptions={ruleSetOptions}
-            subRuleOptions={subRuleOptions}
-            onChange={setForm}
-          />
-        </Box>
-      </DialogContent>
-
-      <DialogActions
-        sx={{
-          mt: 1.5,
-          px: 2.5,
-          py: 1.5,
-          borderTop: '1px solid var(--shell-border)',
-        }}
-      >
-        <Button
-          variant="outlined"
-          onClick={onClose}
-          disabled={submitting}
-          sx={{ textTransform: 'none' }}
-        >
-          {t('shared.actions.cancel')}
-        </Button>
-        <Button
-          variant="contained"
-          loading={submitting}
-          onClick={handleSubmit}
-          sx={{ textTransform: 'none' }}
-        >
-          {t('shared.actions.save')}
-        </Button>
-      </DialogActions>
-    </Dialog>
+      <RuleFormFields
+        autoFocus
+        value={form}
+        policyOptions={policyOptions}
+        ruleSetOptions={ruleSetOptions}
+        subRuleOptions={subRuleOptions}
+        onChange={setForm}
+      />
+    </BaseDialog>
   )
 }

@@ -1,18 +1,6 @@
-import { ExpandMoreRounded } from '@mui/icons-material'
-import {
-  Alert,
-  Box,
-  Chip,
-  IconButton,
-  Menu,
-  MenuItem,
-  Snackbar,
-  Typography,
-} from '@mui/material'
-import { useTheme } from '@mui/material/styles'
+import { ChevronDown } from 'lucide-react'
 import {
   type Key,
-  type MouseEvent,
   type RefObject,
   useCallback,
   useEffect,
@@ -21,7 +9,17 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 import { updateProxyChainConfigInRuntime } from '@/services/cmds'
+import { showNotice } from '@/services/notice-service'
 
 import { ScrollTopButton } from '../layout/scroll-top-button'
 
@@ -59,15 +57,9 @@ interface ChainRuleHeaderProps {
   selectLabel: string
   currentGroup: ProxyGroupOption | null
   canSelectGroup: boolean
-  onMenuOpen: (event: MouseEvent<HTMLElement>) => void
-}
-
-interface GroupSelectMenuProps {
-  anchorEl: HTMLElement | null
   groups: ProxyGroupOption[]
   selectedGroup: string | null
   emptyText: string
-  onClose: () => void
   onSelect: (groupName: string) => void
 }
 
@@ -102,120 +94,73 @@ function ChainRuleHeader({
   selectLabel,
   currentGroup,
   canSelectGroup,
-  onMenuOpen,
-}: ChainRuleHeaderProps) {
-  return (
-    <Box sx={{ borderBottom: '1px solid', borderColor: 'divider' }}>
-      <Box
-        sx={{
-          px: 2,
-          py: 1.5,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '16px' }}>
-            {title}
-          </Typography>
-
-          {currentGroup && (
-            <Chip
-              size="small"
-              label={`${currentGroup.name} (${currentGroup.type})`}
-              variant="outlined"
-              sx={{
-                fontSize: '12px',
-                maxWidth: '200px',
-                '& .MuiChip-label': {
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                },
-              }}
-            />
-          )}
-        </Box>
-
-        {canSelectGroup && (
-          <IconButton
-            size="small"
-            onClick={onMenuOpen}
-            sx={{
-              border: '1px solid',
-              borderColor: 'divider',
-              borderRadius: 'var(--radius-compact)',
-              padding: '4px 8px',
-            }}
-          >
-            <Typography variant="body2" sx={{ mr: 0.5, fontSize: '12px' }}>
-              {selectLabel}
-            </Typography>
-            <ExpandMoreRounded fontSize="small" />
-          </IconButton>
-        )}
-      </Box>
-    </Box>
-  )
-}
-
-function GroupSelectMenu({
-  anchorEl,
   groups,
   selectedGroup,
   emptyText,
-  onClose,
   onSelect,
-}: GroupSelectMenuProps) {
+}: ChainRuleHeaderProps) {
   return (
-    <Menu
-      anchorEl={anchorEl}
-      open={Boolean(anchorEl)}
-      onClose={onClose}
-      slotProps={{
-        paper: {
-          sx: {
-            maxHeight: 300,
-            minWidth: 200,
-          },
-        },
-      }}
-    >
-      {groups.map((group) => (
-        <MenuItem
-          key={group.name}
-          onClick={() => onSelect(group.name)}
-          selected={selectedGroup === group.name}
-          sx={{ fontSize: '14px', py: 1 }}
-        >
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'flex-start',
-            }}
-          >
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              {group.name}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {group.type} · {group.all?.length ?? 0} 节点
-            </Typography>
-          </Box>
-        </MenuItem>
-      ))}
+    <div className="border-b border-[var(--color-border)]">
+      <div className="flex items-center justify-between border-b border-[var(--color-border)] px-inset py-stack">
+        <div className="flex items-center gap-inset">
+          <span className="text-h3 font-semibold text-[var(--color-text-primary)]">
+            {title}
+          </span>
 
-      {groups.length === 0 && (
-        <MenuItem disabled>
-          <Typography variant="body2" color="text.secondary">
-            {emptyText}
-          </Typography>
-        </MenuItem>
-      )}
-    </Menu>
+          {currentGroup && (
+            <Badge variant="outline" className="max-w-[200px]">
+              <span className="truncate">
+                {`${currentGroup.name} (${currentGroup.type})`}
+              </span>
+            </Badge>
+          )}
+        </div>
+
+        {canSelectGroup && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-inline rounded-[var(--radius-compact)] text-xs font-normal"
+              >
+                {selectLabel}
+                <ChevronDown className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="max-h-[300px] min-w-[200px] overflow-y-auto"
+            >
+              {groups.map((group) => (
+                <DropdownMenuItem
+                  key={group.name}
+                  onSelect={() => onSelect(group.name)}
+                  className={cn(
+                    'flex flex-col items-start',
+                    selectedGroup === group.name &&
+                      'bg-[var(--color-bg-active)]',
+                  )}
+                >
+                  <span className="text-label font-medium">{group.name}</span>
+                  <span className="text-xs text-[var(--color-text-secondary)]">
+                    {group.type} · {group.all?.length ?? 0} 节点
+                  </span>
+                </DropdownMenuItem>
+              ))}
+
+              {groups.length === 0 && (
+                <DropdownMenuItem disabled>
+                  <span className="text-body text-[var(--color-text-secondary)]">
+                    {emptyText}
+                  </span>
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -246,9 +191,7 @@ function ProxyVirtualList({
   onHeadState: (groupName: string, patch: Partial<HeadState>) => void
   onChangeProxy: (group: IProxyGroupItem, proxy: IProxyItem) => void
 }) {
-  const theme = useTheme()
-  const stickyBackground =
-    theme.palette.mode === 'dark' ? '#1e1f27' : 'var(--background-color)'
+  const stickyBackground = 'var(--color-bg-page)'
   const listHeight = Math.max(totalSize, 240)
 
   return (
@@ -336,12 +279,6 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
     }
   }, [proxyChain])
 
-  const [ruleMenuAnchor, setRuleMenuAnchor] = useState<null | HTMLElement>(null)
-  const [duplicateWarning, setDuplicateWarning] = useState<{
-    open: boolean
-    message: string
-  }>({ open: false, message: '' })
-
   // Compute current group for rule header
   const currentGroup = useMemo(() => {
     if (!activeSelectedGroup) return null
@@ -353,17 +290,8 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
   }, [activeSelectedGroup, availableGroups])
 
   // Handlers
-  const handleGroupMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setRuleMenuAnchor(event.currentTarget)
-  }
-
-  const handleGroupMenuClose = () => {
-    setRuleMenuAnchor(null)
-  }
-
   const handleGroupSelect = (groupName: string) => {
     onGroupSelect(groupName)
-    handleGroupMenuClose()
 
     if (mode === 'rule') {
       updateProxyChainConfigInRuntime(null)
@@ -374,21 +302,13 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
     }
   }
 
-  const handleCloseDuplicateWarning = useCallback(() => {
-    setDuplicateWarning({ open: false, message: '' })
-  }, [])
-
   const handleChangeProxy = useCallback(
     (_group: IProxyGroupItem, proxy: IProxyItem) => {
       // 使用函数式更新来避免状态延迟问题
       setProxyChain((prev) => {
         // 检查是否已经存在相同名称的代理，防止重复添加
         if (prev.some((item) => item.name === proxy.name)) {
-          const warningMessage = t('proxies.page.chain.duplicateNode')
-          setDuplicateWarning({
-            open: true,
-            message: warningMessage,
-          })
+          showNotice.warning('proxies.page.chain.duplicateNode')
           return prev // 返回原来的状态，不做任何更改
         }
 
@@ -408,7 +328,7 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
         return [...prev, chainItem]
       })
     },
-    [t],
+    [],
   )
 
   // Render virtual list for chain mode
@@ -432,73 +352,43 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
   const showRuleHeader = mode === 'rule' && availableGroups.length > 0
 
   return (
-    <>
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-        <Box sx={{ minWidth: 0, flex: 1, position: 'relative' }}>
-          {showRuleHeader && (
-            <ChainRuleHeader
-              title={t('proxies.page.rules.title')}
-              selectLabel={t('proxies.page.rules.select')}
-              currentGroup={currentGroup}
-              canSelectGroup={availableGroups.length > 0}
-              onMenuOpen={handleGroupMenuOpen}
-            />
-          )}
-
-          {renderProxyList()}
-          <ScrollTopButton
-            show={showScrollTop}
-            onClick={onScrollToTop}
-            sx={{
-              position: 'fixed',
-              right: { xs: 24, md: 440 },
-              bottom: 24,
-              zIndex: 10,
-            }}
-          />
-        </Box>
-
-        <Box
-          sx={{
-            width: '400px',
-            minWidth: '300px',
-            flex: '0 0 auto',
-            alignSelf: 'flex-start',
-          }}
-        >
-          <ProxyChain
-            proxyChain={proxyChain}
-            onUpdateChain={setProxyChain}
-            chainConfigData={chainConfigData}
-            mode={mode}
+    <div className="flex items-start gap-inset">
+      <div className="relative min-w-0 flex-1">
+        {showRuleHeader && (
+          <ChainRuleHeader
+            title={t('proxies.page.rules.title')}
+            selectLabel={t('proxies.page.rules.select')}
+            currentGroup={currentGroup}
+            canSelectGroup={availableGroups.length > 0}
+            groups={availableGroups}
             selectedGroup={activeSelectedGroup}
+            emptyText="暂无可用代理组"
+            onSelect={handleGroupSelect}
           />
-        </Box>
-      </Box>
+        )}
 
-      <Snackbar
-        open={duplicateWarning.open}
-        autoHideDuration={3000}
-        onClose={handleCloseDuplicateWarning}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={handleCloseDuplicateWarning}
-          severity="warning"
-          variant="filled"
-        >
-          {duplicateWarning.message}
-        </Alert>
-      </Snackbar>
+        {renderProxyList()}
+        <ScrollTopButton
+          show={showScrollTop}
+          onClick={onScrollToTop}
+          sx={{
+            position: 'fixed',
+            right: { xs: 24, md: 440 },
+            bottom: 24,
+            zIndex: 10,
+          }}
+        />
+      </div>
 
-      <GroupSelectMenu
-        anchorEl={ruleMenuAnchor}
-        groups={availableGroups}
-        selectedGroup={activeSelectedGroup}
-        emptyText="暂无可用代理组"
-        onClose={handleGroupMenuClose}
-        onSelect={handleGroupSelect}
-      />
-    </>
+      <div className="w-[400px] min-w-[300px] flex-none self-start">
+        <ProxyChain
+          proxyChain={proxyChain}
+          onUpdateChain={setProxyChain}
+          chainConfigData={chainConfigData}
+          mode={mode}
+          selectedGroup={activeSelectedGroup}
+        />
+      </div>
+    </div>
   )
 }

@@ -1,46 +1,25 @@
-import {
-  CloseRounded,
-  RefreshRounded,
-  StorageOutlined,
-} from '@mui/icons-material'
-import {
-  Box,
-  Button,
-  ButtonBase,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  List,
-  ListItem,
-  Typography,
-  alpha,
-  styled,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
+import { Database, Loader2, RefreshCw, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { updateRuleProvider } from 'tauri-plugin-mihomo-api'
 
 import { RuleProviderDetailDialog } from '@/components/rule/rule-provider-detail-dialog'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { cn } from '@/lib/utils'
 import { useAppRefreshers, useRulesData } from '@/providers/app-data-context'
 import type { RuleProviderContent } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
-import { getShellThemeVars } from '@/utils/shell-theme'
 
-const MetaTag = styled(Box)<{ component?: React.ElementType }>(({ theme }) => ({
-  display: 'inline-flex',
-  height: 20,
-  alignItems: 'center',
-  borderRadius: 'var(--radius-compact)',
-  padding: '0 6px',
-  backgroundColor: alpha(theme.palette.text.primary, 0.055),
-  color: theme.palette.text.secondary,
-  fontSize: 11,
-  fontWeight: 500,
-  lineHeight: 1,
-}))
+const metaTagClass =
+  'inline-flex h-5 items-center rounded-[var(--radius-compact)] px-compact text-[11px] font-medium leading-none text-[var(--color-text-secondary)] bg-[color-mix(in_srgb,var(--color-text-primary)_5.5%,transparent)]'
 
 export const ProviderButton = () => {
   const { t } = useTranslation()
@@ -145,285 +124,125 @@ export const ProviderButton = () => {
   return (
     <>
       <Button
-        className="rule-provider-trigger"
-        variant="text"
-        size="small"
-        startIcon={<StorageOutlined sx={{ fontSize: '20px !important' }} />}
+        variant="ghost"
         onClick={() => setOpen(true)}
-        sx={{
-          flex: '0 0 auto',
-          height: 38,
-          minWidth: 0,
-          px: 1.5,
-          borderRadius: 'var(--radius-control)',
-          bgcolor: 'var(--shell-panel-muted)',
-          color: 'text.primary',
-          fontSize: 13.5,
-          fontWeight: 550,
-          lineHeight: 1,
-          whiteSpace: 'nowrap',
-          textTransform: 'none',
-          '& .MuiButton-startIcon': {
-            mr: 1,
-            ml: 0,
-            color: 'text.secondary',
-          },
-          '&:hover': {
-            bgcolor: 'var(--shell-nav-hover)',
-          },
-          '&:active': {
-            bgcolor: 'var(--shell-nav-selected)',
-          },
-          '&:focus-visible': {
-            outline: '2px solid var(--shell-focus) !important',
-            outlineOffset: 1,
-          },
-        }}
+        className="rule-provider-trigger h-[38px] min-w-0 shrink-0 rounded-[var(--radius-control)] bg-[var(--color-bg-subtle)] px-3 text-[13.5px] font-[550] leading-none whitespace-nowrap text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)] active:bg-[var(--color-bg-active)]"
       >
+        <Database className="size-5 text-[var(--color-text-secondary)]" />
         {t('rules.page.provider.trigger')}
       </Button>
 
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        maxWidth={false}
-        slotProps={{
-          paper: {
-            sx: ({ palette }) => ({
-              ...getShellThemeVars(palette),
-              display: 'flex',
-              width: 'min(680px, calc(100vw - 24px))',
-              m: 1.5,
-              maxHeight: 'calc(100% - 24px)',
-              overflow: 'hidden',
-              border: '1px solid var(--shell-border-strong) !important',
-              borderRadius: 'var(--radius-overlay)',
-              bgcolor: 'var(--shell-panel) !important',
-              backgroundImage: 'none',
-              boxShadow: 'var(--shell-shadow) !important',
-            }),
-          },
-        }}
-      >
-        <DialogTitle sx={{ px: 3, pt: 2.75, pb: 2 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: 2,
-              '@media (max-width: 520px)': {
-                alignItems: 'flex-start',
-              },
-            }}
-          >
-            <Box sx={{ minWidth: 0 }}>
-              <Typography
-                component="h2"
-                sx={{
-                  minWidth: 0,
-                  fontSize: 20,
-                  fontWeight: 650,
-                  lineHeight: 1.25,
-                  letterSpacing: '-0.025em',
-                }}
-              >
-                {t('rules.page.provider.dialogTitle')}
-              </Typography>
-            </Box>
-
-            <Box
-              sx={{
-                display: 'flex',
-                flex: '0 0 auto',
-                alignItems: 'center',
-                gap: 0.5,
-              }}
-            >
-              <Button
-                variant="contained"
-                size="small"
-                loading={isUpdatingAny}
-                disabled={isUpdatingAny}
-                onClick={updateAllProviders}
-                sx={{
-                  minHeight: 32,
-                  borderRadius: 'var(--radius-compact)',
-                  px: 1.25,
-                  textTransform: 'none',
-                  '&:focus-visible': {
-                    outline: '2px solid var(--shell-focus) !important',
-                    outlineOffset: 2,
-                  },
-                  '@media (max-width: 420px)': {
-                    minWidth: 32,
-                    px: 0.75,
-                  },
-                }}
-              >
-                {t('rules.page.provider.actions.updateAll')}
-              </Button>
-              <IconButton
-                size="small"
-                onClick={handleClose}
-                aria-label={t('shared.actions.close')}
-                title={t('shared.actions.close')}
-                sx={{
-                  color: 'text.secondary',
-                  '&:hover': { bgcolor: 'var(--shell-nav-hover)' },
-                  '&:focus-visible': {
-                    outline: '2px solid var(--shell-focus) !important',
-                    outlineOffset: 1,
-                  },
-                }}
-              >
-                <CloseRounded fontSize="small" />
-              </IconButton>
-            </Box>
-          </Box>
-        </DialogTitle>
-
+      <Dialog open={open} onOpenChange={(next) => !next && handleClose()}>
         <DialogContent
-          sx={{ minHeight: 0, overflowY: 'auto', px: 3, pt: 0, pb: 3 }}
+          showCloseButton={false}
+          className="gap-0 overflow-hidden p-0 sm:max-w-none"
+          style={{ width: 'min(680px, calc(100vw - 24px))' }}
         >
-          <List
-            sx={{
-              minHeight: 120,
-              overflow: 'hidden',
-              border: '1px solid var(--shell-border)',
-              borderRadius: 'var(--radius-container)',
-              py: 0,
-            }}
-          >
-            {Object.entries(ruleProviders || {})
-              .sort()
-              .map(([key, item]) => {
-                const provider = item
-                const time = dayjs(provider.updatedAt)
-                const isUpdating = updating[key]
+          <DialogHeader className="space-y-0 px-6 pt-[22px] pb-4">
+            <div className="flex items-center justify-between gap-inset max-[520px]:items-start">
+              <DialogTitle className="min-w-0 text-[20px] font-[650] leading-[1.25] tracking-[-0.025em]">
+                {t('rules.page.provider.dialogTitle')}
+              </DialogTitle>
 
-                return (
-                  <ListItem
-                    key={key}
-                    disablePadding
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: 'minmax(0, 1fr) 44px',
-                      minHeight: 64,
-                      borderBottom: '1px solid var(--shell-border)',
-                      '&:last-child': { borderBottom: 0 },
-                    }}
-                  >
-                    <ButtonBase
-                      onClick={() => setSelectedProvider(key)}
-                      aria-label={t('rules.page.provider.detail.open', {
-                        name: key,
-                      })}
-                      sx={({ palette }) => ({
-                        display: 'grid',
-                        gridTemplateColumns: 'minmax(0, 1fr) auto',
-                        minWidth: 0,
-                        minHeight: 64,
-                        alignItems: 'center',
-                        columnGap: 1.5,
-                        px: 2,
-                        py: 1.25,
-                        textAlign: 'left',
-                        transition: 'background-color 160ms ease',
-                        '&:hover': {
-                          bgcolor: alpha(palette.text.primary, 0.055),
-                        },
-                        '&:focus-visible': {
-                          outline: '2px solid var(--shell-focus)',
-                          outlineOffset: -2,
-                        },
-                        '@media (max-width: 520px)': {
-                          gridTemplateColumns: 'minmax(0, 1fr)',
-                          rowGap: 0.75,
-                          px: 1.5,
-                        },
-                      })}
+              <div className="flex shrink-0 items-center gap-inline">
+                <Button
+                  size="sm"
+                  disabled={isUpdatingAny}
+                  onClick={updateAllProviders}
+                  className="min-h-8 rounded-[var(--radius-compact)]"
+                >
+                  {isUpdatingAny && <Loader2 className="animate-spin" />}
+                  {t('rules.page.provider.actions.updateAll')}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={handleClose}
+                  aria-label={t('shared.actions.close')}
+                  title={t('shared.actions.close')}
+                  className="text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)]"
+                >
+                  <X />
+                </Button>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="px-6 pb-6">
+            <ul className="max-h-[60vh] min-h-[120px] overflow-y-auto overflow-x-hidden rounded-[var(--radius-container)] border border-[var(--color-border)]">
+              {Object.entries(ruleProviders || {})
+                .sort()
+                .map(([key, item]) => {
+                  const provider = item
+                  const time = dayjs(provider.updatedAt)
+                  const isUpdating = updating[key]
+
+                  return (
+                    <li
+                      key={key}
+                      className="grid min-h-16 grid-cols-[minmax(0,1fr)_44px] border-b border-[var(--color-border)] last:border-b-0"
                     >
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography
-                          component="div"
-                          noWrap
-                          title={key}
-                          sx={{
-                            mb: 0.75,
-                            fontSize: 14,
-                            fontWeight: 600,
-                            lineHeight: 1.25,
-                            letterSpacing: '-0.01em',
-                          }}
-                        >
-                          {key}
-                        </Typography>
-                        <Box
-                          sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}
-                        >
-                          <MetaTag component="span">
-                            {provider.ruleCount}
-                          </MetaTag>
-                          <MetaTag component="span">
-                            {provider.vehicleType}
-                          </MetaTag>
-                          <MetaTag component="span">
-                            {provider.behavior}
-                          </MetaTag>
-                        </Box>
-                      </Box>
-
-                      <Typography
-                        component="div"
-                        color="text.secondary"
-                        noWrap
-                        title={`${t('shared.labels.updateAt')}: ${time.fromNow()}`}
-                        sx={{ fontSize: 12, lineHeight: 1.4 }}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedProvider(key)}
+                        aria-label={t('rules.page.provider.detail.open', {
+                          name: key,
+                        })}
+                        className={cn(
+                          'grid min-h-16 min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-stack px-inset py-[10px] text-left outline-none transition-colors',
+                          'hover:bg-[var(--color-bg-hover)]',
+                          'focus-visible:-outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-focus-ring)]',
+                          'max-[520px]:grid-cols-[minmax(0,1fr)] max-[520px]:gap-y-compact max-[520px]:px-stack',
+                        )}
                       >
-                        {t('shared.labels.updateAt')}: {time.fromNow()}
-                      </Typography>
-                    </ButtonBase>
+                        <div className="min-w-0">
+                          <div
+                            title={key}
+                            className="mb-compact truncate text-[14px] font-semibold leading-[1.25] tracking-[-0.01em]"
+                          >
+                            {key}
+                          </div>
+                          <div className="flex flex-wrap gap-inline">
+                            <span className={metaTagClass}>
+                              {provider.ruleCount}
+                            </span>
+                            <span className={metaTagClass}>
+                              {provider.vehicleType}
+                            </span>
+                            <span className={metaTagClass}>
+                              {provider.behavior}
+                            </span>
+                          </div>
+                        </div>
 
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <IconButton
-                        size="small"
-                        onClick={() => updateProvider(key)}
-                        disabled={isUpdating}
-                        aria-label={t('rules.page.provider.actions.update')}
-                        sx={{
-                          color: 'text.secondary',
-                          animation: isUpdating
-                            ? 'spin 1s linear infinite'
-                            : 'none',
-                          '&:hover': {
-                            color: 'primary.main',
-                            bgcolor: 'var(--shell-nav-hover)',
-                          },
-                          '&:focus-visible': {
-                            outline: '2px solid var(--shell-focus) !important',
-                            outlineOffset: 2,
-                          },
-                          '@keyframes spin': {
-                            '0%': { transform: 'rotate(0deg)' },
-                            '100%': { transform: 'rotate(360deg)' },
-                          },
-                        }}
-                        title={t('rules.page.provider.actions.update')}
-                      >
-                        <RefreshRounded />
-                      </IconButton>
-                    </Box>
-                  </ListItem>
-                )
-              })}
-          </List>
+                        <div
+                          title={`${t('shared.labels.updateAt')}: ${time.fromNow()}`}
+                          className="truncate text-[12px] leading-[1.4] text-[var(--color-text-secondary)]"
+                        >
+                          {t('shared.labels.updateAt')}: {time.fromNow()}
+                        </div>
+                      </button>
+
+                      <div className="flex items-center justify-center">
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => updateProvider(key)}
+                          disabled={isUpdating}
+                          aria-label={t('rules.page.provider.actions.update')}
+                          title={t('rules.page.provider.actions.update')}
+                          className="text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-accent)]"
+                        >
+                          <RefreshCw
+                            className={isUpdating ? 'animate-spin' : undefined}
+                          />
+                        </Button>
+                      </div>
+                    </li>
+                  )
+                })}
+            </ul>
+          </div>
         </DialogContent>
       </Dialog>
 

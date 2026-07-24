@@ -1,4 +1,3 @@
-import { TextField } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import { nanoid } from 'nanoid'
 import { forwardRef, useImperativeHandle, useState } from 'react'
@@ -6,6 +5,9 @@ import { useForm, Controller } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog } from '@/components/base'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { useVerge } from '@/hooks/use-verge'
 import { showNotice } from '@/services/notice-service'
 
@@ -116,15 +118,6 @@ export const TestViewer = forwardRef<TestViewerRef, Props>(
       setTimeout(() => formIns.reset(), 500)
     }
 
-    const text = {
-      fullWidth: true,
-      size: 'small',
-      margin: 'normal',
-      variant: 'outlined',
-      autoComplete: 'off',
-      autoCorrect: 'off',
-    } as const
-
     return (
       <BaseDialog
         open={open}
@@ -141,39 +134,57 @@ export const TestViewer = forwardRef<TestViewerRef, Props>(
         onOk={handleOk}
         loading={loading}
       >
-        <Controller
-          name="name"
-          control={control}
-          render={({ field }) => (
-            <TextField {...text} {...field} label={t('shared.labels.name')} />
-          )}
-        />
-        <Controller
-          name="icon"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...text}
-              {...field}
-              multiline
-              maxRows={5}
-              label={t('shared.labels.icon')}
-            />
-          )}
-        />
-        <Controller
-          name="url"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...text}
-              {...field}
-              multiline
-              maxRows={3}
-              label={t('tests.modals.test.fields.url')}
-            />
-          )}
-        />
+        <div className="flex flex-col gap-stack">
+          <Controller
+            name="name"
+            control={control}
+            render={({ field }) => (
+              <div className="flex flex-col gap-inline">
+                <Label htmlFor="test-name">{t('shared.labels.name')}</Label>
+                <Input
+                  id="test-name"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  {...field}
+                />
+              </div>
+            )}
+          />
+          <Controller
+            name="icon"
+            control={control}
+            render={({ field }) => (
+              <div className="flex flex-col gap-inline">
+                <Label htmlFor="test-icon">{t('shared.labels.icon')}</Label>
+                <Textarea
+                  id="test-icon"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  className="max-h-[7.5rem]"
+                  {...field}
+                />
+              </div>
+            )}
+          />
+          <Controller
+            name="url"
+            control={control}
+            render={({ field }) => (
+              <div className="flex flex-col gap-inline">
+                <Label htmlFor="test-url">
+                  {t('tests.modals.test.fields.url')}
+                </Label>
+                <Textarea
+                  id="test-url"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  className="max-h-[4.5rem]"
+                  {...field}
+                />
+              </div>
+            )}
+          />
+        </div>
       </BaseDialog>
     )
   },

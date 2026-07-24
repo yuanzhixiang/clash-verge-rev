@@ -1,18 +1,12 @@
-import {
-  Button,
-  List,
-  ListItem,
-  ListItemText,
-  Stack,
-  Typography,
-} from '@mui/material'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { useLockFn } from 'ahooks'
+import { Loader2 } from 'lucide-react'
 import type { ReactNode, Ref } from 'react'
 import { useCallback, useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, DialogRef } from '@/components/base'
+import { Button } from '@/components/ui/button'
 import { useVerge } from '@/hooks/use-verge'
 import {
   createLocalBackup,
@@ -119,35 +113,21 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
       onCancel={() => setOpen(false)}
       onClose={() => setOpen(false)}
     >
-      <Stack spacing={2}>
-        <Stack
-          spacing={1}
-          sx={{
-            border: (theme) => `1px solid ${theme.palette.divider}`,
-            borderRadius: 'var(--radius-container)',
-            p: 2,
-          }}
-        >
-          <Typography variant="subtitle1">
+      <div className="flex flex-col gap-inset">
+        <div className="flex flex-col gap-stack rounded-[var(--radius-container)] border border-[var(--color-border)] p-inset">
+          <p className="font-medium text-[var(--color-text-primary)]">
             {t('settings.modals.backup.auto.title')}
-          </Typography>
-          <List disablePadding sx={{ '.MuiListItem-root': { px: 0 } }}>
+          </p>
+          <div>
             <AutoBackupSettings />
-          </List>
-        </Stack>
+          </div>
+        </div>
 
-        <Stack
-          spacing={1}
-          sx={{
-            border: (theme) => `1px solid ${theme.palette.divider}`,
-            borderRadius: 'var(--radius-container)',
-            p: 2,
-          }}
-        >
-          <Typography variant="subtitle1">
+        <div className="flex flex-col gap-stack rounded-[var(--radius-container)] border border-[var(--color-border)] p-inset">
+          <p className="font-medium text-[var(--color-text-primary)]">
             {t('settings.modals.backup.manual.title')}
-          </Typography>
-          <List disablePadding sx={{ '.MuiListItem-root': { px: 0 } }}>
+          </p>
+          <div>
             {(
               [
                 {
@@ -157,18 +137,19 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
                   actions: [
                     <Button
                       key="backup"
-                      variant="contained"
-                      size="small"
-                      loading={busyAction === 'local'}
-                      disabled={localImporting}
+                      size="sm"
+                      disabled={busyAction === 'local' || localImporting}
                       onClick={() => handleBackup('local')}
                     >
+                      {busyAction === 'local' && (
+                        <Loader2 className="animate-spin" />
+                      )}
                       {t('settings.modals.backup.actions.backup')}
                     </Button>,
                     <Button
                       key="history"
-                      variant="outlined"
-                      size="small"
+                      variant="outline"
+                      size="sm"
                       disabled={isLocalBusy}
                       onClick={() => openHistory('local')}
                     >
@@ -176,12 +157,12 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
                     </Button>,
                     <Button
                       key="import"
-                      variant="text"
-                      size="small"
-                      loading={localImporting}
-                      disabled={busyAction === 'local'}
+                      variant="ghost"
+                      size="sm"
+                      disabled={localImporting || busyAction === 'local'}
                       onClick={() => handleImport()}
                     >
+                      {localImporting && <Loader2 className="animate-spin" />}
                       {t('settings.modals.backup.actions.importBackup')}
                     </Button>,
                   ],
@@ -193,25 +174,27 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
                   actions: [
                     <Button
                       key="backup"
-                      variant="contained"
-                      size="small"
-                      loading={busyAction === 'webdav'}
+                      size="sm"
+                      disabled={busyAction === 'webdav'}
                       onClick={() => handleBackup('webdav')}
                     >
+                      {busyAction === 'webdav' && (
+                        <Loader2 className="animate-spin" />
+                      )}
                       {t('settings.modals.backup.actions.backup')}
                     </Button>,
                     <Button
                       key="history"
-                      variant="outlined"
-                      size="small"
+                      variant="outline"
+                      size="sm"
                       onClick={() => openHistory('webdav')}
                     >
                       {t('settings.modals.backup.actions.viewHistory')}
                     </Button>,
                     <Button
                       key="configure"
-                      variant="text"
-                      size="small"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setWebdavDialogOpen(true)}
                     >
                       {t('settings.modals.backup.manual.configureWebdav')}
@@ -225,27 +208,32 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 actions: ReactNode[]
               }>
             ).map((item, idx) => (
-              <ListItem key={item.key} disableGutters divider={idx === 0}>
-                <Stack spacing={1} sx={{ width: '100%' }}>
-                  <ListItemText
-                    primary={item.title}
-                    slotProps={{ secondary: { component: 'span' } }}
-                    secondary={item.description}
-                  />
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    useFlexGap
-                    sx={{ flexWrap: 'wrap', alignItems: 'center' }}
-                  >
+              <div
+                key={item.key}
+                className={
+                  idx === 0
+                    ? 'border-b border-[var(--color-border)] py-component'
+                    : 'py-component'
+                }
+              >
+                <div className="flex flex-col gap-stack">
+                  <div>
+                    <p className="text-sm text-[var(--color-text-primary)]">
+                      {item.title}
+                    </p>
+                    <span className="text-xs text-[var(--color-text-secondary)]">
+                      {item.description}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-stack">
                     {item.actions}
-                  </Stack>
-                </Stack>
-              </ListItem>
+                  </div>
+                </div>
+              </div>
             ))}
-          </List>
-        </Stack>
-      </Stack>
+          </div>
+        </div>
+      </div>
 
       <BackupHistoryViewer
         open={historyOpen}

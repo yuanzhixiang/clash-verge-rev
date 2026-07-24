@@ -1,16 +1,11 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { DeleteForeverRounded, UndoRounded } from '@mui/icons-material'
-import {
-  Box,
-  IconButton,
-  ListItem,
-  ListItemText,
-  alpha,
-  styled,
-} from '@mui/material'
+import { Trash2, Undo2 } from 'lucide-react'
 
+import { Button } from '@/components/ui/button'
 import { useIconCache } from '@/hooks/use-icon-cache'
+import { cn } from '@/lib/utils'
+
 interface Props {
   type: 'prepend' | 'original' | 'delete' | 'append'
   group: IProxyGroupConfig
@@ -41,121 +36,72 @@ export const GroupItem = (props: Props) => {
     cacheKey: group.name.replaceAll(' ', ''),
   })
 
+  const background =
+    type === 'original'
+      ? 'bg-[color-mix(in_srgb,var(--color-text-primary)_12%,transparent)]'
+      : type === 'delete'
+        ? 'bg-[color-mix(in_srgb,var(--color-danger)_30%,transparent)]'
+        : 'bg-[color-mix(in_srgb,var(--color-success)_30%,transparent)]'
+
   return (
-    <ListItem
-      dense
-      sx={({ palette }) => ({
-        position: 'relative',
-        background:
-          type === 'original'
-            ? palette.mode === 'dark'
-              ? alpha(palette.background.paper, 0.3)
-              : alpha(palette.grey[400], 0.3)
-            : type === 'delete'
-              ? alpha(palette.error.main, 0.3)
-              : alpha(palette.success.main, 0.3),
-        height: '100%',
-        margin: '8px 0',
-        borderRadius: 'var(--radius-control)',
+    <div
+      className={cn(
+        'relative my-component flex h-full items-center rounded-[var(--radius-control)] px-inset py-inline',
+        background,
+      )}
+      style={{
         transform: CSS.Transform.toString(transform),
         transition,
         zIndex: isDragging ? 'calc(infinity)' : undefined,
-      })}
+      }}
     >
       {group.icon && group.icon?.trim().startsWith('http') && (
         <img
           src={iconCachePath === '' ? group.icon : iconCachePath}
-          width="32px"
-          style={{
-            marginRight: '12px',
-            borderRadius: 'var(--radius-compact)',
-          }}
+          className="mr-stack w-8 rounded-[var(--radius-compact)]"
         />
       )}
       {group.icon && group.icon?.trim().startsWith('data') && (
         <img
           src={group.icon}
-          width="32px"
-          style={{
-            marginRight: '12px',
-            borderRadius: 'var(--radius-compact)',
-          }}
+          className="mr-stack w-8 rounded-[var(--radius-compact)]"
         />
       )}
       {group.icon && group.icon?.trim().startsWith('<svg') && (
         <img
           src={`data:image/svg+xml;base64,${btoa(group.icon ?? '')}`}
-          width="32px"
-          style={{
-            marginRight: '12px',
-            borderRadius: 'var(--radius-compact)',
-          }}
+          className="mr-stack w-8 rounded-[var(--radius-compact)]"
         />
       )}
-      <ListItemText
+
+      <div
         {...(dragAttributes ?? {})}
         {...(dragListeners ?? {})}
         ref={dragNodeRef}
-        sx={{ cursor: sortable ? 'move' : '' }}
-        primary={
-          <StyledPrimary
-            sx={{ textDecoration: type === 'delete' ? 'line-through' : '' }}
-          >
-            {group.name}
-          </StyledPrimary>
-        }
-        secondary={
-          <ListItemTextChild
-            sx={{
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'center',
-              pt: '2px',
-            }}
-          >
-            <Box sx={{ marginTop: '2px' }}>
-              <StyledTypeBox>{group.type}</StyledTypeBox>
-            </Box>
-          </ListItemTextChild>
-        }
-        slotProps={{
-          secondary: {
-            sx: {
-              display: 'flex',
-              alignItems: 'center',
-              color: '#ccc',
-            },
-          },
-        }}
-      />
-      <IconButton onClick={onDelete}>
-        {type === 'delete' ? <UndoRounded /> : <DeleteForeverRounded />}
-      </IconButton>
-    </ListItem>
+        className={cn('min-w-0 flex-1', sortable && 'cursor-move')}
+      >
+        <div
+          className={cn(
+            'truncate text-[15px] leading-normal font-bold',
+            type === 'delete' && 'line-through',
+          )}
+        >
+          {group.name}
+        </div>
+        <div className="flex items-center pt-adjust">
+          <span className="mr-component inline-block rounded-[var(--radius-container)] border border-[color-mix(in_srgb,var(--color-accent)_50%,transparent)] px-inline text-[10px] leading-normal text-[color-mix(in_srgb,var(--color-accent)_80%,transparent)]">
+            {group.type}
+          </span>
+        </div>
+      </div>
+
+      <Button type="button" variant="ghost" size="icon" onClick={onDelete}>
+        {type === 'delete' ? (
+          <Undo2 className="size-5" />
+        ) : (
+          <Trash2 className="size-5" />
+        )}
+      </Button>
+    </div>
   )
 }
-
-const StyledPrimary = styled('div')`
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.5;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`
-
-const ListItemTextChild = styled('span')`
-  display: block;
-`
-
-const StyledTypeBox = styled(ListItemTextChild)(({ theme }) => ({
-  display: 'inline-block',
-  border: '1px solid #ccc',
-  borderColor: alpha(theme.palette.primary.main, 0.5),
-  color: alpha(theme.palette.primary.main, 0.8),
-  borderRadius: 'var(--radius-container)',
-  fontSize: 10,
-  padding: '0 4px',
-  lineHeight: 1.5,
-  marginRight: '8px',
-}))

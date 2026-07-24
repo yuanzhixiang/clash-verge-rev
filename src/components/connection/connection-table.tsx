@@ -1,4 +1,3 @@
-import { alpha, useTheme } from '@mui/material/styles'
 import { useLocalStorage } from 'foxact/use-local-storage'
 import {
   memo,
@@ -348,7 +347,6 @@ export const ConnectionTable = (props: Props) => {
     [],
   )
   const { t } = useTranslation()
-  const theme = useTheme()
   const [columnWidths, setColumnWidths] = useLocalStorage<ColumnSizingState>(
     'connection-table-widths',
     {},
@@ -760,10 +758,10 @@ export const ConnectionTable = (props: Props) => {
     [startResize],
   )
 
-  const borderColor = theme.palette.divider
-  const headerBackground = theme.palette.background.paper
-  const selectedBackground = alpha(theme.palette.primary.main, 0.1)
-  const textSecondary = theme.palette.text.secondary
+  const borderColor = 'var(--color-border)'
+  const headerBackground = 'var(--color-bg-card)'
+  const selectedBackground = 'var(--color-accent-subtle)'
+  const textSecondary = 'var(--color-text-secondary)'
 
   return (
     <>
@@ -774,7 +772,7 @@ export const ConnectionTable = (props: Props) => {
           flex: 1,
           minHeight: 0,
           position: 'relative',
-          fontFamily: theme.typography.fontFamily,
+          fontFamily: 'var(--font-sans)',
         }}
       >
         <div

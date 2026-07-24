@@ -1,14 +1,8 @@
-import {
-  LocationOnOutlined,
-  RefreshOutlined,
-  VisibilityOffOutlined,
-  VisibilityOutlined,
-} from '@mui/icons-material'
-import { Box, Button, IconButton, Skeleton, Typography } from '@mui/material'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useEffect } from 'foxact/use-abortable-effect'
 import { useIntersection } from 'foxact/use-intersection'
 import type { XOR } from 'foxts/ts-xor'
+import { Eye, EyeOff, MapPin, RefreshCw } from 'lucide-react'
 import {
   forwardRef,
   memo,
@@ -19,6 +13,8 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { getIpInfo } from '@/services/api'
 import { useQuery } from '@/services/query-client'
 
@@ -30,28 +26,14 @@ const COUNTDOWN_TICK_INTERVAL = 5_000
 const IP_INFO_CACHE_KEY = 'cv_ip_info_cache'
 
 const InfoItem = memo(({ label, value }: { label: string; value?: string }) => (
-  <Box sx={{ mb: 0.7, display: 'flex', alignItems: 'flex-start' }}>
-    <Typography
-      variant="body2"
-      color="text.secondary"
-      sx={{ minwidth: 60, mr: 0.5, flexShrink: 0, textAlign: 'right' }}
-    >
+  <div className="mb-compact flex items-start">
+    <span className="mr-inline shrink-0 text-right text-body text-[var(--color-text-secondary)]">
       {label}:
-    </Typography>
-    <Typography
-      variant="body2"
-      sx={{
-        ml: 0.5,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        wordBreak: 'break-word',
-        whiteSpace: 'normal',
-        flexGrow: 1,
-      }}
-    >
+    </span>
+    <span className="ml-inline flex-grow overflow-hidden break-words text-body">
       {value || 'Unknown'}
-    </Typography>
-  </Box>
+    </span>
+  </div>
 ))
 
 // 获取国旗表情
@@ -82,13 +64,13 @@ const IPInfoCardContainer = forwardRef<HTMLElement, React.PropsWithChildren>(
     return (
       <EnhancedCard
         title={t('home.components.ipInfo.title')}
-        icon={<LocationOnOutlined />}
+        icon={<MapPin className="size-5" />}
         iconColor="info"
         ref={ref}
         action={
-          <IconButton size="small" onClick={() => mutate()}>
-            <RefreshOutlined />
-          </IconButton>
+          <Button variant="ghost" size="icon-sm" onClick={() => mutate()}>
+            <RefreshCw className="size-4" />
+          </Button>
         }
       >
         {children}
@@ -232,134 +214,70 @@ export const IpInfoCard = () => {
   switch (true) {
     case isLoading:
       mainElement = (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <Skeleton variant="text" width="60%" height={30} />
-          <Skeleton variant="text" width="80%" height={24} />
-          <Skeleton variant="text" width="70%" height={24} />
-          <Skeleton variant="text" width="50%" height={24} />
-        </Box>
+        <div className="flex flex-col gap-component">
+          <Skeleton className="h-7 w-3/5" />
+          <Skeleton className="h-6 w-4/5" />
+          <Skeleton className="h-6 w-[70%]" />
+          <Skeleton className="h-6 w-1/2" />
+        </div>
       )
       break
     case !!error:
       mainElement = (
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100%',
-            color: 'error.main',
-          }}
-        >
-          <Typography variant="body1" color="error">
+        <div className="flex h-full flex-col items-center justify-center text-[var(--color-danger)]">
+          <p className="text-body-lg text-[var(--color-danger)]">
             {error instanceof Error
               ? error.message
               : t('home.components.ipInfo.errors.load')}
-          </Typography>
-          <Button onClick={() => mutate()} sx={{ mt: 2 }}>
+          </p>
+          <Button variant="ghost" onClick={() => mutate()} className="mt-inset">
             {t('shared.actions.retry')}
           </Button>
-        </Box>
+        </div>
       )
       break
     default: // Normal render
       mainElement = (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'row',
-              flex: 1,
-              overflow: 'hidden',
-            }}
-          >
+        <div className="flex h-full flex-col">
+          <div className="flex flex-1 flex-row overflow-hidden">
             {/* 左侧：国家和IP地址 */}
-            <Box sx={{ width: '40%', overflow: 'hidden' }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  mb: 1,
-                  overflow: 'hidden',
-                }}
-              >
-                <Box
-                  component="span"
-                  sx={{
-                    fontSize: '1.5rem',
-                    mr: 1,
-                    display: 'inline-block',
-                    width: 28,
-                    textAlign: 'center',
-                    flexShrink: 0,
-                    fontFamily: '"twemoji mozilla", sans-serif',
-                  }}
-                >
+            <div className="w-2/5 overflow-hidden">
+              <div className="mb-component flex items-center overflow-hidden">
+                <span className="mr-component inline-block w-7 shrink-0 text-center text-2xl [font-family:'twemoji_mozilla',sans-serif]">
                   {getCountryFlag(ipInfo?.country_code)}
-                </Box>
-                <Typography
-                  variant="subtitle1"
-                  sx={{
-                    fontWeight: 'medium',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    maxWidth: '100%',
-                  }}
-                >
+                </span>
+                <span className="max-w-full truncate text-body-lg font-medium">
                   {ipInfo?.country ||
                     t('home.components.ipInfo.labels.unknown')}
-                </Typography>
-              </Box>
+                </span>
+              </div>
 
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ flexShrink: 0 }}
-                >
+              <div className="mb-component flex items-center">
+                <span className="shrink-0 text-body text-[var(--color-text-secondary)]">
                   {t('home.components.ipInfo.labels.ip')}:
-                </Typography>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    ml: 1,
-                    overflow: 'hidden',
-                    maxWidth: 'calc(100% - 30px)',
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontFamily: 'monospace',
-                      fontSize: '0.75rem',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      wordBreak: 'break-all',
-                    }}
-                  >
+                </span>
+                <div className="ml-component flex max-w-[calc(100%-30px)] items-center overflow-hidden">
+                  <span className="overflow-hidden font-mono text-xs break-all">
                     {showIp ? ipInfo?.ip : '••••••••••'}
-                  </Typography>
-                  <IconButton size="small" onClick={toggleShowIp}>
+                  </span>
+                  <Button variant="ghost" size="icon-sm" onClick={toggleShowIp}>
                     {showIp ? (
-                      <VisibilityOffOutlined fontSize="small" />
+                      <EyeOff className="size-4" />
                     ) : (
-                      <VisibilityOutlined fontSize="small" />
+                      <Eye className="size-4" />
                     )}
-                  </IconButton>
-                </Box>
-              </Box>
+                  </Button>
+                </div>
+              </div>
 
               <InfoItem
                 label={t('home.components.ipInfo.labels.asn')}
                 value={ipInfo?.asn ? `AS${ipInfo.asn}` : 'N/A'}
               />
-            </Box>
+            </div>
 
             {/* 右侧：组织、ISP和位置信息 */}
-            <Box sx={{ width: '60%', overflow: 'auto' }}>
+            <div className="w-3/5 overflow-auto">
               <InfoItem
                 label={t('home.components.ipInfo.labels.isp')}
                 value={ipInfo?.organization}
@@ -378,40 +296,21 @@ export const IpInfoCard = () => {
                 label={t('home.components.ipInfo.labels.timezone')}
                 value={ipInfo?.timezone}
               />
-            </Box>
-          </Box>
+            </div>
+          </div>
 
-          <Box
-            sx={{
-              mt: 'auto',
-              pt: 0.5,
-              borderTop: 1,
-              borderColor: 'divider',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              opacity: 0.7,
-              fontSize: '0.7rem',
-            }}
-          >
-            <Typography variant="caption">
+          <div className="mt-auto flex items-center justify-between border-t border-[var(--color-border)] pt-inline opacity-70">
+            <span className="text-caption">
               {t('home.components.ipInfo.labels.autoRefresh')}
               {countdown.type === 'countdown'
                 ? `: ${countdown.remainingSeconds}s`
                 : '...'}
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{
-                textOverflow: 'ellipsis',
-                overflow: 'hidden',
-                whiteSpace: 'nowrap',
-              }}
-            >
+            </span>
+            <span className="truncate text-caption">
               {`${ipInfo?.country_code ?? 'N/A'}, ${ipInfo?.longitude?.toFixed(2) ?? 'N/A'}, ${ipInfo?.latitude?.toFixed(2) ?? 'N/A'}`}
-            </Typography>
-          </Box>
-        </Box>
+            </span>
+          </div>
+        </div>
       )
   }
 

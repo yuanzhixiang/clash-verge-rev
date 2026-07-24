@@ -12,24 +12,10 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable'
-import {
-  VerticalAlignBottomRounded,
-  VerticalAlignTopRounded,
-} from '@mui/icons-material'
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  List,
-  ListItem,
-  TextField,
-  styled,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
 import yaml from 'js-yaml'
+import { ArrowDownToLine, ArrowUpToLine } from 'lucide-react'
+import { useTheme } from 'next-themes'
 import {
   startTransition,
   useCallback,
@@ -40,15 +26,21 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseSearchBox, MonacoEditor, VirtualList } from '@/components/base'
+import {
+  BaseDialog,
+  BaseSearchBox,
+  MonacoEditor,
+  VirtualList,
+} from '@/components/base'
 import { ProxyItem } from '@/components/profile/proxy-item'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import { readProfileFile, saveProfileFile } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import {
   type ProfileFormat,
   parseProfileContent,
 } from '@/services/profile-format'
-import { useThemeMode } from '@/services/states'
 import type { MonacoEditorInstance } from '@/types/monaco'
 import getSystem from '@/utils/get-system'
 import parseUri from '@/utils/uri-parser'
@@ -65,7 +57,7 @@ interface Props {
 export const ProxiesEditorViewer = (props: Props) => {
   const { profileUid, profileFormat, property, open, onClose, onSave } = props
   const { t } = useTranslation()
-  const themeMode = useThemeMode()
+  const { resolvedTheme } = useTheme()
   const editorRef = useRef<MonacoEditorInstance | null>(null)
   const [prevData, setPrevData] = useState('')
   const [currData, setCurrData] = useState('')
@@ -367,101 +359,72 @@ export const ProxiesEditorViewer = (props: Props) => {
   })
 
   return (
-    <Dialog
+    <BaseDialog
       open={open}
-      onClose={onClose}
-      maxWidth="xl"
-      fullWidth
+      title={
+        <div className="flex items-center justify-between pr-8">
+          {t('profiles.modals.proxiesEditor.title')}
+          <Button size="sm" onClick={() => setVisualization((prev) => !prev)}>
+            {visualization
+              ? t('shared.editorModes.advanced')
+              : t('shared.editorModes.visualization')}
+          </Button>
+        </div>
+      }
+      contentSx={{ width: 'calc(100vw - 64px)', maxWidth: 1400 }}
+      okBtn={t('shared.actions.save')}
+      cancelBtn={t('shared.actions.cancel')}
       disableEnforceFocus={!visualization}
+      onClose={onClose}
+      onCancel={onClose}
+      onOk={handleSave}
     >
-      <DialogTitle>
-        {
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            {t('profiles.modals.proxiesEditor.title')}
-            <Box>
-              <Button
-                variant="contained"
-                size="small"
-                onClick={() => {
-                  setVisualization((prev) => !prev)
-                }}
-              >
-                {visualization
-                  ? t('shared.editorModes.advanced')
-                  : t('shared.editorModes.visualization')}
-              </Button>
-            </Box>
-          </Box>
-        }
-      </DialogTitle>
-
-      <DialogContent
-        sx={{ display: 'flex', width: 'auto', height: 'calc(100vh - 185px)' }}
-      >
+      <div className="flex h-[calc(100vh-185px)] w-auto">
         {visualization ? (
           <>
-            <List
-              sx={{
-                width: '50%',
-                padding: '0 10px',
-              }}
-            >
-              <Box
-                sx={{
-                  height: 'calc(100% - 80px)',
-                  overflowY: 'auto',
-                }}
-              >
-                <Item>
-                  <TextField
+            <div className="w-1/2 px-2.5">
+              <div className="h-[calc(100%-80px)] overflow-y-auto">
+                <div className="px-adjust py-[5px]">
+                  <Textarea
                     autoComplete="new-password"
                     placeholder={t(
                       'profiles.modals.proxiesEditor.placeholders.multiUri',
                     )}
-                    fullWidth
+                    className="w-full"
                     rows={9}
-                    multiline
-                    size="small"
                     onChange={(e) => setProxyUri(e.target.value)}
                   />
-                </Item>
-              </Box>
-              <Item>
+                </div>
+              </div>
+              <div className="px-adjust py-[5px]">
                 <Button
-                  fullWidth
-                  variant="contained"
-                  startIcon={<VerticalAlignTopRounded />}
+                  className="w-full"
                   onClick={() => {
                     handleParseAsync((proxies) => {
                       setPrependSeq((prev) => [...proxies, ...prev])
                     })
                   }}
                 >
+                  <ArrowUpToLine className="size-4" />
                   {t('profiles.modals.proxiesEditor.actions.prepend')}
                 </Button>
-              </Item>
-              <Item>
+              </div>
+              <div className="px-adjust py-[5px]">
                 <Button
-                  fullWidth
-                  variant="contained"
-                  startIcon={<VerticalAlignBottomRounded />}
+                  className="w-full"
                   onClick={() => {
                     handleParseAsync((proxies) => {
                       setAppendSeq((prev) => [...prev, ...proxies])
                     })
                   }}
                 >
+                  <ArrowDownToLine className="size-4" />
                   {t('profiles.modals.proxiesEditor.actions.append')}
                 </Button>
-              </Item>
-            </List>
+              </div>
+            </div>
 
-            <List
-              sx={{
-                width: '50%',
-                padding: '0 10px',
-              }}
-            >
+            <div className="w-1/2 px-2.5">
               <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
               <VirtualList
                 count={
@@ -473,14 +436,14 @@ export const ProxiesEditorViewer = (props: Props) => {
                 renderItem={renderItem}
                 style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
               />
-            </List>
+            </div>
           </>
         ) : (
           <MonacoEditor
             height="100%"
             language="yaml"
             value={currData}
-            theme={themeMode === 'light' ? 'light' : 'vs-dark'}
+            theme={resolvedTheme === 'dark' ? 'vs-dark' : 'light'}
             onMount={(editorInstance) => {
               editorRef.current = editorInstance
             }}
@@ -507,21 +470,7 @@ export const ProxiesEditorViewer = (props: Props) => {
             onChange={(value) => setCurrData(value ?? '')}
           />
         )}
-      </DialogContent>
-
-      <DialogActions>
-        <Button onClick={onClose} variant="outlined">
-          {t('shared.actions.cancel')}
-        </Button>
-
-        <Button onClick={handleSave} variant="contained">
-          {t('shared.actions.save')}
-        </Button>
-      </DialogActions>
-    </Dialog>
+      </div>
+    </BaseDialog>
   )
 }
-
-const Item = styled(ListItem)(() => ({
-  padding: '5px 2px',
-}))

@@ -1,5 +1,3 @@
-import { Box, Typography } from '@mui/material'
-import { alpha, useTheme } from '@mui/material/styles'
 import { Fragment, type ReactNode } from 'react'
 
 import { getConnectionChainPath } from './connection-route-utils'
@@ -16,7 +14,6 @@ export const ConnectionRouteChips = ({
   chains: string[]
   empty?: ReactNode
 }) => {
-  const theme = useTheme()
   const path = getConnectionChainPath(chains)
   const keyedPath = path.map((node, index) => ({
     node,
@@ -26,65 +23,33 @@ export const ConnectionRouteChips = ({
   if (!path.length) return empty
 
   return (
-    <Box
+    <div
       title={path.join(' -> ')}
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 0.5,
-        minWidth: 0,
-        maxWidth: '100%',
-        overflow: 'hidden',
-      }}
+      className="flex min-w-0 max-w-full items-center gap-inline overflow-hidden"
     >
       {keyedPath.map(({ node, key }) => {
         const isExit = key === keyedPath[keyedPath.length - 1].key
 
         return (
           <Fragment key={key}>
-            <Box
-              component="span"
-              sx={{
-                boxSizing: 'border-box',
-                flex: '0 1 auto',
-                minWidth: 0,
-                maxWidth: isExit ? 160 : 140,
-                height: 22,
-                px: 0.9,
-                borderRadius: 'var(--radius-compact)',
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
-                color: theme.palette.primary.main,
-                backgroundColor: alpha(
-                  theme.palette.primary.main,
-                  isExit ? 0.13 : 0.08,
-                ),
-                fontSize: 12,
-                fontWeight: 600,
-                lineHeight: '20px',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
+            <span
+              className={`box-border h-[22px] min-w-0 shrink truncate rounded-[var(--radius-compact)] border border-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] px-component text-[12px] font-semibold leading-5 text-[var(--color-accent)] ${
+                isExit
+                  ? 'max-w-[160px] bg-[color-mix(in_srgb,var(--color-accent)_13%,transparent)]'
+                  : 'max-w-[140px] bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]'
+              }`}
             >
               {node}
-            </Box>
+            </span>
             {!isExit && (
-              <Box
-                component="span"
-                sx={{
-                  flex: '0 0 auto',
-                  color: alpha(theme.palette.text.primary, 0.55),
-                  fontSize: 15,
-                  lineHeight: 1,
-                }}
-              >
+              <span className="shrink-0 text-[15px] leading-none text-[color-mix(in_srgb,var(--color-text-primary)_55%,transparent)]">
                 -&gt;
-              </Box>
+              </span>
             )}
           </Fragment>
         )
       })}
-    </Box>
+    </div>
   )
 }
 
@@ -93,87 +58,42 @@ export const ConnectionRouteTimeline = ({
 }: {
   steps: ConnectionRouteStep[]
 }) => {
-  const theme = useTheme()
   const visibleSteps = steps.filter((step) => step.value)
 
   if (!visibleSteps.length) return null
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'stretch',
-        flexWrap: 'nowrap',
-        gap: 1,
-        py: 0.25,
-        overflowX: 'auto',
-        overflowY: 'hidden',
-      }}
-    >
+    <div className="flex flex-nowrap items-stretch gap-component overflow-x-auto overflow-y-hidden py-adjust">
       {visibleSteps.map((step) => {
         const isRemote = step === visibleSteps[visibleSteps.length - 1]
 
         return (
           <Fragment key={step.label}>
-            <Box
+            <div
               title={`${step.label}: ${step.value}`}
-              sx={{
-                boxSizing: 'border-box',
-                flex: '0 1 auto',
-                minWidth: 120,
-                maxWidth: 250,
-                px: 1.25,
-                py: 0.8,
-                borderRadius: 'var(--radius-compact)',
-                border: '1px solid',
-                borderColor: alpha(theme.palette.primary.main, 0.26),
-                backgroundColor: alpha(theme.palette.primary.main, 0.035),
-              }}
+              className="box-border min-w-[120px] max-w-[250px] shrink rounded-[var(--radius-compact)] border border-[color-mix(in_srgb,var(--color-accent)_26%,transparent)] bg-[color-mix(in_srgb,var(--color-accent)_3.5%,transparent)] px-2.5 py-compact"
             >
-              <Typography
-                component="div"
-                sx={{
-                  color: theme.palette.primary.main,
-                  fontSize: 10,
-                  fontWeight: 700,
-                  lineHeight: 1.25,
-                }}
-              >
+              <div className="text-[10px] font-bold leading-[1.25] text-[var(--color-accent)]">
                 {step.label}
-              </Typography>
-              <Typography
-                component="div"
-                sx={{
-                  color: isRemote
-                    ? theme.palette.primary.main
-                    : theme.palette.text.primary,
-                  fontSize: 12.5,
-                  fontWeight: isRemote ? 600 : 500,
-                  lineHeight: 1.35,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
+              </div>
+              <div
+                className={`truncate text-[12.5px] leading-[1.35] ${
+                  isRemote
+                    ? 'font-semibold text-[var(--color-accent)]'
+                    : 'font-medium text-[var(--color-text-primary)]'
+                }`}
               >
                 {step.value}
-              </Typography>
-            </Box>
+              </div>
+            </div>
             {!isRemote && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  color: alpha(theme.palette.text.primary, 0.6),
-                  fontSize: 20,
-                  px: 0.1,
-                }}
-              >
+              <div className="flex items-center px-px text-[20px] text-[color-mix(in_srgb,var(--color-text-primary)_60%,transparent)]">
                 -&gt;
-              </Box>
+              </div>
             )}
           </Fragment>
         )
       })}
-    </Box>
+    </div>
   )
 }

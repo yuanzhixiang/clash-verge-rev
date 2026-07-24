@@ -1,9 +1,10 @@
-import { CloseRounded } from '@mui/icons-material'
-import { IconButton } from '@mui/material'
 import { useLockFn } from 'ahooks'
+import { X } from 'lucide-react'
 import { memo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { closeConnection } from 'tauri-plugin-mihomo-api'
+
+import { Button } from '@/components/ui/button'
 
 import { RelativeTime } from './connection-relative-time'
 import type { ConnectionRowView } from './connection-row-view'
@@ -15,63 +16,8 @@ interface Props {
   onShowDetail: (id: string) => void
 }
 
-const tagStyle = {
-  boxSizing: 'border-box',
-  maxWidth: '100%',
-  padding: '1px 6px',
-  border: '1px solid rgba(94, 106, 210, 0.16)',
-  borderRadius: 'var(--radius-container)',
-  background: 'rgba(94, 106, 210, 0.08)',
-  color: 'var(--primary-main, #5e6ad2)',
-  fontSize: 10,
-  fontWeight: 600,
-  lineHeight: 1.45,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-} as const
-
-const itemStyle = {
-  boxSizing: 'border-box',
-  minHeight: 56,
-  display: 'flex',
-  alignItems: 'center',
-  gap: 8,
-  padding: '6px 48px 6px 12px',
-  borderBottom: '1px solid var(--divider-color)',
-  position: 'relative',
-  overflow: 'hidden',
-} as const
-
-const contentStyle = {
-  minWidth: 0,
-  flex: 1,
-  cursor: 'pointer',
-  userSelect: 'text',
-} as const
-
-const primaryStyle = {
-  fontSize: 14,
-  lineHeight: 1.4,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-} as const
-
-const tagsStyle = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: 4,
-  marginTop: 4,
-  overflow: 'hidden',
-} as const
-
-const actionStyle = {
-  position: 'absolute',
-  right: 8,
-  top: '50%',
-  transform: 'translateY(-50%)',
-} as const
+const tagClass =
+  'box-border max-w-full truncate rounded-[var(--radius-container)] border border-[color-mix(in_srgb,var(--color-accent)_16%,transparent)] bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] px-compact py-px text-[10px] font-semibold leading-[1.45] text-[var(--color-accent)]'
 
 export const ConnectionRowItem = memo(
   function ConnectionRowItem({ row, closed, selected, onShowDetail }: Props) {
@@ -85,39 +31,41 @@ export const ConnectionRowItem = memo(
 
     return (
       <div
-        style={{
-          ...itemStyle,
-          backgroundColor: selected ? 'rgba(94, 106, 210, 0.1)' : undefined,
-        }}
+        className={`relative flex min-h-14 items-center gap-component overflow-hidden border-b border-[var(--color-border)] py-compact pr-12 pl-stack ${
+          selected ? 'bg-[var(--color-accent-subtle)]' : ''
+        }`}
       >
-        <div style={contentStyle} onClick={handleShowDetail}>
-          <div style={primaryStyle}>{row.host}</div>
-          <div style={tagsStyle}>
-            <span style={tagStyle}>{row.network}</span>
-            <span style={tagStyle}>{row.type}</span>
-            {row.process && <span style={tagStyle}>{row.process}</span>}
-            {row.chains && <span style={tagStyle}>{row.chains}</span>}
-            <span style={tagStyle}>
+        <div
+          className="min-w-0 flex-1 cursor-pointer select-text"
+          onClick={handleShowDetail}
+        >
+          <div className="truncate text-[14px] leading-[1.4]">{row.host}</div>
+          <div className="mt-inline flex flex-wrap gap-inline overflow-hidden">
+            <span className={tagClass}>{row.network}</span>
+            <span className={tagClass}>{row.type}</span>
+            {row.process && <span className={tagClass}>{row.process}</span>}
+            {row.chains && <span className={tagClass}>{row.chains}</span>}
+            <span className={tagClass}>
               <RelativeTime start={row.time} />
             </span>
             {showTraffic && (
-              <span style={tagStyle}>
+              <span className={tagClass}>
                 {row.uploadSpeedText} / {row.downloadSpeedText}
               </span>
             )}
           </div>
         </div>
         {!closed && (
-          <IconButton
-            size="small"
-            color="inherit"
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="absolute top-1/2 right-component -translate-y-1/2"
             onClick={onDelete}
             title={t('connections.components.actions.closeConnection')}
             aria-label={t('connections.components.actions.closeConnection')}
-            sx={actionStyle}
           >
-            <CloseRounded fontSize="small" />
-          </IconButton>
+            <X className="size-5" />
+          </Button>
         )}
       </div>
     )

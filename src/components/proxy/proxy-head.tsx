@@ -1,22 +1,24 @@
 import {
-  AccessTimeRounded,
-  MyLocationRounded,
-  NetworkCheckRounded,
-  FilterAltRounded,
-  FilterAltOffRounded,
-  VisibilityRounded,
-  VisibilityOffRounded,
-  WifiTetheringRounded,
-  WifiTetheringOffRounded,
-  SortByAlphaRounded,
-  SortRounded,
-} from '@mui/icons-material'
-import { Box, IconButton, TextField, type SxProps } from '@mui/material'
+  ArrowDownAZ,
+  ArrowUpDown,
+  Clock,
+  Eye,
+  EyeOff,
+  Filter,
+  FilterX,
+  Gauge,
+  LocateFixed,
+  Radio,
+  WifiOff,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseSearchBox } from '@/components/base'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useVerge } from '@/hooks/use-verge'
+import { cn } from '@/lib/utils'
 import delayManager from '@/services/delay'
 import { debugLog } from '@/utils/debug'
 
@@ -24,7 +26,7 @@ import type { ProxySortType } from './use-filter-sort'
 import type { HeadState } from './use-head-state'
 
 interface Props {
-  sx?: SxProps
+  className?: string
   url?: string
   groupName: string
   headState: HeadState
@@ -33,10 +35,8 @@ interface Props {
   onHeadState: (val: Partial<HeadState>) => void
 }
 
-const defaultSx: SxProps = {}
-
 export const ProxyHead = ({
-  sx = defaultSx,
+  className,
   url,
   groupName,
   headState,
@@ -74,19 +74,21 @@ export const ProxyHead = ({
   }, [groupName, testUrl, defaultLatencyUrl, url])
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ...sx }}>
-      <IconButton
-        size="small"
-        color="inherit"
+    <div className={cn('flex items-center gap-inline', className)}>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="text-current"
         title={t('proxies.page.tooltips.locate')}
         onClick={onLocation}
       >
-        <MyLocationRounded />
-      </IconButton>
+        <LocateFixed className="size-5" />
+      </Button>
 
-      <IconButton
-        size="small"
-        color="inherit"
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="text-current"
         title={t('proxies.page.tooltips.delayCheck')}
         onClick={() => {
           debugLog(`[ProxyHead] 点击延迟测试按钮，组: ${groupName}`)
@@ -98,12 +100,13 @@ export const ProxyHead = ({
           onCheckDelay()
         }}
       >
-        <NetworkCheckRounded />
-      </IconButton>
+        <Gauge className="size-5" />
+      </Button>
 
-      <IconButton
-        size="small"
-        color="inherit"
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="text-current"
         title={
           [
             t('proxies.page.tooltips.sortDefault'),
@@ -115,29 +118,31 @@ export const ProxyHead = ({
           onHeadState({ sortType: ((sortType + 1) % 3) as ProxySortType })
         }
       >
-        {sortType !== 1 && sortType !== 2 && <SortRounded />}
-        {sortType === 1 && <AccessTimeRounded />}
-        {sortType === 2 && <SortByAlphaRounded />}
-      </IconButton>
+        {sortType !== 1 && sortType !== 2 && <ArrowUpDown className="size-5" />}
+        {sortType === 1 && <Clock className="size-5" />}
+        {sortType === 2 && <ArrowDownAZ className="size-5" />}
+      </Button>
 
-      <IconButton
-        size="small"
-        color="inherit"
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="text-current"
         title={t('proxies.page.tooltips.delayCheckUrl')}
         onClick={() =>
           onHeadState({ textState: textState === 'url' ? null : 'url' })
         }
       >
         {textState === 'url' ? (
-          <WifiTetheringRounded />
+          <Radio className="size-5" />
         ) : (
-          <WifiTetheringOffRounded />
+          <WifiOff className="size-5" />
         )}
-      </IconButton>
+      </Button>
 
-      <IconButton
-        size="small"
-        color="inherit"
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="text-current"
         title={
           showType
             ? t('proxies.page.tooltips.showBasic')
@@ -145,26 +150,27 @@ export const ProxyHead = ({
         }
         onClick={() => onHeadState({ showType: !showType })}
       >
-        {showType ? <VisibilityRounded /> : <VisibilityOffRounded />}
-      </IconButton>
+        {showType ? <Eye className="size-5" /> : <EyeOff className="size-5" />}
+      </Button>
 
-      <IconButton
-        size="small"
-        color="inherit"
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="text-current"
         title={t('proxies.page.tooltips.filter')}
         onClick={() =>
           onHeadState({ textState: textState === 'filter' ? null : 'filter' })
         }
       >
         {textState === 'filter' ? (
-          <FilterAltRounded />
+          <Filter className="size-5" />
         ) : (
-          <FilterAltOffRounded />
+          <FilterX className="size-5" />
         )}
-      </IconButton>
+      </Button>
 
       {textState === 'filter' && (
-        <Box sx={{ ml: 0.5, flex: '1 1 auto' }}>
+        <div className="ml-inline flex-auto">
           <BaseSearchBox
             autoFocus={autoFocus}
             value={filterText}
@@ -182,23 +188,20 @@ export const ProxyHead = ({
               })
             }
           />
-        </Box>
+        </div>
       )}
 
       {textState === 'url' && (
-        <TextField
+        <Input
           autoComplete="new-password"
           autoFocus={autoFocus}
-          hiddenLabel
           autoSave="off"
           value={testUrl}
-          size="small"
-          variant="outlined"
           placeholder={t('proxies.page.placeholders.delayCheckUrl')}
           onChange={(e) => onHeadState({ testUrl: e.target.value })}
-          sx={{ ml: 0.5, flex: '1 1 auto', input: { py: 0.65, px: 1 } }}
+          className="ml-inline h-8 flex-auto"
         />
       )}
-    </Box>
+    </div>
   )
 }

@@ -1,21 +1,9 @@
-import { RestartAltRounded } from '@mui/icons-material'
-import {
-  Box,
-  Button,
-  FormControl,
-  List,
-  ListItem,
-  ListItemText,
-  MenuItem,
-  Select,
-  styled,
-  TextField,
-  Typography,
-} from '@mui/material'
 import { invoke } from '@tauri-apps/api/core'
 import { useLockFn } from 'ahooks'
 import yaml from 'js-yaml'
-import type { Ref } from 'react'
+import { RotateCcw } from 'lucide-react'
+import { useTheme } from 'next-themes'
+import type { ReactNode, Ref } from 'react'
 import {
   useCallback,
   useEffect,
@@ -26,21 +14,56 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseDialog, DialogRef, MonacoEditor, Switch } from '@/components/base'
+import {
+  BaseDialog,
+  BaseStyledSelect,
+  DialogRef,
+  MonacoEditor,
+  Switch,
+} from '@/components/base'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { SelectItem } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { useClash } from '@/hooks/use-clash'
 import { showNotice } from '@/services/notice-service'
-import { useThemeMode } from '@/services/states'
 import type { MonacoEditorInstance } from '@/types/monaco'
 import getSystem from '@/utils/get-system'
 
-const Item = styled(ListItem)(() => ({
-  padding: '5px 2px',
-  '& textarea': {
-    lineHeight: 1.5,
-    fontSize: 14,
-    resize: 'vertical',
-  },
-}))
+function Item({ children, column }: { children: ReactNode; column?: boolean }) {
+  return (
+    <div
+      className={
+        column
+          ? 'flex flex-col items-start gap-component px-adjust py-[5px]'
+          : 'flex items-center justify-between px-adjust py-[5px]'
+      }
+    >
+      {children}
+    </div>
+  )
+}
+
+function ItemText({
+  primary,
+  secondary,
+}: {
+  primary: ReactNode
+  secondary?: ReactNode
+}) {
+  return (
+    <div className="flex flex-col">
+      <span className="text-[var(--color-text-primary)]">{primary}</span>
+      {secondary != null && (
+        <span className="text-body text-[var(--color-text-secondary)]">
+          {secondary}
+        </span>
+      )}
+    </div>
+  )
+}
+
+const TEXTAREA_CLASS = 'w-full resize-y text-body leading-normal'
 
 type NameserverPolicy = Record<string, any>
 
@@ -184,7 +207,8 @@ const DEFAULT_DNS_CONFIG = {
 export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation()
   const { clash, mutateClash } = useClash()
-  const themeMode = useThemeMode()
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
 
   const [open, setOpen] = useState(false)
   const [visualization, setVisualization] = useState(true)
@@ -616,32 +640,29 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     })
   }
 
+  // Switch 使用 shadcn 的 onCheckedChange(boolean)，此处适配回 handleChange 的事件形态
+  const handleSwitchChange = (field: string) => (checked: boolean) =>
+    handleChange(field)({ target: { type: 'checkbox', checked } })
+
   return (
     <BaseDialog
       open={open}
       disableEnforceFocus={!visualization}
       title={
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
+        <div className="flex items-center justify-between">
           {t('settings.modals.dns.dialog.title')}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <div className="flex items-center gap-component">
             <Button
-              variant="outlined"
-              size="small"
-              color="warning"
-              startIcon={<RestartAltRounded />}
+              variant="outline"
+              size="sm"
+              className="border-[var(--color-warning)] text-[var(--color-warning)] hover:bg-[var(--color-warning-subtle)]"
               onClick={resetToDefaults}
             >
+              <RotateCcw />
               {t('shared.actions.resetToDefault')}
             </Button>
             <Button
-              variant="contained"
-              size="small"
+              size="sm"
               onClick={() => {
                 setVisualization((prev) => !prev)
               }}
@@ -650,8 +671,8 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 ? t('shared.editorModes.advanced')
                 : t('shared.editorModes.visualization')}
             </Button>
-          </Box>
-        </Box>
+          </div>
+        </div>
       }
       contentSx={{
         width: 550,
@@ -667,385 +688,321 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       onOk={onSave}
     >
       {/* Warning message */}
-      <Typography
-        variant="body2"
-        color="warning.main"
-        sx={{ mb: 2, mt: 0, fontStyle: 'italic' }}
-      >
+      <p className="mt-0 mb-inset text-body italic text-[var(--color-warning)]">
         {t('settings.modals.dns.dialog.warning')}
-      </Typography>
+      </p>
 
       {visualization ? (
-        <List>
-          <Typography
-            variant="subtitle1"
-            sx={{ mt: 1, mb: 1, fontWeight: 'bold' }}
-          >
+        <div>
+          <p className="mt-component mb-component text-body-lg font-bold">
             {t('settings.modals.dns.sections.general')}
-          </Typography>
+          </p>
 
           <Item>
-            <ListItemText primary={t('settings.modals.dns.fields.enable')} />
+            <ItemText primary={t('settings.modals.dns.fields.enable')} />
             <Switch
-              edge="end"
               checked={values.enable}
-              onChange={handleChange('enable')}
+              onCheckedChange={handleSwitchChange('enable')}
             />
           </Item>
 
           <Item>
-            <ListItemText primary={t('settings.modals.dns.fields.listen')} />
-            <TextField
-              size="small"
+            <ItemText primary={t('settings.modals.dns.fields.listen')} />
+            <Input
+              className="w-[150px]"
               autoComplete="off"
-              spellCheck="false"
+              spellCheck={false}
               value={values.listen}
               onChange={handleChange('listen')}
               placeholder=":53"
-              sx={{ width: 150 }}
             />
           </Item>
 
           <Item>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.enhancedMode')}
-            />
-            <FormControl size="small" sx={{ width: 150 }}>
-              <Select
-                value={values.enhancedMode}
-                onChange={handleChange('enhancedMode')}
-              >
-                <MenuItem value="fake-ip">fake-ip</MenuItem>
-                <MenuItem value="redir-host">redir-host</MenuItem>
-              </Select>
-            </FormControl>
+            <ItemText primary={t('settings.modals.dns.fields.enhancedMode')} />
+            <BaseStyledSelect
+              className="w-[150px]"
+              value={values.enhancedMode}
+              onChange={handleChange('enhancedMode')}
+            >
+              <SelectItem value="fake-ip">fake-ip</SelectItem>
+              <SelectItem value="redir-host">redir-host</SelectItem>
+            </BaseStyledSelect>
           </Item>
 
           <Item>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.fakeIpRange')}
-            />
-            <TextField
-              size="small"
+            <ItemText primary={t('settings.modals.dns.fields.fakeIpRange')} />
+            <Input
+              className="w-[150px]"
               autoComplete="off"
-              spellCheck="false"
+              spellCheck={false}
               value={values.fakeIpRange}
               onChange={handleChange('fakeIpRange')}
               placeholder="198.18.0.1/16"
-              sx={{ width: 150 }}
             />
           </Item>
 
           <Item>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.fakeIpRange6')}
-            />
-            <TextField
-              size="small"
+            <ItemText primary={t('settings.modals.dns.fields.fakeIpRange6')} />
+            <Input
+              className="w-[200px]"
               autoComplete="off"
-              spellCheck="false"
+              spellCheck={false}
               value={values.fakeIpRange6}
               onChange={handleChange('fakeIpRange6')}
               placeholder="fdfe:dcba:9876::1/64"
-              sx={{ width: 200 }}
             />
           </Item>
 
           <Item>
-            <ListItemText
+            <ItemText
               primary={t('settings.modals.dns.fields.fakeIpFilterMode')}
             />
-            <FormControl size="small" sx={{ width: 150 }}>
-              <Select
-                value={values.fakeIpFilterMode}
-                onChange={handleChange('fakeIpFilterMode')}
-              >
-                <MenuItem value="blacklist">blacklist</MenuItem>
-                <MenuItem value="whitelist">whitelist</MenuItem>
-              </Select>
-            </FormControl>
+            <BaseStyledSelect
+              className="w-[150px]"
+              value={values.fakeIpFilterMode}
+              onChange={handleChange('fakeIpFilterMode')}
+            >
+              <SelectItem value="blacklist">blacklist</SelectItem>
+              <SelectItem value="whitelist">whitelist</SelectItem>
+            </BaseStyledSelect>
           </Item>
 
           <Item>
-            <ListItemText
+            <ItemText
               primary={t('settings.modals.dns.fields.ipv6.label')}
               secondary={t('settings.modals.dns.fields.ipv6.description')}
             />
             <Switch
-              edge="end"
               checked={values.ipv6}
-              onChange={handleChange('ipv6')}
+              onCheckedChange={handleSwitchChange('ipv6')}
             />
           </Item>
 
           <Item>
-            <ListItemText
+            <ItemText
               primary={t('settings.modals.dns.fields.preferH3.label')}
               secondary={t('settings.modals.dns.fields.preferH3.description')}
             />
             <Switch
-              edge="end"
               checked={values.preferH3}
-              onChange={handleChange('preferH3')}
+              onCheckedChange={handleSwitchChange('preferH3')}
             />
           </Item>
 
           <Item>
-            <ListItemText
+            <ItemText
               primary={t('settings.modals.dns.fields.respectRules.label')}
               secondary={t(
                 'settings.modals.dns.fields.respectRules.description',
               )}
             />
             <Switch
-              edge="end"
               checked={values.respectRules}
-              onChange={handleChange('respectRules')}
+              onCheckedChange={handleSwitchChange('respectRules')}
             />
           </Item>
 
           <Item>
-            <ListItemText
+            <ItemText
               primary={t('settings.modals.dns.fields.useHosts.label')}
               secondary={t('settings.modals.dns.fields.useHosts.description')}
             />
             <Switch
-              edge="end"
               checked={values.useHosts}
-              onChange={handleChange('useHosts')}
+              onCheckedChange={handleSwitchChange('useHosts')}
             />
           </Item>
 
           <Item>
-            <ListItemText
+            <ItemText
               primary={t('settings.modals.dns.fields.useSystemHosts.label')}
               secondary={t(
                 'settings.modals.dns.fields.useSystemHosts.description',
               )}
             />
             <Switch
-              edge="end"
               checked={values.useSystemHosts}
-              onChange={handleChange('useSystemHosts')}
+              onCheckedChange={handleSwitchChange('useSystemHosts')}
             />
           </Item>
 
           <Item>
-            <ListItemText
+            <ItemText
               primary={t('settings.modals.dns.fields.directPolicy.label')}
               secondary={t(
                 'settings.modals.dns.fields.directPolicy.description',
               )}
             />
             <Switch
-              edge="end"
               checked={values.directNameserverFollowPolicy}
-              onChange={handleChange('directNameserverFollowPolicy')}
+              onCheckedChange={handleSwitchChange(
+                'directNameserverFollowPolicy',
+              )}
             />
           </Item>
 
-          <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
+          <Item column>
+            <ItemText
               primary={t('settings.modals.dns.fields.defaultNameserver.label')}
               secondary={t(
                 'settings.modals.dns.fields.defaultNameserver.description',
               )}
             />
-            <TextField
-              fullWidth
-              multiline
-              minRows={2}
-              maxRows={3}
-              size="small"
-              spellCheck="false"
+            <Textarea
+              className={TEXTAREA_CLASS}
+              spellCheck={false}
               value={values.defaultNameserver}
               onChange={handleChange('defaultNameserver')}
               placeholder="system,223.6.6.6, 8.8.8.8, 2400:3200::1, 2001:4860:4860::8888"
             />
           </Item>
 
-          <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
+          <Item column>
+            <ItemText
               primary={t('settings.modals.dns.fields.nameserver.label')}
               secondary={t('settings.modals.dns.fields.nameserver.description')}
             />
-            <TextField
-              fullWidth
-              multiline
-              minRows={2}
-              maxRows={4}
-              size="small"
-              spellCheck="false"
+            <Textarea
+              className={TEXTAREA_CLASS}
+              spellCheck={false}
               value={values.nameserver}
               onChange={handleChange('nameserver')}
               placeholder="8.8.8.8, https://doh.pub/dns-query, https://dns.alidns.com/dns-query"
             />
           </Item>
 
-          <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
+          <Item column>
+            <ItemText
               primary={t('settings.modals.dns.fields.fallback.label')}
               secondary={t('settings.modals.dns.fields.fallback.description')}
             />
-            <TextField
-              fullWidth
-              multiline
-              minRows={2}
-              maxRows={4}
-              size="small"
-              spellCheck="false"
+            <Textarea
+              className={TEXTAREA_CLASS}
+              spellCheck={false}
               value={values.fallback}
               onChange={handleChange('fallback')}
               placeholder="https://dns.alidns.com/dns-query, https://dns.google/dns-query, https://cloudflare-dns.com/dns-query"
             />
           </Item>
 
-          <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
+          <Item column>
+            <ItemText
               primary={t('settings.modals.dns.fields.proxy.label')}
               secondary={t('settings.modals.dns.fields.proxy.description')}
             />
-            <TextField
-              fullWidth
-              multiline
-              minRows={2}
-              maxRows={3}
-              size="small"
-              spellCheck="false"
+            <Textarea
+              className={TEXTAREA_CLASS}
+              spellCheck={false}
               value={values.proxyServerNameserver}
               onChange={handleChange('proxyServerNameserver')}
               placeholder="https://doh.pub/dns-query, https://dns.alidns.com/dns-query"
             />
           </Item>
 
-          <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
+          <Item column>
+            <ItemText
               primary={t('settings.modals.dns.fields.directNameserver.label')}
               secondary={t(
                 'settings.modals.dns.fields.directNameserver.description',
               )}
             />
-            <TextField
-              fullWidth
-              multiline
-              minRows={2}
-              maxRows={3}
-              size="small"
-              spellCheck="false"
+            <Textarea
+              className={TEXTAREA_CLASS}
+              spellCheck={false}
               value={values.directNameserver}
               onChange={handleChange('directNameserver')}
               placeholder="system, 223.6.6.6"
             />
           </Item>
 
-          <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
+          <Item column>
+            <ItemText
               primary={t('settings.modals.dns.fields.fakeIpFilter.label')}
               secondary={t(
                 'settings.modals.dns.fields.fakeIpFilter.description',
               )}
             />
-            <TextField
-              fullWidth
-              multiline
-              minRows={2}
-              maxRows={4}
-              size="small"
-              spellCheck="false"
+            <Textarea
+              className={TEXTAREA_CLASS}
+              spellCheck={false}
               value={values.fakeIpFilter}
               onChange={handleChange('fakeIpFilter')}
               placeholder="*.lan, *.local, localhost.ptlogin2.qq.com"
             />
           </Item>
 
-          <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
+          <Item column>
+            <ItemText
               primary={t('settings.modals.dns.fields.nameserverPolicy.label')}
               secondary={t(
                 'settings.modals.dns.fields.nameserverPolicy.description',
               )}
             />
-            <TextField
-              fullWidth
-              multiline
-              minRows={2}
-              maxRows={4}
-              size="small"
-              spellCheck="false"
+            <Textarea
+              className={TEXTAREA_CLASS}
+              spellCheck={false}
               value={values.nameserverPolicy}
               onChange={handleChange('nameserverPolicy')}
               placeholder="+.arpa=10.0.0.1, rule-set:cn=https://doh.pub/dns-query;https://dns.alidns.com/dns-query"
             />
           </Item>
 
-          <Typography
-            variant="subtitle2"
-            sx={{ mt: 2, mb: 1, fontWeight: 'bold' }}
-          >
+          <p className="mt-inset mb-component text-body font-bold">
             {t('settings.modals.dns.sections.fallbackFilter')}
-          </Typography>
+          </p>
 
           <Item>
-            <ListItemText
+            <ItemText
               primary={t('settings.modals.dns.fields.geoipFiltering.label')}
               secondary={t(
                 'settings.modals.dns.fields.geoipFiltering.description',
               )}
             />
             <Switch
-              edge="end"
               checked={values.fallbackGeoip}
-              onChange={handleChange('fallbackGeoip')}
+              onCheckedChange={handleSwitchChange('fallbackGeoip')}
             />
           </Item>
 
           <Item>
-            <ListItemText primary={t('settings.modals.dns.fields.geoipCode')} />
-            <TextField
-              size="small"
+            <ItemText primary={t('settings.modals.dns.fields.geoipCode')} />
+            <Input
+              className="w-[100px]"
               autoComplete="off"
-              spellCheck="false"
+              spellCheck={false}
               value={values.fallbackGeoipCode}
               onChange={handleChange('fallbackGeoipCode')}
               placeholder="CN"
-              sx={{ width: 100 }}
             />
           </Item>
 
-          <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
+          <Item column>
+            <ItemText
               primary={t('settings.modals.dns.fields.fallbackIpCidr.label')}
               secondary={t(
                 'settings.modals.dns.fields.fallbackIpCidr.description',
               )}
             />
-            <TextField
-              fullWidth
-              multiline
-              minRows={2}
-              maxRows={3}
-              size="small"
-              spellCheck="false"
+            <Textarea
+              className={TEXTAREA_CLASS}
+              spellCheck={false}
               value={values.fallbackIpcidr}
               onChange={handleChange('fallbackIpcidr')}
               placeholder="240.0.0.0/4, 127.0.0.1/8"
             />
           </Item>
 
-          <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
+          <Item column>
+            <ItemText
               primary={t('settings.modals.dns.fields.fallbackDomain.label')}
               secondary={t(
                 'settings.modals.dns.fields.fallbackDomain.description',
               )}
             />
-            <TextField
-              fullWidth
-              multiline
-              minRows={2}
-              maxRows={3}
-              size="small"
-              spellCheck="false"
+            <Textarea
+              className={TEXTAREA_CLASS}
+              spellCheck={false}
               value={values.fallbackDomain}
               onChange={handleChange('fallbackDomain')}
               placeholder="+.google.com, +.facebook.com, +.youtube.com"
@@ -1053,37 +1010,30 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           {/* Hosts 配置部分 */}
-          <Typography
-            variant="subtitle1"
-            sx={{ mt: 3, mb: 0, fontWeight: 'bold' }}
-          >
+          <p className="mt-block text-body-lg font-bold">
             {t('settings.modals.dns.sections.hosts')}
-          </Typography>
+          </p>
 
-          <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
+          <Item column>
+            <ItemText
               primary={t('settings.modals.dns.fields.hosts.label')}
               secondary={t('settings.modals.dns.fields.hosts.description')}
             />
-            <TextField
-              fullWidth
-              multiline
-              minRows={2}
-              maxRows={4}
-              size="small"
-              spellCheck="false"
+            <Textarea
+              className={TEXTAREA_CLASS}
+              spellCheck={false}
               value={values.hosts}
               onChange={handleChange('hosts')}
               placeholder="*.clash.dev=127.0.0.1, alpha.clash.dev=::1, test.com=1.1.1.1;2.2.2.2, baidu.com=google.com"
             />
           </Item>
-        </List>
+        </div>
       ) : (
         <MonacoEditor
           height="100vh"
           language="yaml"
           value={yamlContent}
-          theme={themeMode === 'light' ? 'light' : 'vs-dark'}
+          theme={isDark ? 'vs-dark' : 'light'}
           className="flex-grow"
           onMount={(editorInstance) => {
             editorRef.current = editorInstance

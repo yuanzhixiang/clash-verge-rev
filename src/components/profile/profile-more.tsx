@@ -1,19 +1,19 @@
-import { FeaturedPlayListRounded, MoreHorizRounded } from '@mui/icons-material'
-import {
-  Box,
-  Badge,
-  Chip,
-  IconButton,
-  Menu,
-  MenuItem,
-  Typography,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
+import { Ellipsis, List } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { EditorViewer } from '@/components/profile/editor-viewer'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useEditorDocument } from '@/hooks/use-editor-document'
+import { cn } from '@/lib/utils'
 import {
   readProfileFile,
   revealProfileFile,
@@ -48,7 +48,7 @@ export const ProfileMore = (props: Props) => {
 
   const entries = logInfo ?? EMPTY_LOG_INFO
   const { t } = useTranslation()
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [position, setPosition] = useState({ left: 0, top: 0 })
   const [fileOpen, setFileOpen] = useState(false)
   const [logOpen, setLogOpen] = useState(false)
@@ -60,12 +60,12 @@ export const ProfileMore = (props: Props) => {
   })
 
   const onEditFile = () => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     setFileOpen(true)
   }
 
   const onOpenFile = useLockFn(async () => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     try {
       await viewProfile(id)
     } catch (err) {
@@ -74,7 +74,7 @@ export const ProfileMore = (props: Props) => {
   })
 
   const onRevealFile = useLockFn(async () => {
-    setAnchorEl(null)
+    setMenuOpen(false)
     try {
       await revealProfileFile(id)
     } catch (err) {
@@ -124,118 +124,83 @@ export const ProfileMore = (props: Props) => {
         onContextMenu={(event) => {
           const { clientX, clientY } = event
           setPosition({ top: clientY, left: clientX })
-          setAnchorEl(event.currentTarget as HTMLElement)
+          setMenuOpen(true)
           event.preventDefault()
         }}
       >
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1fr) auto auto',
-            alignItems: 'center',
-            gap: 1,
-          }}
-        >
-          <Box sx={{ minWidth: 0 }}>
-            <Typography
-              component="h2"
-              noWrap
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-component">
+          <div className="min-w-0">
+            <h2
               title={t(globalTitles[id])}
-              sx={{ fontSize: 14, fontWeight: 550, lineHeight: 1.35 }}
+              className="truncate text-[14px] font-[550] leading-[1.35]"
             >
               {t(globalTitles[id])}
-            </Typography>
-            <Typography
-              color="text.secondary"
-              sx={{ mt: 0.25, fontSize: 11.5, lineHeight: 1.4 }}
-            >
+            </h2>
+            <p className="mt-adjust text-[11.5px] leading-[1.4] text-[var(--color-text-secondary)]">
               {t(chipLabels[id])}
-            </Typography>
-          </Box>
+            </p>
+          </div>
 
-          {id === 'Script' &&
-            (hasError ? (
-              <Badge color="error" variant="dot" overlap="circular">
-                <IconButton
-                  size="small"
-                  edge="start"
-                  color="error"
-                  title={t('profiles.modals.logViewer.title')}
-                  onClick={() => setLogOpen(true)}
-                >
-                  <FeaturedPlayListRounded fontSize="inherit" />
-                </IconButton>
-              </Badge>
-            ) : (
-              <IconButton
-                size="small"
-                edge="start"
-                color="inherit"
+          {id === 'Script' && (
+            <div className="relative flex items-center">
+              <Button
+                variant="ghost"
+                size="icon-sm"
                 title={t('profiles.modals.logViewer.title')}
+                className={cn(hasError && 'text-[var(--color-danger)]')}
                 onClick={() => setLogOpen(true)}
               >
-                <FeaturedPlayListRounded fontSize="inherit" />
-              </IconButton>
-            ))}
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Chip
-              label={t(chipLabels[id])}
-              size="small"
-              sx={{ height: 20, color: 'text.secondary' }}
-            />
-            <IconButton
-              size="small"
+                <List className="size-4" />
+              </Button>
+              {hasError && (
+                <span className="pointer-events-none absolute top-1 right-1 size-1.5 rounded-full bg-[var(--color-danger)]" />
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center">
+            <Badge
+              variant="secondary"
+              className="h-5 font-normal text-[var(--color-text-secondary)]"
+            >
+              {t(chipLabels[id])}
+            </Badge>
+            <Button
+              variant="ghost"
+              size="icon-sm"
               title={t('shared.actions.showDetails')}
-              sx={{ ml: 0.5, color: 'text.secondary' }}
+              className="ml-inline text-[var(--color-text-secondary)]"
               onClick={(event) => {
                 event.stopPropagation()
                 const rect = event.currentTarget.getBoundingClientRect()
                 setPosition({ top: rect.bottom, left: rect.right })
-                setAnchorEl(event.currentTarget)
+                setMenuOpen(true)
               }}
             >
-              <MoreHorizRounded fontSize="small" />
-            </IconButton>
-          </Box>
-        </Box>
+              <Ellipsis className="size-4" />
+            </Button>
+          </div>
+        </div>
       </ProfileBox>
 
-      <Menu
-        open={!!anchorEl}
-        anchorEl={anchorEl}
-        onClose={() => setAnchorEl(null)}
-        anchorPosition={position}
-        anchorReference="anchorPosition"
-        transitionDuration={225}
-        slotProps={{ list: { sx: { py: 0.5 } } }}
-        onContextMenu={(e) => {
-          setAnchorEl(null)
-          e.preventDefault()
-        }}
-      >
-        {itemMenu
-          .filter((item: any) => item.show !== false)
-          .map((item) => (
-            <MenuItem
-              key={item.label}
-              onClick={item.handler}
-              sx={[
-                { minWidth: 120 },
-                (theme) => {
-                  return {
-                    color:
-                      item.label === 'Delete'
-                        ? theme.palette.error.main
-                        : undefined,
-                  }
-                },
-              ]}
-              dense
-            >
-              {t(item.label)}
-            </MenuItem>
-          ))}
-      </Menu>
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+        <DropdownMenuTrigger asChild>
+          <span
+            aria-hidden
+            className="pointer-events-none fixed h-0 w-0"
+            style={{ left: position.left, top: position.top }}
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="min-w-[120px]">
+          {itemMenu
+            .filter((item: any) => item.show !== false)
+            .map((item) => (
+              <DropdownMenuItem key={item.label} onClick={item.handler}>
+                {t(item.label)}
+              </DropdownMenuItem>
+            ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
       {fileOpen && (
         <EditorViewer
           open={true}

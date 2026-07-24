@@ -1,16 +1,12 @@
-import {
-  InfoOutlined,
-  SettingsOutlined,
-  AdminPanelSettingsOutlined,
-  DnsOutlined,
-  ExtensionOutlined,
-} from '@mui/icons-material'
-import { Typography, Stack, Divider, Chip, IconButton } from '@mui/material'
 import { useLockFn } from 'ahooks'
+import { Info, Puzzle, Server, Settings, ShieldUser } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
 import { useServiceInstaller } from '@/hooks/use-service-installer'
 import { useSystemState } from '@/hooks/use-system-state'
 import {
@@ -19,6 +15,7 @@ import {
   readLastCheckTime,
 } from '@/hooks/use-update'
 import { useVerge } from '@/hooks/use-verge'
+import { cn } from '@/lib/utils'
 import { getSystemInfo } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { version as appVersion } from '@root/package.json'
@@ -119,23 +116,8 @@ export const SystemInfoCard = () => {
     [verge],
   )
 
-  // 运行模式样式
-  const runningModeStyle = useMemo(
-    () => ({
-      // Sidecar或纯管理员模式允许安装服务
-      cursor:
-        isSidecarMode || (isAdminMode && isSidecarMode) ? 'pointer' : 'default',
-      textDecoration:
-        isSidecarMode || (isAdminMode && isSidecarMode) ? 'underline' : 'none',
-      display: 'flex',
-      alignItems: 'center',
-      gap: 0.5,
-      '&:hover': {
-        opacity: isSidecarMode || (isAdminMode && isSidecarMode) ? 0.7 : 1,
-      },
-    }),
-    [isSidecarMode, isAdminMode],
-  )
+  // Sidecar或纯管理员模式允许安装服务
+  const runningModeClickable = isSidecarMode || (isAdminMode && isSidecarMode)
 
   // 获取模式图标和文本
   const getModeIcon = () => {
@@ -144,35 +126,35 @@ export const SystemInfoCard = () => {
       if (!isSidecarMode) {
         return (
           <>
-            <AdminPanelSettingsOutlined
-              sx={{ color: 'primary.main', fontSize: 16 }}
-              titleAccess={t('home.components.systemInfo.badges.adminMode')}
+            <ShieldUser
+              className="size-4 text-[var(--color-accent)]"
+              aria-label={t('home.components.systemInfo.badges.adminMode')}
             />
-            <DnsOutlined
-              sx={{ color: 'success.main', fontSize: 16, ml: 0.5 }}
-              titleAccess={t('home.components.systemInfo.badges.serviceMode')}
+            <Server
+              className="ml-inline size-4 text-[var(--color-success)]"
+              aria-label={t('home.components.systemInfo.badges.serviceMode')}
             />
           </>
         )
       }
       return (
-        <AdminPanelSettingsOutlined
-          sx={{ color: 'primary.main', fontSize: 16 }}
-          titleAccess={t('home.components.systemInfo.badges.adminMode')}
+        <ShieldUser
+          className="size-4 text-[var(--color-accent)]"
+          aria-label={t('home.components.systemInfo.badges.adminMode')}
         />
       )
     } else if (isSidecarMode) {
       return (
-        <ExtensionOutlined
-          sx={{ color: 'info.main', fontSize: 16 }}
-          titleAccess={t('home.components.systemInfo.badges.sidecarMode')}
+        <Puzzle
+          className="size-4 text-[var(--color-info)]"
+          aria-label={t('home.components.systemInfo.badges.sidecarMode')}
         />
       )
     } else {
       return (
-        <DnsOutlined
-          sx={{ color: 'success.main', fontSize: 16 }}
-          titleAccess={t('home.components.systemInfo.badges.serviceMode')}
+        <Server
+          className="size-4 text-[var(--color-success)]"
+          aria-label={t('home.components.systemInfo.badges.serviceMode')}
         />
       )
     }
@@ -199,95 +181,85 @@ export const SystemInfoCard = () => {
   return (
     <EnhancedCard
       title={t('home.components.systemInfo.title')}
-      icon={<InfoOutlined />}
+      icon={<Info className="size-5" />}
       iconColor="error"
       action={
-        <IconButton
-          size="small"
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={goToSettings}
           title={t('home.components.systemInfo.actions.settings')}
         >
-          <SettingsOutlined fontSize="small" />
-        </IconButton>
+          <Settings className="size-4" />
+        </Button>
       }
     >
-      <Stack spacing={1.5}>
-        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-          <Typography variant="body2" color="text.secondary">
+      <div className="flex flex-col gap-stack">
+        <div className="flex justify-between">
+          <span className="text-body text-[var(--color-text-secondary)]">
             {t('home.components.systemInfo.fields.osInfo')}
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-            {osInfo}
-          </Typography>
-        </Stack>
-        <Divider />
-        <Stack
-          direction="row"
-          sx={{ justifyContent: 'space-between', alignItems: 'center' }}
-        >
-          <Typography variant="body2" color="text.secondary">
+          </span>
+          <span className="text-body font-medium">{osInfo}</span>
+        </div>
+        <Separator />
+        <div className="flex items-center justify-between">
+          <span className="text-body text-[var(--color-text-secondary)]">
             {t('home.components.systemInfo.fields.autoLaunch')}
-          </Typography>
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            <Chip
-              size="small"
-              label={
-                autoLaunchEnabled
-                  ? t('shared.statuses.enabled')
-                  : t('shared.statuses.disabled')
-              }
-              color={autoLaunchEnabled ? 'success' : 'default'}
-              variant={autoLaunchEnabled ? 'filled' : 'outlined'}
+          </span>
+          <div className="flex items-center gap-component">
+            <Badge
               onClick={toggleAutoLaunch}
-              sx={{ cursor: 'pointer' }}
-            />
-          </Stack>
-        </Stack>
-        <Divider />
-        <Stack
-          direction="row"
-          sx={{ justifyContent: 'space-between', alignItems: 'center' }}
-        >
-          <Typography variant="body2" color="text.secondary">
+              variant={autoLaunchEnabled ? 'default' : 'outline'}
+              className={cn(
+                'cursor-pointer',
+                autoLaunchEnabled &&
+                  'border-transparent bg-[var(--color-success)] text-[var(--color-text-on-accent)]',
+              )}
+            >
+              {autoLaunchEnabled
+                ? t('shared.statuses.enabled')
+                : t('shared.statuses.disabled')}
+            </Badge>
+          </div>
+        </div>
+        <Separator />
+        <div className="flex items-center justify-between">
+          <span className="text-body text-[var(--color-text-secondary)]">
             {t('home.components.systemInfo.fields.runningMode')}
-          </Typography>
-          <Typography
-            variant="body2"
+          </span>
+          <span
             onClick={handleRunningModeClick}
-            sx={{ ...runningModeStyle, fontWeight: 'medium' }}
+            className={cn(
+              'flex items-center gap-inline text-body font-medium',
+              runningModeClickable
+                ? 'cursor-pointer underline hover:opacity-70'
+                : 'cursor-default',
+            )}
           >
             {getModeIcon()}
             {getModeText()}
-          </Typography>
-        </Stack>
-        <Divider />
-        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-          <Typography variant="body2" color="text.secondary">
+          </span>
+        </div>
+        <Separator />
+        <div className="flex justify-between">
+          <span className="text-body text-[var(--color-text-secondary)]">
             {t('home.components.systemInfo.fields.lastCheckUpdate')}
-          </Typography>
-          <Typography
-            variant="body2"
+          </span>
+          <span
             onClick={onCheckUpdate}
-            sx={{
-              cursor: 'pointer',
-              textDecoration: 'underline',
-              fontWeight: 'medium',
-              '&:hover': { opacity: 0.7 },
-            }}
+            className="cursor-pointer text-body font-medium underline hover:opacity-70"
           >
             {lastCheckUpdateText}
-          </Typography>
-        </Stack>
-        <Divider />
-        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-          <Typography variant="body2" color="text.secondary">
+          </span>
+        </div>
+        <Separator />
+        <div className="flex justify-between">
+          <span className="text-body text-[var(--color-text-secondary)]">
             {t('home.components.systemInfo.fields.vergeVersion')}
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-            v{appVersion}
-          </Typography>
-        </Stack>
-      </Stack>
+          </span>
+          <span className="text-body font-medium">v{appVersion}</span>
+        </div>
+      </div>
     </EnhancedCard>
   )
 }

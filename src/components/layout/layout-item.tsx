@@ -1,15 +1,26 @@
-import {
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  useMediaQuery,
-} from '@mui/material'
 import type { ReactNode } from 'react'
-import { useCallback } from 'react'
+import { useCallback, useSyncExternalStore } from 'react'
 import { useMatch, useNavigate, useResolvedPath } from 'react-router'
 
 import { useVerge } from '@/hooks/use-verge'
+import { cn } from '@/lib/utils'
+
+// 轻量 matchMedia 钩子，替代 MUI 的 useMediaQuery（useSyncExternalStore 实现）
+function useMediaQuery(query: string): boolean {
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      const mql = window.matchMedia(query)
+      mql.addEventListener('change', onChange)
+      return () => mql.removeEventListener('change', onChange)
+    },
+    [query],
+  )
+  return useSyncExternalStore(
+    subscribe,
+    () => window.matchMedia(query).matches,
+    () => false,
+  )
+}
 
 interface Props {
   to: string
@@ -27,6 +38,7 @@ export const LayoutItem = (props: Props) => {
   const resolved = useResolvedPath(to)
   const match = useMatch({ path: resolved.pathname, end: true })
   const navigate = useNavigate()
+  const selected = !!match
 
   const effectiveMenuIcon =
     compact && menu_icon === 'disable' ? 'monochrome' : menu_icon
@@ -36,87 +48,44 @@ export const LayoutItem = (props: Props) => {
   }, [onPreload])
 
   return (
-    <ListItem
-      sx={{ width: '100%', maxWidth: 250, mx: 'auto', px: 0, py: 0.35 }}
-    >
-      <ListItemButton
-        selected={!!match}
-        sx={[
-          {
-            minHeight: 44,
-            borderRadius: 'var(--radius-control)',
-            px: 1.625,
-            py: 0.5,
-            cursor: 'pointer',
-            transition:
-              'background-color 160ms ease, color 160ms ease, transform 160ms ease',
-            '&:active': {
-              bgcolor: 'var(--shell-nav-selected)',
-            },
-            '&:hover': {
-              bgcolor: 'var(--shell-nav-hover)',
-            },
-            '&:focus-visible': {
-              outline: '2px solid var(--shell-focus) !important',
-              outlineOffset: '-2px',
-            },
-            '& .MuiListItemText-primary': {
-              color: 'text.primary',
-              fontSize: 14.5,
-              fontWeight: 450,
-              letterSpacing: '-0.005em',
-            },
-            '&.Mui-selected': {
-              bgcolor: 'var(--shell-nav-selected)',
-            },
-            '&.Mui-selected:hover': {
-              bgcolor: 'var(--shell-nav-selected)',
-            },
-          },
-        ]}
+    <li className="mx-auto w-full max-w-[250px] px-0 py-adjust">
+      <button
+        type="button"
         title={compact ? children : undefined}
         aria-label={children}
+        aria-current={selected ? 'page' : undefined}
         onFocus={handlePreload}
         onMouseEnter={handlePreload}
         onPointerDown={handlePreload}
         onClick={() => navigate(to)}
+        className={cn(
+          'flex min-h-[44px] w-full cursor-pointer items-center rounded-[var(--radius-control)] px-stack py-inline transition-colors duration-[var(--duration-base)]',
+          'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--color-focus-ring)]',
+          'active:bg-[var(--color-bg-active)]',
+          selected
+            ? 'bg-[var(--color-bg-active)] hover:bg-[var(--color-bg-active)]'
+            : 'hover:bg-[var(--color-bg-hover)]',
+        )}
       >
         {(effectiveMenuIcon === 'monochrome' || !effectiveMenuIcon) && (
-          <ListItemIcon
-            sx={{
-              color: 'text.secondary',
-              minWidth: 36,
-              cursor: 'inherit',
-              transition: 'color 160ms ease',
-              '& .MuiSvgIcon-root': { fontSize: 20 },
-            }}
-          >
+          <span className="flex min-w-9 items-center text-[var(--color-text-secondary)] transition-colors duration-[var(--duration-base)] [&_svg]:size-5">
             {icon[0]}
-          </ListItemIcon>
+          </span>
         )}
         {effectiveMenuIcon === 'colorful' && (
-          <ListItemIcon
-            sx={{
-              minWidth: 36,
-              cursor: 'inherit',
-              opacity: 0.72,
-              transition: 'opacity 160ms ease',
-              '& .MuiSvgIcon-root': { fontSize: 20 },
-            }}
-          >
+          <span className="flex min-w-9 items-center opacity-[0.72] transition-opacity duration-[var(--duration-base)] [&_svg]:size-5">
             {icon[1]}
-          </ListItemIcon>
+          </span>
         )}
-        <ListItemText
-          sx={{
-            minWidth: 0,
-            m: 0,
-            textAlign: 'left',
-            pl: effectiveMenuIcon === 'disable' ? 1 : 0,
-          }}
-          primary={children}
-        />
-      </ListItemButton>
-    </ListItem>
+        <span
+          className={cn(
+            'm-0 min-w-0 text-left text-[14.5px] font-[450] tracking-[-0.005em] text-[var(--color-text-primary)]',
+            effectiveMenuIcon === 'disable' ? 'pl-component' : 'pl-0',
+          )}
+        >
+          {children}
+        </span>
+      </button>
+    </li>
   )
 }

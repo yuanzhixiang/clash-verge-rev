@@ -1,17 +1,10 @@
-import {
-  InputAdornment,
-  List,
-  ListItem,
-  ListItemText,
-  TextField,
-  Typography,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
 import type { Ref } from 'react'
 import { useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, DialogRef, Switch, TooltipIcon } from '@/components/base'
+import { Input } from '@/components/ui/input'
 import { useVerge } from '@/hooks/use-verge'
 import { entry_lightweight_mode } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -60,90 +53,70 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
-      <List>
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.liteMode.actions.enterNow')}
-          />
-          <Typography
-            variant="button"
-            sx={{
-              cursor: 'pointer',
-              color: 'primary.main',
-              '&:hover': { textDecoration: 'underline' },
-            }}
+      <ul className="py-component">
+        <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+          <span>{t('settings.modals.liteMode.actions.enterNow')}</span>
+          <button
+            type="button"
+            className="cursor-pointer text-body font-medium uppercase text-[var(--color-accent)] hover:underline"
             onClick={async () => await entry_lightweight_mode()}
           >
             {t('shared.actions.enable')}
-          </Typography>
-        </ListItem>
+          </button>
+        </li>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.liteMode.toggles.autoEnter')}
-            sx={{ maxWidth: 'fit-content' }}
-          />
-          <TooltipIcon
-            title={t('settings.modals.liteMode.tooltips.autoEnter')}
-            sx={{ opacity: '0.7' }}
-          />
+        <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+          <div className="flex items-center gap-inline">
+            <span>{t('settings.modals.liteMode.toggles.autoEnter')}</span>
+            <TooltipIcon
+              title={t('settings.modals.liteMode.tooltips.autoEnter')}
+              className="opacity-70"
+            />
+          </div>
           <Switch
-            edge="end"
             checked={values.autoEnterLiteMode}
-            onChange={(_, c) =>
+            onCheckedChange={(c) =>
               setValues((v) => ({ ...v, autoEnterLiteMode: c }))
             }
-            sx={{ marginLeft: 'auto' }}
           />
-        </ListItem>
+        </li>
 
         {values.autoEnterLiteMode && (
           <>
-            <ListItem sx={{ padding: '5px 2px' }}>
-              <ListItemText
-                primary={t('settings.modals.liteMode.fields.delay')}
-              />
-              <TextField
-                autoComplete="off"
-                size="small"
-                type="number"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck="false"
-                sx={{ width: 150 }}
-                value={values.autoEnterLiteModeDelay}
-                onChange={(e) =>
-                  setValues((v) => ({
-                    ...v,
-                    autoEnterLiteModeDelay: parseInt(e.target.value) || 1,
-                  }))
-                }
-                slotProps={{
-                  input: {
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        {t('shared.units.minutes')}
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-            </ListItem>
+            <li className="flex items-center justify-between gap-component px-adjust py-[5px]">
+              <span>{t('settings.modals.liteMode.fields.delay')}</span>
+              <div className="relative w-[150px]">
+                <Input
+                  autoComplete="off"
+                  type="number"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  className="pr-14"
+                  value={values.autoEnterLiteModeDelay}
+                  onChange={(e) =>
+                    setValues((v) => ({
+                      ...v,
+                      autoEnterLiteModeDelay: parseInt(e.target.value) || 1,
+                    }))
+                  }
+                />
+                <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-body text-[var(--color-text-secondary)]">
+                  {t('shared.units.minutes')}
+                </span>
+              </div>
+            </li>
 
-            <ListItem sx={{ padding: '5px 2px' }}>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ fontStyle: 'italic' }}
-              >
+            <li className="flex items-center px-adjust py-[5px]">
+              <p className="text-body italic text-[var(--color-text-secondary)]">
                 {t('settings.modals.liteMode.messages.autoEnterHint', {
                   n: values.autoEnterLiteModeDelay,
                 })}
-              </Typography>
-            </ListItem>
+              </p>
+            </li>
           </>
         )}
-      </List>
+      </ul>
     </BaseDialog>
   )
 }

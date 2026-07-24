@@ -1,14 +1,9 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { DeleteForeverRounded, UndoRounded } from '@mui/icons-material'
-import {
-  Box,
-  IconButton,
-  ListItem,
-  ListItemText,
-  alpha,
-  styled,
-} from '@mui/material'
+import { Trash2, Undo2 } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 interface Props {
   type: 'prepend' | 'original' | 'delete' | 'append'
@@ -35,92 +30,55 @@ export const ProxyItem = (props: Props) => {
   const dragListeners = sortable ? sortableListeners : undefined
   const dragNodeRef = sortable ? sortableSetNodeRef : undefined
 
+  const bgClass =
+    type === 'original'
+      ? 'bg-[var(--color-bg-subtle)]'
+      : type === 'delete'
+        ? 'bg-[color-mix(in_srgb,var(--color-danger)_30%,transparent)]'
+        : 'bg-[color-mix(in_srgb,var(--color-success)_30%,transparent)]'
+
   return (
-    <ListItem
-      dense
-      sx={({ palette }) => ({
-        position: 'relative',
-        background:
-          type === 'original'
-            ? palette.mode === 'dark'
-              ? alpha(palette.background.paper, 0.3)
-              : alpha(palette.grey[400], 0.3)
-            : type === 'delete'
-              ? alpha(palette.error.main, 0.3)
-              : alpha(palette.success.main, 0.3),
-        height: '100%',
-        margin: '8px 0',
-        borderRadius: 'var(--radius-control)',
+    <div
+      className={cn(
+        'relative my-component flex items-center gap-component rounded-[var(--radius-control)] px-inset py-inline',
+        bgClass,
+      )}
+      style={{
         transform: CSS.Transform.toString(transform),
         transition,
         zIndex: isDragging ? 'calc(infinity)' : undefined,
-      })}
+      }}
     >
-      <ListItemText
+      <div
         {...(dragAttributes ?? {})}
         {...(dragListeners ?? {})}
         ref={dragNodeRef}
-        sx={{ cursor: sortable ? 'move' : '' }}
-        primary={
-          <StyledPrimary
-            title={proxy.name}
-            sx={{ textDecoration: type === 'delete' ? 'line-through' : '' }}
-          >
-            {proxy.name}
-          </StyledPrimary>
-        }
-        secondary={
-          <ListItemTextChild
-            sx={{
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'center',
-              pt: '2px',
-            }}
-          >
-            <Box sx={{ marginTop: '2px' }}>
-              <StyledTypeBox>{proxy.type}</StyledTypeBox>
-            </Box>
-          </ListItemTextChild>
-        }
-        slotProps={{
-          secondary: {
-            sx: {
-              display: 'flex',
-              alignItems: 'center',
-              color: '#ccc',
-            },
-          },
-        }}
-      />
-      <IconButton onClick={onDelete}>
-        {type === 'delete' ? <UndoRounded /> : <DeleteForeverRounded />}
-      </IconButton>
-    </ListItem>
+        className={cn('min-w-0 flex-1', sortable && 'cursor-move')}
+      >
+        <div
+          title={proxy.name}
+          className={cn(
+            'truncate text-[15px] font-bold leading-[1.5]',
+            type === 'delete' && 'line-through',
+          )}
+        >
+          {proxy.name}
+        </div>
+        <div className="flex items-center overflow-hidden pt-adjust">
+          <div className="mt-adjust">
+            <span className="inline-block rounded-[var(--radius-container)] border border-[color-mix(in_srgb,var(--color-accent)_50%,transparent)] px-inline text-[10px] leading-[1.5] text-[color-mix(in_srgb,var(--color-accent)_80%,transparent)]">
+              {proxy.type}
+            </span>
+          </div>
+        </div>
+      </div>
+      <Button variant="ghost" size="icon" onClick={onDelete}>
+        {type === 'delete' ? (
+          <Undo2 className="size-5" />
+        ) : (
+          <Trash2 className="size-5" />
+        )}
+      </Button>
+    </div>
   )
 }
-
-const StyledPrimary = styled('div')`
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.5;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`
-
-const ListItemTextChild = styled('span')`
-  display: block;
-`
-
-const StyledTypeBox = styled(ListItemTextChild)(({ theme }) => ({
-  display: 'inline-block',
-  border: '1px solid #ccc',
-  borderColor: alpha(theme.palette.primary.main, 0.5),
-  color: alpha(theme.palette.primary.main, 0.8),
-  borderRadius: 'var(--radius-container)',
-  fontSize: 10,
-  padding: '0 4px',
-  lineHeight: 1.5,
-  marginRight: '8px',
-}))

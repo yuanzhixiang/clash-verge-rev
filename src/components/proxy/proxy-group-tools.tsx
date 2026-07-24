@@ -1,21 +1,25 @@
-import AccessTimeRounded from '@mui/icons-material/AccessTimeRounded'
-import FilterAltOffRounded from '@mui/icons-material/FilterAltOffRounded'
-import FilterAltRounded from '@mui/icons-material/FilterAltRounded'
-import MyLocationRounded from '@mui/icons-material/MyLocationRounded'
-import NetworkCheckRounded from '@mui/icons-material/NetworkCheckRounded'
-import SortByAlphaRounded from '@mui/icons-material/SortByAlphaRounded'
-import SortRounded from '@mui/icons-material/SortRounded'
-import VisibilityOffRounded from '@mui/icons-material/VisibilityOffRounded'
-import VisibilityRounded from '@mui/icons-material/VisibilityRounded'
-import WifiTetheringOffRounded from '@mui/icons-material/WifiTetheringOffRounded'
-import WifiTetheringRounded from '@mui/icons-material/WifiTetheringRounded'
-import { Box, IconButton, type SxProps, TextField } from '@mui/material'
 import { useDebounceFn } from 'ahooks'
+import {
+  ArrowDownAZ,
+  ArrowUpDown,
+  Clock,
+  Eye,
+  EyeOff,
+  Filter,
+  FilterX,
+  Gauge,
+  LocateFixed,
+  Radio,
+  WifiOff,
+} from 'lucide-react'
 import { memo, useEffect } from 'react'
 import { flushSync } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useVerge } from '@/hooks/use-verge'
+import { cn } from '@/lib/utils'
 import delayManager from '@/services/delay'
 
 import { BaseSearchBox, type SearchState } from '../base'
@@ -24,7 +28,7 @@ import type { ProxySortType } from './use-filter-sort'
 import type { HeadState } from './use-head-state'
 
 interface Props {
-  sx?: SxProps
+  className?: string
   url?: string
   groupName: string
   headState: HeadState
@@ -35,7 +39,7 @@ interface Props {
 
 export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
   const {
-    sx,
+    className,
     url,
     groupName,
     headState,
@@ -87,20 +91,14 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
   useEffect(() => () => flushFilter(), [flushFilter])
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        justifyContent: 'end',
-        alignItems: 'center',
-        gap: 0.5,
-        height: 36,
-        flex: 1,
-        ml: 2,
-        ...sx,
-      }}
+    <div
+      className={cn(
+        'ml-inset flex h-9 flex-1 items-center justify-end gap-inline',
+        className,
+      )}
     >
       {textState === 'filter' && (
-        <Box sx={{ flex: '1 1 auto' }}>
+        <div className="flex-auto">
           <BaseSearchBox
             defaultValue={filterText}
             matchCase={filterMatchCase}
@@ -112,29 +110,27 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
             }}
             onSearch={(_, state) => applyFilter(state)}
           />
-        </Box>
+        </div>
       )}
 
       {textState === 'url' && (
-        <TextField
+        <Input
           autoComplete="new-password"
-          hiddenLabel
           autoSave="off"
           value={testUrl}
-          size="small"
-          variant="outlined"
           placeholder={t('proxies.page.placeholders.delayCheckUrl')}
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()
           }}
           onChange={(e) => onHeadState({ testUrl: e.target.value })}
-          sx={{ flex: '1 1 auto', input: { py: 0.65, px: 1 } }}
+          className="h-8 flex-auto"
         />
       )}
-      <IconButton
-        size="small"
-        color="inherit"
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="text-current"
         title={t('proxies.page.tooltips.locate')}
         onClick={(e) => {
           e.preventDefault()
@@ -145,12 +141,13 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           onLocation()
         }}
       >
-        <MyLocationRounded fontSize="inherit" />
-      </IconButton>
+        <LocateFixed className="size-4" />
+      </Button>
 
-      <IconButton
-        size="small"
-        color="inherit"
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="text-current"
         title={t('proxies.page.tooltips.delayCheck')}
         onClick={(e) => {
           e.preventDefault()
@@ -165,12 +162,13 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           onCheckDelay()
         }}
       >
-        <NetworkCheckRounded fontSize="inherit" />
-      </IconButton>
+        <Gauge className="size-4" />
+      </Button>
 
-      <IconButton
-        size="small"
-        color="inherit"
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="text-current"
         title={
           [
             t('proxies.page.tooltips.sortDefault'),
@@ -189,14 +187,15 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           })
         }}
       >
-        {sortType !== 1 && sortType !== 2 && <SortRounded fontSize="inherit" />}
-        {sortType === 1 && <AccessTimeRounded fontSize="inherit" />}
-        {sortType === 2 && <SortByAlphaRounded fontSize="inherit" />}
-      </IconButton>
+        {sortType !== 1 && sortType !== 2 && <ArrowUpDown className="size-4" />}
+        {sortType === 1 && <Clock className="size-4" />}
+        {sortType === 2 && <ArrowDownAZ className="size-4" />}
+      </Button>
 
-      <IconButton
-        size="small"
-        color="inherit"
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="text-current"
         title={t('proxies.page.tooltips.delayCheckUrl')}
         onClick={(e) => {
           e.preventDefault()
@@ -207,15 +206,16 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
         }}
       >
         {textState === 'url' ? (
-          <WifiTetheringRounded fontSize="inherit" />
+          <Radio className="size-4" />
         ) : (
-          <WifiTetheringOffRounded fontSize="inherit" />
+          <WifiOff className="size-4" />
         )}
-      </IconButton>
+      </Button>
 
-      <IconButton
-        size="small"
-        color="inherit"
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="text-current"
         title={
           showType
             ? t('proxies.page.tooltips.showBasic')
@@ -230,16 +230,13 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           onHeadState({ showType: !showType })
         }}
       >
-        {showType ? (
-          <VisibilityRounded fontSize="inherit" />
-        ) : (
-          <VisibilityOffRounded fontSize="inherit" />
-        )}
-      </IconButton>
+        {showType ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+      </Button>
 
-      <IconButton
-        size="small"
-        color="inherit"
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="text-current"
         title={t('proxies.page.tooltips.filter')}
         onClick={(e) => {
           e.preventDefault()
@@ -251,11 +248,11 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
         }}
       >
         {textState === 'filter' ? (
-          <FilterAltRounded fontSize="inherit" />
+          <Filter className="size-4" />
         ) : (
-          <FilterAltOffRounded fontSize="inherit" />
+          <FilterX className="size-4" />
         )}
-      </IconButton>
-    </Box>
+      </Button>
+    </div>
   )
 })

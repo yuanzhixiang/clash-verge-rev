@@ -1,15 +1,9 @@
-import {
-  InputAdornment,
-  ListItem,
-  ListItemText,
-  Stack,
-  TextField,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
 import { Fragment, useMemo, useState, type ChangeEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Switch } from '@/components/base'
+import { Input } from '@/components/ui/input'
 import { useVerge } from '@/hooks/use-verge'
 import { showNotice } from '@/services/notice-service'
 
@@ -74,10 +68,7 @@ export function AutoBackupSettings() {
 
   const disabled = !verge
 
-  const handleScheduleToggle = (
-    _: ChangeEvent<HTMLInputElement>,
-    checked: boolean,
-  ) => {
+  const handleScheduleToggle = (checked: boolean) => {
     applyPatch(
       { scheduleEnabled: checked },
       {
@@ -87,10 +78,7 @@ export function AutoBackupSettings() {
     )
   }
 
-  const handleChangeToggle = (
-    _: ChangeEvent<HTMLInputElement>,
-    checked: boolean,
-  ) => {
+  const handleChangeToggle = (checked: boolean) => {
     applyPatch({ changeEnabled: checked }, { auto_backup_on_change: checked })
   }
 
@@ -133,38 +121,34 @@ export function AutoBackupSettings() {
 
   return (
     <Fragment>
-      <ListItem divider disableGutters>
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{ alignItems: 'center', width: '100%' }}
-        >
-          <ListItemText
-            primary={t('settings.modals.backup.auto.scheduleLabel')}
-            secondary={t('settings.modals.backup.auto.scheduleHelper')}
-          />
-          <Switch
-            edge="end"
-            checked={values.scheduleEnabled}
-            onChange={handleScheduleToggle}
-            disabled={disabled}
-          />
-        </Stack>
-      </ListItem>
+      <div className="flex items-center gap-component border-b border-[var(--color-border)] py-component">
+        <div className="flex-1">
+          <p className="text-sm text-[var(--color-text-primary)]">
+            {t('settings.modals.backup.auto.scheduleLabel')}
+          </p>
+          <p className="mt-adjust text-xs text-[var(--color-text-secondary)]">
+            {t('settings.modals.backup.auto.scheduleHelper')}
+          </p>
+        </div>
+        <Switch
+          checked={values.scheduleEnabled}
+          onCheckedChange={handleScheduleToggle}
+          disabled={disabled}
+        />
+      </div>
 
-      <ListItem divider disableGutters>
-        <Stack
-          direction="row"
-          spacing={2}
-          sx={{ alignItems: 'center', width: '100%' }}
-        >
-          <ListItemText
-            primary={t('settings.modals.backup.auto.intervalLabel')}
-          />
-          <TextField
-            label={t('settings.modals.backup.auto.intervalLabel')}
-            size="small"
+      <div className="flex items-center gap-inset border-b border-[var(--color-border)] py-component">
+        <div className="flex-1">
+          <p className="text-sm text-[var(--color-text-primary)]">
+            {t('settings.modals.backup.auto.intervalLabel')}
+          </p>
+        </div>
+        <div className="relative min-w-40">
+          <Input
             type="number"
+            inputMode="numeric"
+            min={MIN_INTERVAL_HOURS}
+            max={MAX_INTERVAL_HOURS}
             value={intervalInputDraft ?? values.intervalHours.toString()}
             disabled={scheduleDisabled}
             onChange={handleIntervalInputChange}
@@ -175,43 +159,29 @@ export function AutoBackupSettings() {
                 commitIntervalInput()
               }
             }}
-            sx={{ minWidth: 160 }}
-            slotProps={{
-              input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    {t('shared.units.hours')}
-                  </InputAdornment>
-                ),
-              },
-              htmlInput: {
-                min: MIN_INTERVAL_HOURS,
-                max: MAX_INTERVAL_HOURS,
-                inputMode: 'numeric',
-              },
-            }}
+            className="pr-14"
           />
-        </Stack>
-      </ListItem>
+          <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm text-[var(--color-text-muted)]">
+            {t('shared.units.hours')}
+          </span>
+        </div>
+      </div>
 
-      <ListItem divider disableGutters>
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{ alignItems: 'center', width: '100%' }}
-        >
-          <ListItemText
-            primary={t('settings.modals.backup.auto.changeLabel')}
-            secondary={t('settings.modals.backup.auto.changeHelper')}
-          />
-          <Switch
-            edge="end"
-            checked={values.changeEnabled}
-            onChange={handleChangeToggle}
-            disabled={disabled}
-          />
-        </Stack>
-      </ListItem>
+      <div className="flex items-center gap-component border-b border-[var(--color-border)] py-component">
+        <div className="flex-1">
+          <p className="text-sm text-[var(--color-text-primary)]">
+            {t('settings.modals.backup.auto.changeLabel')}
+          </p>
+          <p className="mt-adjust text-xs text-[var(--color-text-secondary)]">
+            {t('settings.modals.backup.auto.changeHelper')}
+          </p>
+        </div>
+        <Switch
+          checked={values.changeEnabled}
+          onCheckedChange={handleChangeToggle}
+          disabled={disabled}
+        />
+      </div>
     </Fragment>
   )
 }

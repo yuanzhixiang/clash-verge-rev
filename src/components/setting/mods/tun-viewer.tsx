@@ -1,12 +1,3 @@
-import {
-  Box,
-  Button,
-  List,
-  ListItem,
-  ListItemText,
-  TextField,
-  Typography,
-} from '@mui/material'
 import { useLockFn } from 'ahooks'
 import type { Ref } from 'react'
 import { useImperativeHandle, useState } from 'react'
@@ -19,6 +10,8 @@ import {
   DialogRef,
   Switch,
 } from '@/components/base'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useClash } from '@/hooks/use-clash'
 import { enhanceProfiles } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -141,11 +134,11 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
     <BaseDialog
       open={open}
       title={
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
-          <Typography variant="h6">{t('settings.modals.tun.title')}</Typography>
+        <div className="flex items-center justify-between gap-component">
+          <span>{t('settings.modals.tun.title')}</span>
           <Button
-            variant="outlined"
-            size="small"
+            variant="outline"
+            size="sm"
             onClick={async () => {
               const tun: IConfigData['tun'] = {
                 stack: 'gvisor',
@@ -185,7 +178,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
           >
             {t('shared.actions.resetToDefault')}
           </Button>
-        </Box>
+        </div>
       }
       contentSx={{ width: 450 }}
       okBtn={t('shared.actions.save')}
@@ -194,9 +187,11 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
-      <List>
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText primary={t('settings.modals.tun.fields.stack')} />
+      <div className="py-component">
+        <div className="flex items-center gap-component py-[5px] px-adjust">
+          <span className="flex-1">
+            {t('settings.modals.tun.fields.stack')}
+          </span>
           <StackModeSwitch
             value={values.stack}
             onChange={(value) => {
@@ -206,31 +201,33 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
               }))
             }}
           />
-        </ListItem>
+        </div>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText primary={t('settings.modals.tun.fields.device')} />
-          <TextField
+        <div className="flex items-center gap-component py-[5px] px-adjust">
+          <span className="flex-1">
+            {t('settings.modals.tun.fields.device')}
+          </span>
+          <Input
             autoComplete="new-password"
-            size="small"
             autoCorrect="off"
             autoCapitalize="off"
-            spellCheck="false"
-            sx={{ width: 250 }}
+            spellCheck={false}
+            className="h-8 w-[250px]"
             value={values.device}
             placeholder="Mihomo"
             onChange={(e) =>
               setValues((v) => ({ ...v, device: e.target.value }))
             }
           />
-        </ListItem>
+        </div>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText primary={t('settings.modals.tun.fields.autoRoute')} />
+        <div className="flex items-center gap-component py-[5px] px-adjust">
+          <span className="flex-1">
+            {t('settings.modals.tun.fields.autoRoute')}
+          </span>
           <Switch
-            edge="end"
             checked={values.autoRoute}
-            onChange={(_, c) =>
+            onCheckedChange={(c) =>
               setValues((v) => ({
                 ...v,
                 autoRoute: c,
@@ -238,82 +235,82 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
               }))
             }
           />
-        </ListItem>
+        </div>
 
         {OS === 'linux' && (
-          <ListItem sx={{ padding: '5px 2px' }}>
-            <ListItemText
-              primary={t('settings.modals.tun.fields.autoRedirect')}
-              sx={{ maxWidth: 'fit-content' }}
-            />
+          <div className="flex items-center gap-component py-[5px] px-adjust">
+            <span className="max-w-fit">
+              {t('settings.modals.tun.fields.autoRedirect')}
+            </span>
             <TooltipIcon
               title={t('settings.modals.tun.tooltips.autoRedirect')}
-              sx={{ opacity: values.autoRoute ? 0.7 : 0.3 }}
+              className={values.autoRoute ? 'opacity-70' : 'opacity-30'}
             />
             <Switch
-              edge="end"
+              className="ml-auto"
               checked={values.autoRedirect}
-              onChange={(_, c) =>
+              onCheckedChange={(c) =>
                 setValues((v) => ({
                   ...v,
                   autoRedirect: v.autoRoute ? c : v.autoRedirect,
                 }))
               }
               disabled={!values.autoRoute}
-              sx={{ marginLeft: 'auto' }}
             />
-          </ListItem>
+          </div>
         )}
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText primary={t('settings.modals.tun.fields.strictRoute')} />
+        <div className="flex items-center gap-component py-[5px] px-adjust">
+          <span className="flex-1">
+            {t('settings.modals.tun.fields.strictRoute')}
+          </span>
           <Switch
-            edge="end"
             checked={values.strictRoute}
-            onChange={(_, c) => setValues((v) => ({ ...v, strictRoute: c }))}
+            onCheckedChange={(c) =>
+              setValues((v) => ({ ...v, strictRoute: c }))
+            }
           />
-        </ListItem>
+        </div>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.tun.fields.autoDetectInterface')}
-          />
+        <div className="flex items-center gap-component py-[5px] px-adjust">
+          <span className="flex-1">
+            {t('settings.modals.tun.fields.autoDetectInterface')}
+          </span>
           <Switch
-            edge="end"
             checked={values.autoDetectInterface}
-            onChange={(_, c) =>
+            onCheckedChange={(c) =>
               setValues((v) => ({ ...v, autoDetectInterface: c }))
             }
           />
-        </ListItem>
+        </div>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText primary={t('settings.modals.tun.fields.dnsHijack')} />
-          <TextField
+        <div className="flex items-center gap-component py-[5px] px-adjust">
+          <span className="flex-1">
+            {t('settings.modals.tun.fields.dnsHijack')}
+          </span>
+          <Input
             autoComplete="new-password"
-            size="small"
             autoCorrect="off"
             autoCapitalize="off"
-            spellCheck="false"
-            sx={{ width: 250 }}
+            spellCheck={false}
+            className="h-8 w-[250px]"
             value={values.dnsHijack.join(',')}
             placeholder={t('settings.modals.tun.tooltips.dnsHijack')}
             onChange={(e) =>
               setValues((v) => ({ ...v, dnsHijack: e.target.value.split(',') }))
             }
           />
-        </ListItem>
+        </div>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText primary={t('settings.modals.tun.fields.mtu')} />
-          <TextField
+        <div className="flex items-center gap-component py-[5px] px-adjust">
+          <span className="flex-1">{t('settings.modals.tun.fields.mtu')}</span>
+          <Input
             autoComplete="new-password"
-            size="small"
             type="number"
             autoCorrect="off"
             autoCapitalize="off"
-            spellCheck="false"
-            sx={{ width: 250 }}
+            spellCheck={false}
+            className="h-8 w-[250px]"
             value={values.mtu}
             placeholder="1500"
             onChange={(e) =>
@@ -323,7 +320,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
               }))
             }
           />
-        </ListItem>
+        </div>
 
         <BaseSplitChipEditor
           value={values.routeExcludeAddress}
@@ -336,17 +333,15 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
             setValues((v) => ({ ...v, routeExcludeAddress: nextValue }))
           }
           renderHeader={(modeToggle) => (
-            <ListItem sx={{ padding: '5px 2px' }}>
-              <ListItemText
-                primary={t('settings.modals.tun.fields.routeExcludeAddress')}
-              />
-              {modeToggle ? (
-                <Box sx={{ marginLeft: 'auto' }}>{modeToggle}</Box>
-              ) : null}
-            </ListItem>
+            <div className="flex items-center gap-component py-[5px] px-adjust">
+              <span className="flex-1">
+                {t('settings.modals.tun.fields.routeExcludeAddress')}
+              </span>
+              {modeToggle ? <div className="ml-auto">{modeToggle}</div> : null}
+            </div>
           )}
         />
-      </List>
+      </div>
     </BaseDialog>
   )
 }
