@@ -1,0 +1,116 @@
+name: Windows Build (Fork)
+
+# 个人 fork 专用：手动构建 Windows x64 安装包并发布到本仓库 Release。
+# 与上游的 autobuild.yml / release.yml 无关，不涉及签名、updater、telegram、winget。
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag 名称'
+        required: false
+        type: string
+        default: 'win-build'
+
+permissions:
+  contents: write
+
+env:
+  CARGO_INCREMENTAL: 0
+  RUST_BACKTRACE: short
+  HUSKY: 0
+  TARGET: x86_64-pc-windows-msvc
+
+concurrency:
+  group: '${{ github.workflow }} - ${{ github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Windows x64
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@1.95.0
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: 'v1-rust'
+          key: 'rust-fork-win-x64'
+          workspaces: |
+            . -> target
+          cache-all-crates: true
+
+      - uses: pnpm/action-setup@v6
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.18.0'
+          cache: 'pnpm'
+
+      - name: Pnpm install and prebuild
+        run: |
+          pnpm i
+          pnpm run prebuild ${{ env.TARGET }}
+
+      - name: Tauri build
+        uses: tauri-apps/tauri-action@v1
+        env:
+          NODE_OPTIONS: '--max_old_space_size=4096'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tauriScript: pnpm
+          args: --target ${{ env.TARGET }} -b nsis
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          mkdir -p out
+          cp target/${TARGET}/release/bundle/nsis/*.exe out/
+          ls -la out/
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          archive: false
+          path: out/*.exe
+          if-no-files-found: error
+
+      - name: Publish to Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          VERSION=$(jq -r .version package.json)
+          SHORT_SHA="${GITHUB_SHA::7}"
+
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              --title "Windows Build (x64)" \
+              --notes "个人构建产物，基于 \`${GITHUB_REF_NAME}\` @ \`${SHORT_SHA}\`（版本 ${VERSION}）。仅供本人测试使用，非官方发布。" \
+              --prerelease
+          else
+            gh release edit "$TAG" \
+              --notes "个人构建产物，基于 \`${GITHUB_REF_NAME}\` @ \`${SHORT_SHA}\`（版本 ${VERSION}）。仅供本人测试使用，非官方发布。"
+          fi
+
+          gh release upload "$TAG" out/*.exe --clobber
+
+          echo "### 下载链接" >> $GITHUB_STEP_SUMMARY
+          for f in out/*.exe; do
+            NAME=$(basename "$f")
+            ENCODED=$(echo "$NAME" | sed 's/ /%20/g')
+            echo "- https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${ENCODED}" >> $GITHUB_STEP_SUMMARY
+          done
