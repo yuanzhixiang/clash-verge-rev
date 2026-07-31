@@ -3,7 +3,7 @@ use crate::{
     config::{Config, ConfigType, runtime::IRuntime},
     constants::timing,
     core::{
-        handle,
+        handle, rule_disable,
         validate::{CoreConfigValidator, ValidationOutcome, ValidationSkipReason},
     },
     utils::{dirs, help},
@@ -27,6 +27,7 @@ impl CoreManager {
                 config: Some(clash_config.to_owned()),
                 exists_keys: HashSet::new(),
                 chain_logs: Default::default(),
+                disabled_rules: Vec::new(),
             }
         });
 
@@ -140,6 +141,8 @@ impl CoreManager {
         match self.reload_config(path).await {
             Ok(_) => {
                 Config::runtime().await.apply();
+                // reload 会重建规则表并清空 disabled 标记，须在这之后重放。
+                rule_disable::replay_after_apply().await;
                 logging!(info, Type::Core, "Configuration applied");
                 Ok(())
             }
@@ -152,6 +155,7 @@ impl CoreManager {
                 match self.restart_core().await {
                     Ok(_) => {
                         Config::runtime().await.apply();
+                        rule_disable::replay_after_apply().await;
                         logging!(info, Type::Core, "Configuration applied after restart");
                         Ok(())
                     }

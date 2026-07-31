@@ -48,7 +48,8 @@ tauri = { workspace = true, features = [
 ] }
 parking_lot = { workspace = true }
 anyhow = { workspace = true }
-tokio = { workspace = true }
+# net: core::rule_disable 直连内核 IPC（unix socket / windows named pipe）需要。
+tokio = { workspace = true, features = ["net"] }
 compact_str = { workspace = true }
 flexi_logger = { workspace = true }
 log = { workspace = true }
@@ -99,6 +100,12 @@ tauri-plugin-http = "2.5.9"
 console-subscriber = { version = "0.5.0", optional = true }
 tauri-plugin-devtools = { version = "2.1.0" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "fix/api-robustness" }
+# fork: core::rule_disable 需要直连内核 IPC 打 PATCH /rules/disable，
+# tauri-plugin-mihomo 未暴露该接口也未导出其 IPC 传输层，故在本仓库内自带一个最小客户端。
+# 三者均已在依赖树中（tauri-plugin-mihomo 传递引入），此处仅提升为直接依赖。
+hyper = { version = "1", default-features = false, features = ["client", "http1"] }
+hyper-util = { version = "0.1", default-features = false, features = ["tokio"] }
+http-body-util = "0.1"
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.89"
 clash_verge_service_ipc = { version = "2.3.3", features = [

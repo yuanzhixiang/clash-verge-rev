@@ -1,5 +1,11 @@
 import { useTranslation } from 'react-i18next'
 
+import { Switch } from '@/components/ui/switch'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import type { RuntimeRule } from '@/types/rule'
 
@@ -19,8 +25,11 @@ interface Props {
   value: RuntimeRule
   displayIndex: number
   selected: boolean
+  toggling: boolean
+  canToggle: boolean
   onSelect: (value: RuntimeRule) => void
   onEdit: (value: RuntimeRule) => void
+  onToggleEnabled: (value: RuntimeRule, enabled: boolean) => void
 }
 
 const parseColor = (text: string) => {
@@ -38,13 +47,20 @@ const RuleItem = ({
   value,
   displayIndex,
   selected,
+  toggling,
+  canToggle,
   onSelect,
   onEdit,
+  onToggleEnabled,
 }: Props) => {
   const { t } = useTranslation()
   const payload = value.payload || '-'
   const used = value.extra?.hitCount
   const usedLabel = used == null ? '—' : String(used)
+  // 禁用状态以内核实际标记为准：规则仍留在列表里，只是不参与匹配。
+  const disabled = value.extra?.disabled === true
+  // 只压暗信息列，开关本身保持满对比度，否则禁用之后反而更难点回来。
+  const muted = disabled ? 'opacity-50' : undefined
 
   return (
     <div
@@ -54,6 +70,7 @@ const RuleItem = ({
       aria-description={t('rules.page.actions.edit.hint')}
       aria-keyshortcuts="F2"
       data-selected={selected ? 'true' : 'false'}
+      data-disabled={disabled ? 'true' : 'false'}
       data-striped={displayIndex % 2 === 1 ? 'true' : 'false'}
       onClick={() => onSelect(value)}
       onDoubleClick={() => onEdit(value)}
@@ -83,6 +100,7 @@ const RuleItem = ({
         className={cn(
           cellBase,
           'text-center tabular-nums text-[var(--color-text-secondary)]',
+          muted,
         )}
       >
         {value.index}
@@ -90,17 +108,21 @@ const RuleItem = ({
       <div
         role="cell"
         title={value.type}
-        className={cn(cellBase, 'font-[560]')}
+        className={cn(cellBase, 'font-[560]', muted)}
       >
         {value.type}
       </div>
-      <div role="cell" title={payload} className={cellBase}>
+      <div
+        role="cell"
+        title={payload}
+        className={cn(cellBase, disabled && 'line-through', muted)}
+      >
         {payload}
       </div>
       <div
         role="cell"
         title={value.proxy}
-        className={cellBase}
+        className={cn(cellBase, muted)}
         style={{ color: parseColor(value.proxy) }}
       >
         {value.proxy}
@@ -111,9 +133,44 @@ const RuleItem = ({
         className={cn(
           cellBase,
           'text-right tabular-nums text-[var(--color-text-secondary)]',
+          muted,
         )}
       >
         {usedLabel}
+      </div>
+      {/* 开关列不能把点击冒泡成选中/编辑，否则切换时会顺带改掉选中行。 */}
+      <div
+        role="cell"
+        className="flex min-w-0 items-center justify-center px-2"
+        onClick={(event) => event.stopPropagation()}
+        onDoubleClick={(event) => event.stopPropagation()}
+      >
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex">
+              <Switch
+                size="sm"
+                checked={!disabled}
+                disabled={!canToggle || toggling}
+                aria-label={t(
+                  disabled
+                    ? 'rules.page.actions.toggle.enable'
+                    : 'rules.page.actions.toggle.disable',
+                )}
+                onCheckedChange={(next) => onToggleEnabled(value, next)}
+              />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            {t(
+              !canToggle
+                ? 'rules.feedback.notifications.mutationUnavailable'
+                : disabled
+                  ? 'rules.page.actions.toggle.enable'
+                  : 'rules.page.actions.toggle.disable',
+            )}
+          </TooltipContent>
+        </Tooltip>
       </div>
     </div>
   )

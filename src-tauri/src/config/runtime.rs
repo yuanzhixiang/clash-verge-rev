@@ -14,6 +14,10 @@ pub struct IRuntime {
     pub exists_keys: HashSet<String>,
     // TODO 或许可以用 FixMap 来存储以提升效率
     pub chain_logs: HashMap<String, Vec<(String, String)>>,
+    // rules 链里声明为「保留但禁用」的规则原文。
+    // 这些规则照常出现在 config.rules 里，配置 apply 之后再调用内核
+    // `PATCH /rules/disable` 把它们标记为 disabled，见 core::rule_disable。
+    pub disabled_rules: Vec<std::string::String>,
 }
 
 impl IRuntime {

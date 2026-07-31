@@ -45,6 +45,10 @@
         "title": "Edit aturan",
         "hint": "Klik dua kali atau tekan F2 untuk mengedit aturan ini"
       },
+      "toggle": {
+        "enable": "Aktifkan aturan ini",
+        "disable": "Nonaktifkan aturan ini tetapi tetap tampilkan di daftar"
+      },
       "scrollTop": "Kembali ke atas"
     },
     "columns": {
@@ -52,7 +56,8 @@
       "type": "Tipe",
       "value": "Nilai",
       "policy": "Kebijakan",
-      "used": "Digunakan"
+      "used": "Digunakan",
+      "enabled": "Aktif"
     },
     "description": "Aturan dievaluasi berdasarkan prioritas, dari atas ke bawah.",
     "searchPlaceholder": "Cari aturan",
@@ -76,7 +81,10 @@
       "editSuccess": "Aturan diperbarui",
       "editUnavailable": "Aturan ini tidak dapat diedit: {{message}}",
       "editAmbiguous": "Aturan duplikat yang identik tidak dapat diedit dengan aman",
-      "editTargetChanged": "Aturan berubah sebelum disimpan. Buka kembali aturan tersebut."
+      "editTargetChanged": "Aturan berubah sebelum disimpan. Buka kembali aturan tersebut.",
+      "disableSuccess": "Aturan dinonaktifkan dan tetap ada di daftar",
+      "enableSuccess": "Aturan diaktifkan kembali",
+      "toggleAmbiguous": "Aturan duplikat yang identik tidak dapat dinonaktifkan dengan aman"
     }
   },
   "modals": {

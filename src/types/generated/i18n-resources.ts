@@ -565,10 +565,12 @@ export interface TranslationResources {
         notifications: {
           addSuccess: string
           deleteSuccess: string
+          disableSuccess: string
           editAmbiguous: string
           editSuccess: string
           editTargetChanged: string
           editUnavailable: string
+          enableSuccess: string
           mutationNotApplied: string
           mutationUnavailable: string
           provider: {
@@ -580,6 +582,7 @@ export interface TranslationResources {
           }
           runtimeReadFailed: string
           saveFailed: string
+          toggleAmbiguous: string
         }
       }
       modals: {
@@ -667,8 +670,13 @@ export interface TranslationResources {
             title: string
           }
           scrollTop: string
+          toggle: {
+            disable: string
+            enable: string
+          }
         }
         columns: {
+          enabled: string
           id: string
           policy: string
           type: string

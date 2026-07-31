@@ -45,6 +45,10 @@
         "title": "Edit Rule",
         "hint": "Double-click or press F2 to edit this rule"
       },
+      "toggle": {
+        "enable": "Enable this rule",
+        "disable": "Disable this rule but keep it in the list"
+      },
       "scrollTop": "Scroll to top"
     },
     "columns": {
@@ -52,7 +56,8 @@
       "type": "Type",
       "value": "Value",
       "policy": "Policy",
-      "used": "Used"
+      "used": "Used",
+      "enabled": "Enabled"
     },
     "description": "Rules are evaluated in priority order, from top to bottom.",
     "searchPlaceholder": "Search rules",
@@ -76,7 +81,10 @@
       "editSuccess": "Rule updated",
       "editUnavailable": "This rule cannot be edited: {{message}}",
       "editAmbiguous": "Identical duplicate rules cannot be edited safely",
-      "editTargetChanged": "The rule changed before it could be saved. Open it again."
+      "editTargetChanged": "The rule changed before it could be saved. Open it again.",
+      "disableSuccess": "Rule disabled, still kept in the list",
+      "enableSuccess": "Rule enabled again",
+      "toggleAmbiguous": "Identical duplicate rules cannot be disabled safely"
     }
   },
   "modals": {

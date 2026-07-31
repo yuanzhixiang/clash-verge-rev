@@ -45,6 +45,10 @@
         "title": "编辑规则",
         "hint": "双击或按 F2 编辑这条规则"
       },
+      "toggle": {
+        "enable": "启用这条规则",
+        "disable": "禁用这条规则，但保留在列表中"
+      },
       "scrollTop": "返回顶部"
     },
     "columns": {
@@ -52,7 +56,8 @@
       "type": "类型",
       "value": "匹配值",
       "policy": "策略",
-      "used": "命中"
+      "used": "命中",
+      "enabled": "启用"
     },
     "description": "规则按优先级从上到下匹配。",
     "searchPlaceholder": "搜索规则",
@@ -76,7 +81,10 @@
       "editSuccess": "规则已更新",
       "editUnavailable": "无法编辑这条规则：{{message}}",
       "editAmbiguous": "存在完全相同的重复规则，无法安全定位编辑目标",
-      "editTargetChanged": "规则在保存前已发生变化，请重新打开后再编辑"
+      "editTargetChanged": "规则在保存前已发生变化，请重新打开后再编辑",
+      "disableSuccess": "规则已禁用，仍保留在列表中",
+      "enableSuccess": "规则已重新启用",
+      "toggleAmbiguous": "存在完全相同的重复规则，无法安全定位禁用目标"
     }
   },
   "modals": {

@@ -274,13 +274,18 @@ async fn process_global_items(
     (config, exists_keys, result_map)
 }
 
+/// 返回处理后的配置，以及 rules 链声明的「保留但禁用」规则原文。
+/// 禁用状态不落在配置里，由 apply 之后调用内核接口重放，见 `core::rule_disable`。
 fn process_seq_items(
     mut config: Mapping,
     rules_item: ChainItem,
     proxies_item: ChainItem,
     groups_item: ChainItem,
-) -> Mapping {
+) -> (Mapping, Vec<std::string::String>) {
+    let mut disabled_rules = Vec::new();
+
     if let ChainType::Rules(rules) = rules_item.data {
+        disabled_rules = rules.disabled.clone();
         config = use_seq(rules, config, "rules");
     }
 
@@ -292,7 +297,7 @@ fn process_seq_items(
         config = use_seq(groups, config, "proxy-groups");
     }
 
-    config
+    (config, disabled_rules)
 }
 
 fn extend_changed_keys(exists_keys: &mut Vec<String>, config: &Mapping, res_config: &Mapping) {
@@ -719,8 +724,8 @@ fn use_quic_fallback_reject(mut config: Mapping, enabled: bool) -> Mapping {
 }
 
 /// Enhance mode
-/// 返回最终订阅、该订阅包含的键、和script执行的结果
-pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, ResultLog>)> {
+/// 返回最终订阅、该订阅包含的键、script执行的结果，以及被标记为禁用的规则原文
+pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, ResultLog>, Vec<std::string::String>)> {
     // gather config values
     let cfg_vals = get_config_values().await;
     let ConfigValues {
@@ -753,7 +758,7 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     let result_map = HashMap::new();
 
     // 顺序项先于手动覆盖。
-    let config = process_seq_items(config, rules_item, proxies_item, groups_item);
+    let (config, disabled_rules) = process_seq_items(config, rules_item, proxies_item, groups_item);
     let exists_keys = use_keys(&config).collect::<Vec<_>>();
 
     // merge default clash config
@@ -813,7 +818,7 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     let mut exists_keys_set = HashSet::new();
     exists_keys_set.extend(exists_keys);
 
-    Ok((config, exists_keys_set, result_map))
+    Ok((config, exists_keys_set, result_map, disabled_rules))
 }
 
 #[allow(clippy::expect_used)]

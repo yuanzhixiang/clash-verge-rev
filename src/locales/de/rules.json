@@ -45,6 +45,10 @@
         "title": "Regel bearbeiten",
         "hint": "Doppelklicken oder F2 drücken, um diese Regel zu bearbeiten"
       },
+      "toggle": {
+        "enable": "Diese Regel aktivieren",
+        "disable": "Diese Regel deaktivieren, aber in der Liste behalten"
+      },
       "scrollTop": "Nach oben"
     },
     "columns": {
@@ -52,7 +56,8 @@
       "type": "Typ",
       "value": "Wert",
       "policy": "Richtlinie",
-      "used": "Treffer"
+      "used": "Treffer",
+      "enabled": "Aktiv"
     },
     "description": "Regeln werden nach Priorität von oben nach unten ausgewertet.",
     "searchPlaceholder": "Regeln durchsuchen",
@@ -76,7 +81,10 @@
       "editSuccess": "Regel aktualisiert",
       "editUnavailable": "Diese Regel kann nicht bearbeitet werden: {{message}}",
       "editAmbiguous": "Identische doppelte Regeln können nicht sicher bearbeitet werden",
-      "editTargetChanged": "Die Regel wurde vor dem Speichern geändert. Bitte erneut öffnen."
+      "editTargetChanged": "Die Regel wurde vor dem Speichern geändert. Bitte erneut öffnen.",
+      "disableSuccess": "Regel deaktiviert, bleibt aber in der Liste",
+      "enableSuccess": "Regel wieder aktiviert",
+      "toggleAmbiguous": "Identische doppelte Regeln können nicht sicher deaktiviert werden"
     }
   },
   "modals": {

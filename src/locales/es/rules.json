@@ -45,6 +45,10 @@
         "title": "Editar regla",
         "hint": "Haz doble clic o pulsa F2 para editar esta regla"
       },
+      "toggle": {
+        "enable": "Activar esta regla",
+        "disable": "Desactivar esta regla pero mantenerla en la lista"
+      },
       "scrollTop": "Volver arriba"
     },
     "columns": {
@@ -52,7 +56,8 @@
       "type": "Tipo",
       "value": "Valor",
       "policy": "Política",
-      "used": "Usos"
+      "used": "Usos",
+      "enabled": "Activa"
     },
     "description": "Las reglas se evalúan por prioridad, de arriba abajo.",
     "searchPlaceholder": "Buscar reglas",
@@ -76,7 +81,10 @@
       "editSuccess": "Regla actualizada",
       "editUnavailable": "No se puede editar esta regla: {{message}}",
       "editAmbiguous": "No se pueden editar de forma segura reglas duplicadas idénticas",
-      "editTargetChanged": "La regla cambió antes de guardarse. Ábrela de nuevo."
+      "editTargetChanged": "La regla cambió antes de guardarse. Ábrela de nuevo.",
+      "disableSuccess": "Regla desactivada, se mantiene en la lista",
+      "enableSuccess": "Regla activada de nuevo",
+      "toggleAmbiguous": "No se pueden desactivar de forma segura reglas duplicadas idénticas"
     }
   },
   "modals": {

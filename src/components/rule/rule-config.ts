@@ -246,7 +246,7 @@ const parseRecord = (content: string): UnknownRecord => {
 
 const readStringArray = (
   document: UnknownRecord,
-  key: 'prepend' | 'append' | 'delete',
+  key: 'prepend' | 'append' | 'delete' | 'disabled',
 ): string[] => {
   const value = document[key]
   if (value == null) return []
@@ -310,6 +310,8 @@ interface RuleEnhancementState {
   append: string[]
   delete: string[]
   replace: RuleReplacement[]
+  /** 保留在规则列表里但不参与匹配的规则原文，由内核 `PATCH /rules/disable` 落地。 */
+  disabled: string[]
 }
 
 export interface RuleReplacement {
@@ -342,6 +344,7 @@ const parseRuleEnhancement = (content: string): RuleEnhancementState => {
     append: readStringArray(document, 'append'),
     delete: readStringArray(document, 'delete'),
     replace: readReplacements(document),
+    disabled: readStringArray(document, 'disabled'),
   }
 }
 
@@ -353,6 +356,7 @@ const dumpRuleEnhancement = (state: RuleEnhancementState): string =>
       append: state.append,
       delete: state.delete,
       replace: state.replace,
+      disabled: state.disabled,
     },
     { forceQuotes: true, lineWidth: -1 },
   )
@@ -385,6 +389,9 @@ export const deleteRuleFromEnhancement = (
     throw new RuleConfigError('invalidEnhancement')
   }
   const alreadyDeleted = state.delete.includes(rule)
+  // 规则被删掉之后禁用标记就没有归属了，一并清掉避免留下永远匹配不上的原文。
+  const clearedDisabled = state.disabled.includes(rule)
+  state.disabled = state.disabled.filter((item) => item !== rule)
 
   state.prepend = state.prepend.filter((item) => item !== rule)
   state.append = state.append.filter((item) => item !== rule)
@@ -405,12 +412,40 @@ export const deleteRuleFromEnhancement = (
   const changed =
     removedLocalRule ||
     replacementIndexes.length === 1 ||
-    (!removedLocalRule && !alreadyDeleted)
+    (!removedLocalRule && !alreadyDeleted) ||
+    clearedDisabled
   return {
     content: changed ? dumpRuleEnhancement(state) : content,
     changed,
     removedLocalRule,
   }
+}
+
+export const isRuleDisabledInEnhancement = (
+  content: string,
+  rule: string,
+): boolean => parseRuleEnhancement(content).disabled.includes(rule)
+
+/**
+ * 切换「保留但禁用」标记。
+ *
+ * 规则本身不动：它照常进入 runtime 配置和内核规则表，只是 apply 之后由后端调用
+ * 内核 `PATCH /rules/disable` 标记为 disabled，因此这里存的是规则原文而不是下标。
+ */
+export const toggleRuleDisabledInEnhancement = (
+  content: string,
+  rule: string,
+  disabled: boolean,
+): { content: string; changed: boolean } => {
+  const state = parseRuleEnhancement(content)
+  if (state.disabled.includes(rule) === disabled) {
+    return { content, changed: false }
+  }
+
+  state.disabled = disabled
+    ? [...state.disabled, rule]
+    : state.disabled.filter((item) => item !== rule)
+  return { content: dumpRuleEnhancement(state), changed: true }
 }
 
 export const replaceRuleInEnhancement = (
@@ -421,6 +456,14 @@ export const replaceRuleInEnhancement = (
   if (previousRule === nextRule) return { content, changed: false }
 
   const state = parseRuleEnhancement(content)
+  // 禁用标记按原文寻址，改了原文就要跟着迁移，否则编辑一条被禁用的规则会把它悄悄启用。
+  if (state.disabled.includes(previousRule)) {
+    state.disabled = [
+      ...new Set(
+        state.disabled.map((item) => (item === previousRule ? nextRule : item)),
+      ),
+    ]
+  }
   let replacedLocalRule = false
   const replaceLocal = (rules: string[]) =>
     rules.map((rule) => {

@@ -2,6 +2,7 @@ import { useLockFn } from 'ahooks'
 import { Loader2, Minus, Plus } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { getRules } from 'tauri-plugin-mihomo-api'
 
 import { BaseEmpty, BaseSearchBox, VirtualList } from '@/components/base'
 import { ProviderButton } from '@/components/rule/provider-button'
@@ -15,6 +16,7 @@ import {
   parseSerializedRule,
   parseRuntimeRuleConfig,
   replaceRuleInEnhancement,
+  toggleRuleDisabledInEnhancement,
   type ParsedRule,
   type RulePlacement,
   type RuntimeRuleConfig,
@@ -47,7 +49,7 @@ import { showNotice } from '@/services/notice-service'
 import type { RuntimeRule } from '@/types/rule'
 
 const RULE_GRID_COLUMNS =
-  '50px 132px minmax(200px, 1fr) minmax(110px, 150px) 72px'
+  '50px 132px minmax(200px, 1fr) minmax(110px, 150px) 72px 56px'
 
 // 表头行 / 底部工具栏的中性叠加底色（原 alpha(text.primary, 明 0.018 / 暗 0.03)）
 const NEUTRAL_OVERLAY_BG =
@@ -93,6 +95,7 @@ const RulesPage = () => {
   const [submittingAdd, setSubmittingAdd] = useState(false)
   const [editContext, setEditContext] = useState<EditDialogContext | null>(null)
   const [submittingEdit, setSubmittingEdit] = useState(false)
+  const [togglingIndex, setTogglingIndex] = useState<number | null>(null)
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null)
   const [preparingDelete, setPreparingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -332,6 +335,65 @@ const RulesPage = () => {
     }
   })
 
+  // 禁用不改配置里的规则本身：规则照常留在列表和内核规则表里，只是被标记为
+  // disabled。状态存在 rules 增强链的 disabled 段（存原文），apply 之后由后端
+  // 调内核 PATCH /rules/disable 重放，因此下标位移和内核重载都不会丢。
+  const handleToggleEnabled = useLockFn(
+    async (rule: RuntimeRule, enabled: boolean) => {
+      if (!currentProfileUid || !rulesProfileUid) {
+        showNotice.error('rules.feedback.notifications.mutationUnavailable')
+        return
+      }
+
+      const targetRulesProfileUid = rulesProfileUid
+      setTogglingIndex(rule.index)
+      try {
+        const runtimeBefore = await loadRuntimeRules()
+        const rawRule = getRuntimeRuleAtIndex(runtimeBefore, rule.index)
+        // 原文是唯一的寻址依据，重复原文无法区分要禁用哪一条。
+        if (countRuntimeRule(runtimeBefore, rawRule) !== 1) {
+          showNotice.error('rules.feedback.notifications.toggleAmbiguous')
+          return
+        }
+
+        const previousContent = await readProfileFile(targetRulesProfileUid)
+        const mutation = toggleRuleDisabledInEnhancement(
+          previousContent,
+          rawRule,
+          !enabled,
+        )
+        if (!mutation.changed) {
+          await refreshRules()
+          return
+        }
+
+        if (!(await saveProfileFile(targetRulesProfileUid, mutation.content))) {
+          throw new Error(t('rules.feedback.notifications.saveFailed'))
+        }
+
+        const applied = (await getRules()).rules as RuntimeRule[]
+        const target = applied.find((item) => item.index === rule.index)
+        const stillSameRule =
+          target?.type === rule.type && target?.payload === rule.payload
+        if (!stillSameRule || (target?.extra?.disabled === true) === enabled) {
+          await saveProfileFile(targetRulesProfileUid, previousContent)
+          throw new Error(t('rules.feedback.notifications.mutationNotApplied'))
+        }
+
+        await refreshRules()
+        showNotice.success(
+          enabled
+            ? 'rules.feedback.notifications.enableSuccess'
+            : 'rules.feedback.notifications.disableSuccess',
+        )
+      } catch (error) {
+        showNotice.error(error)
+      } finally {
+        setTogglingIndex(null)
+      }
+    },
+  )
+
   const handlePrepareDelete = useLockFn(async () => {
     if (!currentProfileUid || !rulesProfileUid || !selectedRule) {
       showNotice.error('rules.feedback.notifications.mutationUnavailable')
@@ -411,11 +473,12 @@ const RulesPage = () => {
   })
 
   const columnHeaders = [
-    t('rules.page.columns.id'),
-    t('rules.page.columns.type'),
-    t('rules.page.columns.value'),
-    t('rules.page.columns.policy'),
-    t('rules.page.columns.used'),
+    { label: t('rules.page.columns.id'), align: 'text-center' },
+    { label: t('rules.page.columns.type'), align: 'text-left' },
+    { label: t('rules.page.columns.value'), align: 'text-left' },
+    { label: t('rules.page.columns.policy'), align: 'text-left' },
+    { label: t('rules.page.columns.used'), align: 'text-right' },
+    { label: t('rules.page.columns.enabled'), align: 'text-center' },
   ]
 
   return (
@@ -461,21 +524,17 @@ const RulesPage = () => {
               NEUTRAL_OVERLAY_BG,
             )}
           >
-            {columnHeaders.map((header, index) => (
+            {columnHeaders.map((header) => (
               <div
-                key={header}
+                key={header.label}
                 role="columnheader"
-                title={header}
+                title={header.label}
                 className={cn(
                   'min-w-0 truncate px-component text-[12px] font-[650] leading-8 tracking-[0.01em] text-[var(--color-text-secondary)]',
-                  index === 0
-                    ? 'text-center'
-                    : index === 4
-                      ? 'text-right'
-                      : 'text-left',
+                  header.align,
                 )}
               >
-                {header}
+                {header.label}
               </div>
             ))}
           </div>
@@ -491,6 +550,8 @@ const RulesPage = () => {
                   value={filteredRules[index]}
                   displayIndex={index}
                   selected={filteredRules[index]?.index === selectedRuleIndex}
+                  canToggle={canMutateRules}
+                  toggling={filteredRules[index]?.index === togglingIndex}
                   onSelect={(rule) =>
                     currentProfileUid &&
                     setSelectedRuleTarget({
@@ -499,6 +560,7 @@ const RulesPage = () => {
                     })
                   }
                   onEdit={handleOpenEdit}
+                  onToggleEnabled={handleToggleEnabled}
                 />
               )}
               style={{ flex: 1, minHeight: 0, overflowX: 'hidden' }}

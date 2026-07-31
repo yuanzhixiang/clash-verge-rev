@@ -45,6 +45,10 @@
         "title": "ルールを編集",
         "hint": "ダブルクリックまたは F2 キーでこのルールを編集"
       },
+      "toggle": {
+        "enable": "このルールを有効にする",
+        "disable": "このルールを無効にする（一覧には残す）"
+      },
       "scrollTop": "一番上へ戻る"
     },
     "columns": {
@@ -52,7 +56,8 @@
       "type": "タイプ",
       "value": "値",
       "policy": "ポリシー",
-      "used": "使用回数"
+      "used": "使用回数",
+      "enabled": "有効"
     },
     "description": "ルールは上から下へ優先順位順に評価されます。",
     "searchPlaceholder": "ルールを検索",
@@ -76,7 +81,10 @@
       "editSuccess": "ルールを更新しました",
       "editUnavailable": "このルールは編集できません: {{message}}",
       "editAmbiguous": "同一の重複ルールは安全に編集できません",
-      "editTargetChanged": "保存前にルールが変更されました。もう一度開いてください。"
+      "editTargetChanged": "保存前にルールが変更されました。もう一度開いてください。",
+      "disableSuccess": "ルールを無効にしました（一覧には残ります）",
+      "enableSuccess": "ルールを再度有効にしました",
+      "toggleAmbiguous": "同一の重複ルールは安全に無効化できません"
     }
   },
   "modals": {

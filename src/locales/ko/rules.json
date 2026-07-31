@@ -45,6 +45,10 @@
         "title": "규칙 편집",
         "hint": "두 번 클릭하거나 F2를 눌러 이 규칙 편집"
       },
+      "toggle": {
+        "enable": "이 규칙 사용",
+        "disable": "이 규칙을 목록에 남긴 채 사용 중지"
+      },
       "scrollTop": "맨 위로"
     },
     "columns": {
@@ -52,7 +56,8 @@
       "type": "유형",
       "value": "값",
       "policy": "정책",
-      "used": "사용 횟수"
+      "used": "사용 횟수",
+      "enabled": "사용"
     },
     "description": "규칙은 위에서 아래로 우선순위에 따라 평가됩니다.",
     "searchPlaceholder": "규칙 검색",
@@ -76,7 +81,10 @@
       "editSuccess": "규칙이 업데이트되었습니다",
       "editUnavailable": "이 규칙을 편집할 수 없습니다: {{message}}",
       "editAmbiguous": "동일한 중복 규칙은 안전하게 편집할 수 없습니다",
-      "editTargetChanged": "저장하기 전에 규칙이 변경되었습니다. 다시 여세요."
+      "editTargetChanged": "저장하기 전에 규칙이 변경되었습니다. 다시 여세요.",
+      "disableSuccess": "규칙을 사용 중지했습니다. 목록에는 그대로 남아 있습니다",
+      "enableSuccess": "규칙을 다시 사용하도록 설정했습니다",
+      "toggleAmbiguous": "동일한 중복 규칙은 안전하게 사용 중지할 수 없습니다"
     }
   },
   "modals": {

@@ -45,6 +45,10 @@
         "title": "編輯規則",
         "hint": "按兩下或按 F2 編輯這條規則"
       },
+      "toggle": {
+        "enable": "啟用這條規則",
+        "disable": "停用這條規則，但保留在列表中"
+      },
       "scrollTop": "返回頂部"
     },
     "columns": {
@@ -52,7 +56,8 @@
       "type": "類型",
       "value": "匹配值",
       "policy": "策略",
-      "used": "命中"
+      "used": "命中",
+      "enabled": "啟用"
     },
     "description": "規則會依優先順序由上而下比對。",
     "searchPlaceholder": "搜尋規則",
@@ -76,7 +81,10 @@
       "editSuccess": "規則已更新",
       "editUnavailable": "無法編輯這條規則：{{message}}",
       "editAmbiguous": "存在完全相同的重複規則，無法安全定位編輯目標",
-      "editTargetChanged": "規則在儲存前已變更，請重新開啟後再編輯"
+      "editTargetChanged": "規則在儲存前已變更，請重新開啟後再編輯",
+      "disableSuccess": "規則已停用，仍保留在列表中",
+      "enableSuccess": "規則已重新啟用",
+      "toggleAmbiguous": "存在完全相同的重複規則，無法安全定位停用目標"
     }
   },
   "modals": {

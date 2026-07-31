@@ -9,6 +9,11 @@ pub struct SeqMap {
     pub delete: Vec<String>,
     #[serde(default)]
     pub replace: Vec<SeqReplace>,
+    /// 保留在规则列表里但不参与匹配的规则原文，仅 rules 链使用。
+    /// 规则仍然进入 runtime 配置和内核规则表，由 apply 之后调用内核
+    /// `PATCH /rules/disable` 置为 disabled，因此这里存原文而不是下标。
+    #[serde(default)]
+    pub disabled: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -39,11 +44,14 @@ fn is_selector_group(group_map: &Mapping) -> bool {
 }
 
 pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
+    // disabled 不参与配置生成：被禁用的规则依然要留在规则列表里，
+    // 只是在 apply 之后通过内核接口标记为 disabled。
     let SeqMap {
         prepend,
         append,
         delete,
         replace,
+        disabled: _,
     } = seq;
 
     let added_proxy_names = if field == "proxies" {
@@ -190,6 +198,31 @@ mod tests {
 
     #[test]
     #[allow(clippy::expect_used)]
+    fn test_legacy_seq_map_defaults_disabled() {
+        let seq: SeqMap = serde_yaml_ng::from_str("prepend: []\nappend: []\ndelete: []\n")
+            .expect("legacy seq map should deserialize");
+        assert!(seq.disabled.is_empty());
+    }
+
+    #[test]
+    #[allow(clippy::expect_used)]
+    fn test_disabled_rules_stay_in_rules_list() {
+        let config: Mapping = serde_yaml_ng::from_str("rules: [A, B]\n").expect("config should deserialize");
+        let seq = SeqMap {
+            disabled: vec!["A".to_string()],
+            ..Default::default()
+        };
+
+        let config = use_seq(seq, config, "rules");
+        let rules = config
+            .get("rules")
+            .and_then(Value::as_sequence)
+            .expect("rules should remain a sequence");
+        assert_eq!(rules, &vec![Value::from("A"), Value::from("B")]);
+    }
+
+    #[test]
+    #[allow(clippy::expect_used)]
     fn test_replace_rules_in_original_slots() {
         let config: Mapping = serde_yaml_ng::from_str("rules: [A, B, A]\n").expect("config should deserialize");
         let seq = SeqMap {
@@ -279,7 +312,7 @@ proxy-groups:
             prepend: Sequence::new(),
             append: Sequence::new(),
             delete: vec!["proxy1".to_string()],
-            replace: Vec::new(),
+            ..Default::default()
         };
 
         config = use_seq(seq, config, "proxies");
@@ -371,7 +404,7 @@ proxy-groups:
             prepend,
             append,
             delete: vec![],
-            replace: Vec::new(),
+            ..Default::default()
         };
 
         config = use_seq(seq, config, "proxies");
@@ -418,7 +451,7 @@ proxy-groups: "invalid"
             prepend: Sequence::new(),
             append: Sequence::new(),
             delete: vec!["proxy1".to_string()],
-            replace: Vec::new(),
+            ..Default::default()
         };
 
         config = use_seq(seq, config, "proxies");
