@@ -1,0 +1,4 @@
+interface:
+  display_name: "Clash Verge CLI"
+  short_description: "Use vergectl to inspect and safely control Clash Verge."
+  default_prompt: "Use vergectl for Clash Verge status, logs, profiles, proxies, runtime state, backups, and safe configuration changes."

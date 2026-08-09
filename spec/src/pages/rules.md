@@ -95,5 +95,5 @@
 - 增删编辑必须使用当前 Profile 的 `prepend / append / delete / replace` 增强能力，不修改 Mihomo API 或原始订阅。
 - replace 只替换原始规则所在槽位；订阅更新导致其数字 ID 变化不视为移动。
 - 启停使用规则增强文件的 `disabled` 段，存规则原文而不是下标：下标会随任意增删整体位移，原文在订阅更新后仍可对齐。
-- 被禁用的规则照常进入 runtime 配置和核心规则表，禁用状态由后端在配置 apply 之后调用核心接口重放，见 `plan/src-tauri/src/core/rule_disable.md`；前端不直接调用该接口。
+- 被禁用的规则照常进入 runtime 配置和核心规则表，禁用状态由后端在配置 apply 之后调用核心接口重放，见 `spec/src-tauri/src/core/rule_disable.md`；前端不直接调用该接口。
 - 不自行统计或持久化 Used，不实现 Reset Counter。

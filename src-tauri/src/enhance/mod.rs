@@ -725,7 +725,12 @@ fn use_quic_fallback_reject(mut config: Mapping, enabled: bool) -> Mapping {
 
 /// Enhance mode
 /// 返回最终订阅、该订阅包含的键、script执行的结果，以及被标记为禁用的规则原文
-pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, ResultLog>, Vec<std::string::String>)> {
+pub async fn enhance() -> Result<(
+    Mapping,
+    HashSet<String>,
+    HashMap<String, ResultLog>,
+    Vec<std::string::String>,
+)> {
     // gather config values
     let cfg_vals = get_config_values().await;
     let ConfigValues {

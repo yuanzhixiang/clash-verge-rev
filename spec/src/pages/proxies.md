@@ -52,7 +52,7 @@
 
 ## 外部节点订阅（Surge policy-path 对应能力）
 
-- profile 中 `proxy-providers` 声明 `verge-format: surge` + `url`（可选 `interval`、`ua`）即成为外部节点列表订阅，组用 `use:` 引用；详见 plan/src-tauri/src/module/external_provider.md。
+- profile 中 `proxy-providers` 声明 `verge-format: surge` + `url`（可选 `interval`、`ua`）即成为外部节点列表订阅，组用 `use:` 引用；详见 spec/src-tauri/src/module/external_provider.md。
 - 此类 provider 的节点自动不进 Proxy 区（provider 节点既有过滤），组浮层可见可选。
 
 ## 加载、空态与错误态
