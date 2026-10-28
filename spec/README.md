@@ -16,7 +16,7 @@ fork 代码全部放在新增文件里，对 upstream 文件的改动只有 4 �
 | 文件 | 改动 |
 |---|---|
 | `src-tauri/src/lib.rs` | `mod fork;` 与 `.plugin(fork::init())` |
-| `src/pages/settings.tsx` | 引入并渲染 `<SurgeBridgeSetting />` |
+| `src/pages/settings.tsx` | 引入并在左栏「Clash 设置」下方渲染 `<SurgeBridgeSetting />` |
 
 刻意避免的接触点（不要为了方便去改）：
 

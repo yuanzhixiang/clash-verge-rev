@@ -32,6 +32,7 @@ USAGE:
   vergectl surge path <file>              use another Surge profile
   vergectl surge refresh                  reconvert and reload the Surge subscription
   vergectl surge import                   add the Surge profile as the active subscription
+  vergectl surge reveal                   open the folder holding the Surge profile
   vergectl config get verge|clash         dump app or core config
   vergectl config patch verge '<json>'    patch app config
   vergectl app exit                       quit Clash Verge
@@ -67,8 +68,12 @@ fn token() -> Result<String, Failure> {
     let path = app_dir()
         .map(|dir| dir.join("fork.json"))
         .ok_or_else(|| Failure::Unreachable("cannot locate the Clash Verge data directory".into()))?;
-    let content = std::fs::read_to_string(&path)
-        .map_err(|err| Failure::Unreachable(format!("cannot read {}: {err}; start Clash Verge first", path.display())))?;
+    let content = std::fs::read_to_string(&path).map_err(|err| {
+        Failure::Unreachable(format!(
+            "cannot read {}: {err}; start Clash Verge first",
+            path.display()
+        ))
+    })?;
     let settings: Value = serde_json::from_str(&content).map_err(|err| Failure::Unreachable(err.to_string()))?;
     settings
         .get("token")
@@ -217,6 +222,7 @@ fn run(args: &[&str]) -> Result<Value, Failure> {
         ["surge", "path", path] => call("POST", "surge", Some(&json!({ "path": path }))),
         ["surge", "refresh"] => call("POST", "surge/refresh", None),
         ["surge", "import"] => call("POST", "surge/import", None),
+        ["surge", "reveal"] => call("POST", "surge/reveal", None),
         ["config", "get", target @ ("verge" | "clash")] => call("GET", &format!("config/{target}"), None),
         ["config", "patch", "verge", patch] => call("POST", "config/verge", Some(&parse_json(patch)?)),
         ["app", "exit"] => call("POST", "app/exit", None),

@@ -109,10 +109,7 @@ pub fn to_mihomo_proxy(line: &SurgeLine<'_>) -> anyhow::Result<Mapping> {
         .positional
         .first()
         .ok_or_else(|| anyhow::anyhow!("missing server"))?;
-    let raw_port = line
-        .positional
-        .get(1)
-        .ok_or_else(|| anyhow::anyhow!("missing port"))?;
+    let raw_port = line.positional.get(1).ok_or_else(|| anyhow::anyhow!("missing port"))?;
     let port: u16 = raw_port
         .parse()
         .map_err(|_| anyhow::anyhow!("invalid port: {raw_port:?}"))?;
@@ -262,7 +259,8 @@ mod tests {
                 .len(),
             1
         );
-        let list = convert_node_list("a = ss, example.com, 1, encrypt-method=aes-128-gcm, password=p\nb = wireguard, x\n");
+        let list =
+            convert_node_list("a = ss, example.com, 1, encrypt-method=aes-128-gcm, password=p\nb = wireguard, x\n");
         assert_eq!(list.proxies.len(), 1);
         assert_eq!(list.skipped.len(), 1);
     }

@@ -56,7 +56,10 @@ pub async fn handle(bridge: &'static Bridge, method: &str, path: &str, body: Val
             Ok(json!({ "ok": true }))
         }
         ("GET", "mode") => {
-            let config = Handle::mihomo().get_base_config().await.map_err(|err| err.to_string())?;
+            let config = Handle::mihomo()
+                .get_base_config()
+                .await
+                .map_err(|err| err.to_string())?;
             Ok(json!({ "mode": to_json(&config.mode)? }))
         }
         ("POST", "mode") => {
@@ -75,7 +78,9 @@ pub async fn handle(bridge: &'static Bridge, method: &str, path: &str, body: Val
         ("POST", "surge") => {
             let enabled = body.get("enabled").and_then(Value::as_bool);
             let path = body.get("path").and_then(Value::as_str).map(str::to_owned);
-            bridge.update_settings(enabled, path).map_err(|err| format!("{err:#}"))?;
+            bridge
+                .update_settings(enabled, path)
+                .map_err(|err| format!("{err:#}"))?;
             if bridge.settings().surge.enabled {
                 let _ = bridge.convert().await;
             }
@@ -83,10 +88,20 @@ pub async fn handle(bridge: &'static Bridge, method: &str, path: &str, body: Val
         }
         ("POST", "surge/refresh") => {
             bridge.convert().await.map_err(|err| format!("{err:#}"))?;
-            let refreshed = Box::pin(bridge.refresh_profiles()).await.map_err(|err| format!("{err:#}"))?;
+            let refreshed = Box::pin(bridge.refresh_profiles())
+                .await
+                .map_err(|err| format!("{err:#}"))?;
             Ok(json!({ "refreshed": refreshed, "surge": surge_state(bridge) }))
         }
         ("POST", "surge/import") => Box::pin(import_surge(bridge)).await,
+        ("POST", "surge/reveal") => {
+            let path = std::path::PathBuf::from(bridge.settings().surge.path);
+            let folder = path
+                .parent()
+                .ok_or_else(|| format!("{} has no parent folder", path.display()))?;
+            open::that(folder).map_err(|err| format!("cannot open {}: {err}", folder.display()))?;
+            Ok(json!({ "opened": folder }))
+        }
         ("POST", "app/exit") => {
             tokio::spawn(feat::quit());
             Ok(json!({ "ok": true }))

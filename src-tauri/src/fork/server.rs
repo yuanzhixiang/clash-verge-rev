@@ -32,7 +32,8 @@ fn json_reply(status: StatusCode, value: &Value) -> Response<String> {
 
 fn is_app_origin(origin: &str) -> bool {
     APP_ORIGINS.contains(&origin)
-        || (cfg!(debug_assertions) && (origin.starts_with("http://localhost:") || origin.starts_with("http://127.0.0.1:")))
+        || (cfg!(debug_assertions)
+            && (origin.starts_with("http://localhost:") || origin.starts_with("http://127.0.0.1:")))
 }
 
 /// Rejects DNS-rebinding requests that reach the loopback port under a foreign host name.
@@ -120,7 +121,11 @@ async fn route(
     body: Bytes,
 ) -> Result<Response<String>, Infallible> {
     let Some(bridge) = bridge::get() else {
-        return Ok(reply(StatusCode::SERVICE_UNAVAILABLE, "text/plain", "starting".to_owned()));
+        return Ok(reply(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "text/plain",
+            "starting".to_owned(),
+        ));
     };
     if !is_loopback_host(&headers) {
         return Ok(reply(StatusCode::FORBIDDEN, "text/plain", "forbidden".to_owned()));

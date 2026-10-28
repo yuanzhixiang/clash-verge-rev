@@ -239,7 +239,11 @@ impl Bridge {
             return;
         }
         match self.refresh_profiles().await {
-            Ok(count) => logging!(info, Type::Config, "[surge] profile changed, refreshed {count} subscription(s)"),
+            Ok(count) => logging!(
+                info,
+                Type::Config,
+                "[surge] profile changed, refreshed {count} subscription(s)"
+            ),
             Err(err) => logging!(warn, Type::Config, "[surge] refresh failed: {err:#}"),
         }
     }
@@ -250,7 +254,12 @@ fn convert_remote(kind: RemoteKind, body: &str) -> Result<String> {
         RemoteKind::ProxyList => {
             let list = convert_node_list(body);
             if !list.skipped.is_empty() {
-                logging!(warn, Type::Config, "[surge] skipped proxies: {}", list.skipped.join("; "));
+                logging!(
+                    warn,
+                    Type::Config,
+                    "[surge] skipped proxies: {}",
+                    list.skipped.join("; ")
+                );
             }
             let mut doc = serde_yaml_ng::Mapping::new();
             doc.insert(
@@ -262,7 +271,12 @@ fn convert_remote(kind: RemoteKind, body: &str) -> Result<String> {
         RemoteKind::RuleSet => {
             let set = convert_rule_set(body);
             if set.dropped > 0 {
-                logging!(info, Type::Config, "[surge] dropped {} unsupported rule-set lines", set.dropped);
+                logging!(
+                    info,
+                    Type::Config,
+                    "[surge] dropped {} unsupported rule-set lines",
+                    set.dropped
+                );
             }
             set.content
         }

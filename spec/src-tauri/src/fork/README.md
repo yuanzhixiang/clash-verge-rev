@@ -66,6 +66,7 @@
 | `POST surge {enabled?, path?}` | 改设置并立即重新转换 |
 | `POST surge/refresh` | 重新转换并刷新所有指向桥接的订阅 |
 | `POST surge/import` | 未导入则以订阅形式导入（不经代理下载），然后启用 |
+| `POST surge/reveal` | 用系统文件管理器打开 Surge 文件所在目录（`open::that`，与 upstream 打开应用目录的方式一致） |
 | `POST app/exit` | 退出 Clash Verge |
 
 成功返回 200 + JSON；业务错误返回 400 `{error}`；鉴权失败 401；Host 不是 `127.0.0.1:33380` / `localhost:33380` 返回 403（防 DNS rebinding）。

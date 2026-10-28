@@ -32,7 +32,7 @@ install -m 755 crates/vergectl/target/release/vergectl ~/.local/bin/vergectl
 | `profiles [list]`、`profiles use\|update <uid\|name\|url>`、`profiles import <url>` | `profiles*` |
 | `groups [list]` | `GET groups`，精简为 `{name,type,now,members}` |
 | `groups select <group> <proxy>`、`groups delay <group>` | `groups/*` |
-| `surge [status]`、`surge enable\|disable`、`surge path <file>`、`surge refresh`、`surge import` | `surge*` |
+| `surge [status]`、`surge enable\|disable`、`surge path <file>`、`surge refresh`、`surge import`、`surge reveal` | `surge*` |
 | `config get verge\|clash`、`config patch verge '<json>'` | `config/*` |
 | `app exit` | `POST app/exit` |
 | `api GET\|POST <path> ['<json>']` | 任意 `/api/<path>`，给新接口留口子 |

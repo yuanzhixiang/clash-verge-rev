@@ -166,11 +166,17 @@ impl<'a> Converter<'a> {
         let kind = match line.kind.as_str() {
             kind @ ("select" | "url-test" | "fallback" | "load-balance") => kind,
             "smart" => {
-                self.warn(format!("[Proxy Group] {}: smart group converted to url-test", line.name));
+                self.warn(format!(
+                    "[Proxy Group] {}: smart group converted to url-test",
+                    line.name
+                ));
                 "url-test"
             }
             other => {
-                self.warn(format!("[Proxy Group] {}: {other} group converted to select", line.name));
+                self.warn(format!(
+                    "[Proxy Group] {}: {other} group converted to select",
+                    line.name
+                ));
                 "select"
             }
         };
@@ -225,7 +231,10 @@ impl<'a> Converter<'a> {
                 self.proxy_providers.insert(text(&provider), Value::Mapping(entry));
                 group.insert(text("use"), Value::Sequence(vec![text(&provider)]));
             } else {
-                self.warn(format!("[Proxy Group] {}: local policy-path is not supported", line.name));
+                self.warn(format!(
+                    "[Proxy Group] {}: local policy-path is not supported",
+                    line.name
+                ));
             }
         }
         if include_all {
@@ -240,7 +249,10 @@ impl<'a> Converter<'a> {
             }
         }
         if members.is_empty() && !group.contains_key("use") && !include_all {
-            self.warn(format!("[Proxy Group] {}: no members, falling back to DIRECT", line.name));
+            self.warn(format!(
+                "[Proxy Group] {}: no members, falling back to DIRECT",
+                line.name
+            ));
             members.push(text("DIRECT"));
         }
         if !members.is_empty() {
@@ -257,7 +269,9 @@ impl<'a> Converter<'a> {
         let policy = tokens.get(2).map(|name| self.policy(name));
         match (kind.as_str(), policy) {
             ("FINAL", _) => {
-                let policy = tokens.get(1).map_or_else(|| "DIRECT".to_owned(), |name| self.policy(name));
+                let policy = tokens
+                    .get(1)
+                    .map_or_else(|| "DIRECT".to_owned(), |name| self.policy(name));
                 self.rules.push(text(&format!("MATCH,{policy}")));
             }
             ("RULE-SET" | "DOMAIN-SET", Some(policy)) => self.rule_set(&kind, &tokens, &policy),
@@ -409,7 +423,11 @@ pub fn convert_profile(content: &str, remote_base: &str) -> Conversion {
     }
     general_warnings.append(&mut converter.warnings);
 
-    if !converter.rules.iter().any(|rule| rule.as_str().is_some_and(|rule| rule.starts_with("MATCH,"))) {
+    if !converter
+        .rules
+        .iter()
+        .any(|rule| rule.as_str().is_some_and(|rule| rule.starts_with("MATCH,")))
+    {
         general_warnings.push("[Rule] no FINAL rule, added MATCH,DIRECT".to_owned());
         converter.rules.push(text("MATCH,DIRECT"));
     }

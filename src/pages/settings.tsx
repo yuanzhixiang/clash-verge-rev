@@ -94,6 +94,7 @@ const SettingPage = () => {
           >
             <SettingClash onError={onError} />
           </Box>
+          <SurgeBridgeSetting onError={onError} />
         </Grid>
         <Grid size={6}>
           <Box
@@ -113,7 +114,6 @@ const SettingPage = () => {
           >
             <SettingVergeAdvanced onError={onError} />
           </Box>
-          <SurgeBridgeSetting onError={onError} />
         </Grid>
       </Grid>
     </BasePage>

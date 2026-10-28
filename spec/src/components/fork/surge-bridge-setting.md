@@ -2,7 +2,7 @@
 
 ## 职责
 
-设置页右栏最下方的「Surge 配置」卡片：开关桥接、选择 Surge 文件、查看转换结果和警告、一键把桥接添加为订阅并启用、手动重新转换。由 `src/pages/settings.tsx` 以一行 `<SurgeBridgeSetting onError={onError} />` 接入。
+设置页左栏「Clash 设置」下方的「Surge 配置」卡片：开关桥接、选择 Surge 文件、打开其所在文件夹、查看转换结果和警告、一键把桥接添加为订阅并启用、手动重新转换。由 `src/pages/settings.tsx` 以一行 `<SurgeBridgeSetting onError={onError} />` 接入。
 
 ## 数据来源
 
@@ -18,6 +18,7 @@
 |---|---|
 | 使用 Surge 配置 | 开关，`POST surge {enabled}` |
 | 配置文件 | 副标题显示完整路径；「更换」打开系统文件选择框（只列 `.conf`），选中后 `POST surge {path}` |
+| 打开配置文件所在文件夹 | 可点击行，`POST surge/reveal`，用系统文件管理器打开配置文件的父目录 |
 | 转换状态 | 「N 个节点 · N 个分组 · N 条规则 · 时间」；出错时显示错误信息；未启用时显示「未启用」 |
 | 转换提示（N） | 点击展开或收起警告列表，没有警告时显示「无」 |
 | 订阅 | 未启用时显示「添加并启用」或「启用」按钮，`POST surge/import`，成功后弹出提示 |

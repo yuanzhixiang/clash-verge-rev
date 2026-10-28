@@ -40,6 +40,7 @@ const STRINGS = {
     enable: '使用 Surge 配置',
     file: '配置文件',
     change: '更换',
+    reveal: '打开配置文件所在文件夹',
     status: '转换状态',
     converted: (s: SurgeState['status']['stats'], at: string) =>
       `${s.proxies} 个节点 · ${s.groups} 个分组 · ${s.rules} 条规则 · ${at}`,
@@ -62,6 +63,7 @@ const STRINGS = {
     enable: 'Use Surge profile',
     file: 'Profile file',
     change: 'Change',
+    reveal: 'Open containing folder',
     status: 'Conversion',
     converted: (s: SurgeState['status']['stats'], at: string) =>
       `${s.proxies} proxies · ${s.groups} groups · ${s.rules} rules · ${at}`,
@@ -199,6 +201,11 @@ const SurgeBridgeSetting = ({
             {s.change}
           </Button>
         </SettingItem>
+
+        <SettingItem
+          label={s.reveal}
+          onClick={() => run(() => call('POST', 'surge/reveal'))}
+        />
 
         <SettingItem label={s.status} secondary={statusText} />
 

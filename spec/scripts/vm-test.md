@@ -55,3 +55,4 @@
 - 虚拟机出网经过宿主 NAT。宿主开着 TUN 时，虚拟机流量会再被宿主接管；这会影响请求成功与否，但不影响虚拟机内代理、路由、DNS 的断言。
 - Surge 用例使用真实节点和远程列表，结果依赖这些外部地址可访问。
 - Apple 许可限制同时最多运行 2 台 macOS 虚拟机。
+- 偶发：刚启动的虚拟机里，服务清理上一任代理设置时可能碰到 `SystemConfiguration lock preferences (status 3002)`（`kSCStatusPrefsBusy`，系统网络偏好被占用），内核启动失败，表现为「core did not start」。这是 upstream 服务启动时没有重试造成的，重跑一次即可。2026-10-28 的 4 轮测试中出现过 1 次。
