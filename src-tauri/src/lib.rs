@@ -7,6 +7,7 @@ mod constants;
 mod core;
 mod enhance;
 mod feat;
+mod fork;
 pub mod ipc;
 mod process;
 pub mod utils;
@@ -67,7 +68,8 @@ mod app_init {
                     .protocol(tauri_plugin_mihomo::models::Protocol::LocalSocket)
                     .socket_path(crate::config::IClashTemp::guard_external_controller_ipc())
                     .build(),
-            );
+            )
+            .plugin(fork::init());
 
         // Devtools plugin only in debug mode with feature tauri-dev
         // to avoid duplicated registering of logger since the devtools plugin also registers a logger

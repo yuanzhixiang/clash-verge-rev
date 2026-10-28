@@ -4,6 +4,7 @@ import { useLockFn } from 'ahooks'
 import { useTranslation } from 'react-i18next'
 
 import { BasePage } from '@/components/base'
+import SurgeBridgeSetting from '@/components/fork/surge-bridge-setting'
 import SettingClash from '@/components/setting/setting-clash'
 import SettingSystem from '@/components/setting/setting-system'
 import SettingVergeAdvanced from '@/components/setting/setting-verge-advanced'
@@ -112,6 +113,7 @@ const SettingPage = () => {
           >
             <SettingVergeAdvanced onError={onError} />
           </Box>
+          <SurgeBridgeSetting onError={onError} />
         </Grid>
       </Grid>
     </BasePage>

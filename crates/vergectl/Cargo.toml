@@ -1,0 +1,12 @@
+[package]
+name = "vergectl"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Command-line control for a running Clash Verge (fork)"
+
+# Standalone on purpose: keeps the fork out of the upstream workspace manifest.
+[workspace]
+
+[dependencies]
+serde_json = "1"
