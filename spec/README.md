@@ -19,6 +19,7 @@ fork 代码全部放在新增文件里，对 upstream 文件的改动只有挂�
 | `src/pages/settings.tsx` | 引入并在左栏「Clash 设置」下方渲染 `<SurgeBridgeSetting />` |
 | `src/pages/rules.tsx` | 页头 `<ProviderButton />` 前渲染 `<SurgeRuleButton />` |
 | `src/components/connection/connection-detail.tsx` | 连接详情「关闭连接」按钮上方渲染 `<SurgeRuleAction connection={data} />` |
+| `knip.json` | `ignoreBinaries` 追加 `tart`、`sshpass`（`scripts/vm-test.mjs` 调用的系统工具，pre-push 的 knip 检查要求声明） |
 
 刻意避免的接触点（不要为了方便去改）：
 
