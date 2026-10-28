@@ -30,9 +30,11 @@
 - `pnpm dev:remote` → 原只读远程窗口（dev-safe.mjs，要求正式版在跑）；`dev:diff` 指向它。
 - `pnpm dev:unsafe` / `dev:trace` 保留：同为 verge-dev feature，受益于 IPC 与系统网络隔离，但不做播种。
 - `pnpm dev:chrome` → 见 dev-chrome.md。
+- `pnpm test:vm` → 在虚拟机里测试本实例覆盖不到的系统级功能，见 vm-test.md。
+- 不再提供不带 verge-dev 的 `dev:tauri`：它与正式版共用配置目录和系统服务、会真实修改系统网络，2026-10-28 删除。
 
 ## 已知限制
 
-- verge-dev 构建下无法测试"系统代理开关 / 系统 DNS 设置"功能本身（被全局 no-op）；需要测这些时用正式打包版。
+- verge-dev 构建下无法测试"系统代理开关 / 系统 DNS 设置"功能本身（被全局 no-op）；需要测这些时用 `pnpm test:vm`，在虚拟机里装正式构建测试。
 - verge-dev 构建下服务模式（clash-verge-service）恒不可用，dev 只跑 Sidecar；服务安装/卸载/交接流程无法在 dev 中测试。
 - TUN 模式在 dev 中同样不可用（依赖服务模式或管理员权限，开关被播种为 false，用户手动开启会被自动关闭并提示一次）。
