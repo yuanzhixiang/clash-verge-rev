@@ -12,8 +12,8 @@ import {
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
 
-// Served by the fork plugin in src-tauri/src/fork; the webview origin authenticates the call.
-const API = 'http://127.0.0.1:33380/api'
+import { call } from './fork-api'
+
 const POLL_MS = 5000
 
 interface SurgeState {
@@ -81,17 +81,6 @@ const STRINGS = {
     refresh: 'Reconvert and refresh subscription now',
     refreshed: (n: number) => `Refreshed ${n} subscription(s)`,
   },
-}
-
-async function call<T>(method: 'GET' | 'POST', path: string, body?: unknown) {
-  const response = await fetch(`${API}/${path}`, {
-    method,
-    headers: { 'content-type': 'application/json' },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  })
-  const payload = await response.json()
-  if (!response.ok) throw new Error(payload?.error ?? response.statusText)
-  return payload as T
 }
 
 const SurgeBridgeSetting = ({

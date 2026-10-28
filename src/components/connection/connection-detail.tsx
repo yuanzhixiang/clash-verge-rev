@@ -5,6 +5,7 @@ import { useCallback, useImperativeHandle, useState, type Ref } from 'react'
 import { useTranslation } from 'react-i18next'
 import { closeConnection } from 'tauri-plugin-mihomo-api'
 
+import { SurgeRuleAction } from '@/components/fork/surge-rules'
 import parseTraffic from '@/utils/parse-traffic'
 
 export interface ConnectionDetailRef {
@@ -147,6 +148,7 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
         </div>
       ))}
 
+      <SurgeRuleAction connection={data} />
       {!closed && (
         <Box sx={{ textAlign: 'right' }}>
           <Button

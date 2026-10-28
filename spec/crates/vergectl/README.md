@@ -33,6 +33,8 @@ install -m 755 crates/vergectl/target/release/vergectl ~/.local/bin/vergectl
 | `groups [list]` | `GET groups`，精简为 `{name,type,now,members}` |
 | `groups select <group> <proxy>`、`groups delay <group>` | `groups/*` |
 | `surge [status]`、`surge enable\|disable`、`surge path <file>`、`surge refresh`、`surge import`、`surge reveal` | `surge*` |
+| `surge rules [keyword]` | `GET surge/rules`，有关键词时按类型、值、策略过滤 |
+| `surge rule add [type] <value> <policy>`、`surge rule rm [type] <value>` | `POST surge/rules`、`POST surge/rules/delete`，`type` 缺省为 `DOMAIN-SUFFIX` |
 | `config get verge\|clash`、`config patch verge '<json>'` | `config/*` |
 | `app exit` | `POST app/exit` |
 | `api GET\|POST <path> ['<json>']` | 任意 `/api/<path>`，给新接口留口子 |

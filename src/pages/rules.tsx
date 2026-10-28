@@ -9,6 +9,7 @@ import {
   VirtualList,
   type VirtualListHandle,
 } from '@/components/base'
+import { SurgeRuleButton } from '@/components/fork/surge-rules'
 import { ScrollTopButton } from '@/components/layout/scroll-top-button'
 import { ProviderButton } from '@/components/rule/provider-button'
 import RuleItem from '@/components/rule/rule-item'
@@ -65,6 +66,7 @@ const RulesPage = () => {
       }}
       header={
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <SurgeRuleButton />
           <ProviderButton />
         </Box>
       }

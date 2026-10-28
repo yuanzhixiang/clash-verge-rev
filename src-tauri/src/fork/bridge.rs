@@ -29,6 +29,8 @@ const WATCH_INTERVAL: Duration = Duration::from_secs(3);
 
 /// Modification time and size of the watched file.
 type FileStamp = (Option<u64>, u64);
+/// Last examined path and its stamp; a missing file is `(path, None)`.
+type Seen = Option<(PathBuf, Option<FileStamp>)>;
 
 #[derive(Clone, Debug, Default, Serialize)]
 pub struct Status {
@@ -45,6 +47,8 @@ pub struct Bridge {
     status: RwLock<Status>,
     remotes: RwLock<HashMap<String, Remote>>,
     cache: RwLock<HashMap<String, String>>,
+    /// Shared by the watcher and in-app edits so a file we wrote is not handled twice.
+    seen: tokio::sync::Mutex<Seen>,
 }
 
 static BRIDGE: OnceLock<Bridge> = OnceLock::new();
@@ -55,6 +59,7 @@ pub fn init(settings: Settings) -> &'static Bridge {
         status: RwLock::new(Status::default()),
         remotes: RwLock::new(HashMap::new()),
         cache: RwLock::new(HashMap::new()),
+        seen: tokio::sync::Mutex::new(None),
     })
 }
 
@@ -71,6 +76,13 @@ fn now_millis() -> u64 {
 fn modified_millis(meta: &std::fs::Metadata) -> Option<u64> {
     let elapsed = meta.modified().ok()?.duration_since(UNIX_EPOCH).ok()?;
     u64::try_from(elapsed.as_millis()).ok()
+}
+
+async fn stamp(path: &std::path::Path) -> Option<FileStamp> {
+    tokio::fs::metadata(path)
+        .await
+        .ok()
+        .map(|meta| (modified_millis(&meta), meta.len()))
 }
 
 fn cache_path(id: &str) -> Result<PathBuf> {
@@ -207,27 +219,65 @@ impl Bridge {
 
     /// Polls the Surge file; iCloud replaces it atomically so file events are unreliable.
     pub async fn watch(&self) {
-        // `None` until the configured path is first examined; a missing file is `Some((path, None))`.
-        let mut last_seen: Option<(PathBuf, Option<FileStamp>)> = None;
         loop {
             let settings = self.settings();
-            if settings.surge.enabled {
-                let path = PathBuf::from(&settings.surge.path);
-                let stamp = tokio::fs::metadata(&path)
-                    .await
-                    .ok()
-                    .map(|meta| (modified_millis(&meta), meta.len()));
-                let first = last_seen.as_ref().is_none_or(|(seen, _)| *seen != path);
-                let changed = first || last_seen.as_ref().is_some_and(|(_, seen)| *seen != stamp);
-                if changed {
-                    last_seen = Some((path, stamp));
-                    self.on_file_changed(first).await;
+            let mut first = None;
+            {
+                let mut seen = self.seen.lock().await;
+                if settings.surge.enabled {
+                    let path = PathBuf::from(&settings.surge.path);
+                    let current = stamp(&path).await;
+                    let is_first = seen.as_ref().is_none_or(|(known, _)| *known != path);
+                    if is_first || seen.as_ref().is_some_and(|(_, known)| *known != current) {
+                        *seen = Some((path, current));
+                        first = Some(is_first);
+                    }
+                } else {
+                    *seen = None;
                 }
-            } else {
-                last_seen = None;
+            }
+            if let Some(first) = first {
+                self.on_file_changed(first).await;
             }
             tokio::time::sleep(WATCH_INTERVAL).await;
         }
+    }
+
+    /// Applies `edit` to the Surge file, then reconverts and reloads the subscription.
+    /// Returns `None` from `edit` to leave the file untouched.
+    pub async fn edit_profile<T>(
+        &self,
+        edit: impl FnOnce(&str) -> std::result::Result<(Option<String>, T), String>,
+    ) -> Result<(T, bool)> {
+        let settings = self.settings();
+        if !settings.surge.enabled {
+            bail!("Surge bridge is disabled");
+        }
+        let configured = PathBuf::from(&settings.surge.path);
+        let mut seen = self.seen.lock().await;
+        // Write through a symlink instead of replacing it.
+        let path = tokio::fs::canonicalize(&configured)
+            .await
+            .unwrap_or_else(|_| configured.clone());
+        let content = tokio::fs::read_to_string(&path)
+            .await
+            .with_context(|| format!("cannot read {}", path.display()))?;
+        let (next, value) = edit(&content).map_err(anyhow::Error::msg)?;
+        let Some(next) = next else {
+            return Ok((value, false));
+        };
+        let name = path.file_name().map(|name| name.to_string_lossy()).unwrap_or_default();
+        let temp = path.with_file_name(format!(".{name}.verge-edit"));
+        tokio::fs::write(&temp, next).await?;
+        tokio::fs::rename(&temp, &path)
+            .await
+            .with_context(|| format!("cannot replace {}", path.display()))?;
+        *seen = Some((configured.clone(), stamp(&configured).await));
+        drop(seen);
+
+        self.convert().await?;
+        self.refresh_profiles().await?;
+        Ok((value, true))
     }
 
     async fn on_file_changed(&self, first: bool) {

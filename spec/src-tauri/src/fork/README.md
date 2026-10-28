@@ -66,6 +66,9 @@
 | `POST surge {enabled?, path?}` | 改设置并立即重新转换 |
 | `POST surge/refresh` | 重新转换并刷新所有指向桥接的订阅 |
 | `POST surge/import` | 未导入则以订阅形式导入（不经代理下载），然后启用 |
+| `GET surge/rules` | `{rules: [{type,value,policy,editable}], policies, kinds}`，按文件顺序列出 `[Rule]`；`policies` 为 `DIRECT`、`REJECT` 加 `[Proxy]`、`[Proxy Group]` 的名字 |
+| `POST surge/rules {type?, value, policy}` | 设置一条规则的策略，见「规则编辑」 |
+| `POST surge/rules/delete {type?, value}` | 删除同类型同值的所有行 |
 | `POST surge/reveal` | 用系统文件管理器打开 Surge 文件所在目录（`open::that`，与 upstream 打开应用目录的方式一致） |
 | `POST app/exit` | 退出 Clash Verge |
 
@@ -78,6 +81,17 @@
 - 首次看到某个路径：只转换，不刷新订阅。
 - 之后发生变化：转换成功后刷新所有 URL 以 `http://127.0.0.1:33380/surge/<token>/` 开头的订阅（`feat::update_profile`），日志打 `[surge] profile changed, refreshed N subscription(s)`。
 - 转换失败：只记日志，保留上一次的订阅内容。
+
+## 规则编辑（`surge/edit.rs`）
+
+给界面和 `vergectl` 用的「这个站走某某策略」，直接改 Surge 文件，Surge 那边看到的也是同一份规则。
+
+- 只支持 `DOMAIN-SUFFIX`（`type` 缺省值）、`DOMAIN`、`DOMAIN-KEYWORD`、`IP-CIDR`、`IP-CIDR6`。其它类型可以列出，但不能在界面里改。值统一转小写，去掉首尾的 `.`；IP 不带前缀时补 `/32` 或 `/128`。
+- 新规则插到 `[Rule]` 标题的下一行，优先级最高。已有同类型同值（不区分大小写）的规则时，原地改策略，保留缩进和 `no-resolve` 之类的选项。策略没变就不写文件。
+- 按行做文本编辑：其余内容逐字节不变，保留 CRLF。删除时连同换行一起删掉，不留空行。
+- 写入时先写同目录下的 `.<文件名>.verge-edit`，再 `rename` 替换，避免读到写了一半的文件。配置的路径是符号链接时，写到它的目标文件。
+- 读、改、写都在 `Bridge.seen` 锁内完成，写完后把新的文件状态记进 `seen`，3 秒轮询就不会把同一次修改再处理一遍。随后立即转换，并刷新指向桥接的订阅（mihomo 热重载，内核不重启）。
+- 刷新成功后，从 mihomo 拉当前连接，关闭命中规则的连接，让它们按新规则重连：`host` 按域名规则匹配，`destinationIP` 按 CIDR 匹配。已建立的连接不会因为重载而换线路。删除规则后也照此处理。
 
 ## Surge → mihomo 转换口径（`surge/`）
 

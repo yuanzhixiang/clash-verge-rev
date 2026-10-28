@@ -1,6 +1,12 @@
 use serde_json::{Value, json};
 
-use super::{bridge::Bridge, settings::PORT};
+use super::{
+    bridge::Bridge,
+    settings::PORT,
+    surge::edit::{self, Change},
+};
+use clash_verge_logging::{Type, logging};
+
 use crate::{
     cmd,
     config::{Config, IVerge, MixedPort, PrfOption},
@@ -93,6 +99,9 @@ pub async fn handle(bridge: &'static Bridge, method: &str, path: &str, body: Val
                 .map_err(|err| format!("{err:#}"))?;
             Ok(json!({ "refreshed": refreshed, "surge": surge_state(bridge) }))
         }
+        ("GET", "surge/rules") => list_surge_rules(bridge).await,
+        ("POST", "surge/rules") => Box::pin(set_surge_rule(bridge, &body)).await,
+        ("POST", "surge/rules/delete") => Box::pin(delete_surge_rule(bridge, &body)).await,
         ("POST", "surge/import") => Box::pin(import_surge(bridge)).await,
         ("POST", "surge/reveal") => {
             let path = std::path::PathBuf::from(bridge.settings().surge.path);
@@ -210,4 +219,140 @@ async fn import_surge(bridge: &'static Bridge) -> ApiResult {
             .map_err(|err| err.detail)?;
     }
     Box::pin(select_profile(&url)).await
+}
+
+async fn read_surge_profile(bridge: &'static Bridge) -> Result<String, String> {
+    let path = bridge.settings().surge.path;
+    tokio::fs::read_to_string(&path)
+        .await
+        .map_err(|err| format!("cannot read {path}: {err}"))
+}
+
+async fn list_surge_rules(bridge: &'static Bridge) -> ApiResult {
+    let content = read_surge_profile(bridge).await?;
+    Ok(json!({
+        "rules": to_json(&edit::list_rules(&content))?,
+        "policies": edit::list_policies(&content),
+        "kinds": edit::EDITABLE_KINDS,
+    }))
+}
+
+/// `type` defaults to `DOMAIN-SUFFIX`, the usual "send this site through X".
+fn rule_target(body: &Value) -> Result<(String, String), String> {
+    let kind = body.get("type").and_then(Value::as_str).unwrap_or("DOMAIN-SUFFIX");
+    edit::normalize(kind, field(body, "value")?)
+}
+
+async fn set_surge_rule(bridge: &'static Bridge, body: &Value) -> ApiResult {
+    let (kind, value) = rule_target(body)?;
+    let policy = field(body, "policy")?.trim().to_owned();
+    let (change, changed) = bridge
+        .edit_profile(|content| {
+            if !edit::list_policies(content).contains(&policy) {
+                return Err(format!("unknown policy `{policy}`"));
+            }
+            let (next, change) = edit::upsert_rule(content, &kind, &value, &policy)?;
+            Ok(((change != Change::Unchanged).then_some(next), change))
+        })
+        .await
+        .map_err(|err| format!("{err:#}"))?;
+    let closed = if changed {
+        close_matching(&kind, &value).await
+    } else {
+        0
+    };
+    let (action, previous) = match change {
+        Change::Added => ("added", None),
+        Change::Updated { previous } => ("updated", Some(previous)),
+        Change::Unchanged => ("unchanged", None),
+    };
+    logging!(
+        info,
+        Type::Config,
+        "[surge] rule {kind},{value},{policy} {action}, closed {closed} connection(s)"
+    );
+    Ok(json!({
+        "rule": format!("{kind},{value},{policy}"),
+        "action": action,
+        "previous": previous,
+        "closed": closed,
+    }))
+}
+
+async fn delete_surge_rule(bridge: &'static Bridge, body: &Value) -> ApiResult {
+    let (kind, value) = rule_target(body)?;
+    let (policy, _) = bridge
+        .edit_profile(|content| {
+            let (next, policy) = edit::remove_rule(content, &kind, &value)?;
+            Ok((Some(next), policy))
+        })
+        .await
+        .map_err(|err| format!("{err:#}"))?;
+    let closed = close_matching(&kind, &value).await;
+    logging!(
+        info,
+        Type::Config,
+        "[surge] rule {kind},{value},{policy} removed, closed {closed} connection(s)"
+    );
+    Ok(json!({ "rule": format!("{kind},{value},{policy}"), "closed": closed }))
+}
+
+/// Established connections keep their old route after a reload, so drop the ones the rule now covers.
+async fn close_matching(kind: &str, value: &str) -> usize {
+    let mihomo = Handle::mihomo();
+    let connections = match mihomo.get_connections().await {
+        Ok(connections) => connections.connections.unwrap_or_default(),
+        Err(err) => {
+            logging!(warn, Type::Config, "[surge] cannot list connections: {err}");
+            return 0;
+        }
+    };
+    let mut closed = 0;
+    for connection in connections {
+        let meta = &connection.metadata;
+        let hit = [&meta.host, &meta.sniff_host]
+            .iter()
+            .any(|host| !host.is_empty() && host_matches(kind, value, host))
+            || (!meta.destination_ip.is_empty() && ip_matches(kind, value, &meta.destination_ip));
+        if hit && mihomo.close_connection(&connection.id).await.is_ok() {
+            closed += 1;
+        }
+    }
+    closed
+}
+
+fn host_matches(kind: &str, value: &str, host: &str) -> bool {
+    let host = host.trim_end_matches('.').to_ascii_lowercase();
+    match kind {
+        "DOMAIN" => host == value,
+        "DOMAIN-SUFFIX" => host == value || host.ends_with(&format!(".{value}")),
+        "DOMAIN-KEYWORD" => host.contains(value),
+        _ => false,
+    }
+}
+
+fn ip_matches(kind: &str, cidr: &str, ip: &str) -> bool {
+    if !kind.starts_with("IP-CIDR") {
+        return false;
+    }
+    let Some((network, prefix)) = cidr.split_once('/') else {
+        return false;
+    };
+    let (Ok(network), Ok(ip), Ok(prefix)) = (
+        network.parse::<std::net::IpAddr>(),
+        ip.parse::<std::net::IpAddr>(),
+        prefix.parse::<u32>(),
+    ) else {
+        return false;
+    };
+    let (network, ip, bits) = match (network, ip.to_canonical()) {
+        (std::net::IpAddr::V4(n), std::net::IpAddr::V4(i)) => (u128::from(n.to_bits()), u128::from(i.to_bits()), 32),
+        (std::net::IpAddr::V6(n), std::net::IpAddr::V6(i)) => (n.to_bits(), i.to_bits(), 128),
+        _ => return false,
+    };
+    if prefix > bits {
+        return false;
+    }
+    let shift = bits - prefix;
+    shift == bits || network >> shift == ip >> shift
 }

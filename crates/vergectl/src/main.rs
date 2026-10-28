@@ -33,6 +33,12 @@ USAGE:
   vergectl surge refresh                  reconvert and reload the Surge subscription
   vergectl surge import                   add the Surge profile as the active subscription
   vergectl surge reveal                   open the folder holding the Surge profile
+  vergectl surge rules [keyword]          list [Rule] lines and the available policies
+  vergectl surge rule add [type] <value> <policy>
+                                          set a rule's policy, adding it at the top of [Rule];
+                                          type defaults to DOMAIN-SUFFIX; matching connections
+                                          are closed so they reconnect through the new policy
+  vergectl surge rule rm [type] <value>   remove a rule
   vergectl config get verge|clash         dump app or core config
   vergectl config patch verge '<json>'    patch app config
   vergectl app exit                       quit Clash Verge
@@ -188,6 +194,20 @@ fn summarize_groups(value: Value) -> Value {
     )
 }
 
+fn filter_rules(mut value: Value, keyword: &str) -> Value {
+    let keyword = keyword.to_ascii_lowercase();
+    if let Some(rules) = value.get_mut("rules").and_then(Value::as_array_mut) {
+        rules.retain(|rule| {
+            ["type", "value", "policy"].iter().any(|key| {
+                rule.get(key)
+                    .and_then(Value::as_str)
+                    .is_some_and(|text| text.to_ascii_lowercase().contains(&keyword))
+            })
+        });
+    }
+    value
+}
+
 fn run(args: &[&str]) -> Result<Value, Failure> {
     match args {
         [] | ["help" | "-h" | "--help"] => Err(Failure::Usage(String::new())),
@@ -223,6 +243,24 @@ fn run(args: &[&str]) -> Result<Value, Failure> {
         ["surge", "refresh"] => call("POST", "surge/refresh", None),
         ["surge", "import"] => call("POST", "surge/import", None),
         ["surge", "reveal"] => call("POST", "surge/reveal", None),
+        ["surge", "rules"] => call("GET", "surge/rules", None),
+        ["surge", "rules", keyword] => call("GET", "surge/rules", None).map(|value| filter_rules(value, keyword)),
+        ["surge", "rule", "add", value, policy] => call(
+            "POST",
+            "surge/rules",
+            Some(&json!({ "value": value, "policy": policy })),
+        ),
+        ["surge", "rule", "add", kind, value, policy] => call(
+            "POST",
+            "surge/rules",
+            Some(&json!({ "type": kind, "value": value, "policy": policy })),
+        ),
+        ["surge", "rule", "rm", value] => call("POST", "surge/rules/delete", Some(&json!({ "value": value }))),
+        ["surge", "rule", "rm", kind, value] => call(
+            "POST",
+            "surge/rules/delete",
+            Some(&json!({ "type": kind, "value": value })),
+        ),
         ["config", "get", target @ ("verge" | "clash")] => call("GET", &format!("config/{target}"), None),
         ["config", "patch", "verge", patch] => call("POST", "config/verge", Some(&parse_json(patch)?)),
         ["app", "exit"] => call("POST", "app/exit", None),

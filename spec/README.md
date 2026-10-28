@@ -11,12 +11,14 @@
 
 ## 与 upstream 的接触面
 
-fork 代码全部放在新增文件里，对 upstream 文件的改动只有 4 行：
+fork 代码全部放在新增文件里，对 upstream 文件的改动只有挂载点（每处一行 import 加一行调用或 JSX）：
 
 | 文件 | 改动 |
 |---|---|
 | `src-tauri/src/lib.rs` | `mod fork;` 与 `.plugin(fork::init())` |
 | `src/pages/settings.tsx` | 引入并在左栏「Clash 设置」下方渲染 `<SurgeBridgeSetting />` |
+| `src/pages/rules.tsx` | 页头 `<ProviderButton />` 前渲染 `<SurgeRuleButton />` |
+| `src/components/connection/connection-detail.tsx` | 连接详情「关闭连接」按钮上方渲染 `<SurgeRuleAction connection={data} />` |
 
 刻意避免的接触点（不要为了方便去改）：
 
@@ -29,7 +31,7 @@ fork 代码全部放在新增文件里，对 upstream 文件的改动只有 4 �
 
 ```bash
 git fetch upstream
-git merge upstream/dev   # 冲突只可能出现在上面 4 行附近
+git merge upstream/dev   # 冲突只可能出现在上面这些挂载点附近
 ```
 
 合并后验证：`cargo clippy -p clash-verge --lib --tests`、`cargo test -p clash-verge --lib fork::`、`pnpm typecheck`、`node scripts/vm-test.mjs`。
